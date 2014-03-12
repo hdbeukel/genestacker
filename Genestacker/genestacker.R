@@ -36,7 +36,7 @@ genestacker.run <- function(input,          # input file path
                             h4=FALSE,       # heuristic H4
                             h5=FALSE,       # heuristic H5
                             h5c=FALSE,      # heuristic H5c
-							h6=FALSE,		# heuristic H6
+                            h6=FALSE,	    # heuristic H6
                             mem="2g")       # reserved RAM memory (defaults to 2 GB)
                             {
     
