@@ -145,6 +145,9 @@ genestacker.run <- function(input,          # input file path
     if(h5c){
         options = paste("-h5c", options)
     }
+    if(h6){
+        options = paste("-h6", options)
+    }
     
     # run CLI
     mem = paste("-Xmx", mem, sep="")
