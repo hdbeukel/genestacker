@@ -1,0 +1,7 @@
+.DS_Store
+/Genestacker/Genestacker-cli/target/
+/Genestacker/Genestacker-lib/target/
+/Genestacker/bin/
+/Genestacker/dist/*.zip
+.Rapp.history
+

@@ -1,0 +1,110 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+<!-- include plants structure -->
+<xs:include schemaLocation="genestacker_input.xsd" />
+
+<!-- redefine t_plant type to include id, seedlot reference, generation, LPA and observation probability -->
+<xs:redefine schemaLocation="genestacker_input.xsd">
+    <xs:complexType name="t_plant">
+        <xs:complexContent>
+            <xs:extension base="t_plant">
+                <xs:attribute name="id" type="xs:string" />
+                <xs:attribute name="seedlot" type="xs:string" />
+                <xs:attribute name="generation" type="xs:nonNegativeInteger" />
+                <xs:attribute name="lpa" type="probability" />
+                <xs:attribute name="obsProb" type="probability" />
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+</xs:redefine>
+
+<!-- plants -->
+<xs:element name="plants">
+    <xs:complexType>
+        <xs:sequence>
+            <xs:element ref="plant" maxOccurs="unbounded" />
+        </xs:sequence>
+    </xs:complexType>
+</xs:element>
+
+<!-- used seeds (of seed lots) -->
+<xs:element name="used_seeds">
+    <xs:complexType>
+        <xs:attribute name="amount" type="xs:nonNegativeInteger" />
+        <xs:attribute name="generation" type="xs:nonNegativeInteger" />
+    </xs:complexType>
+</xs:element>
+
+<!-- seedlot -->
+<xs:element name="seedlot">
+    <xs:complexType>
+        <xs:sequence>
+            <xs:element ref="used_seeds" maxOccurs="unbounded" minOccurs="0" />
+        </xs:sequence>
+        <xs:attribute name="id" type="xs:string" />
+        <xs:attribute name="generation" type="xs:nonNegativeInteger" />        
+        <xs:attribute name="expDES" type="xs:double" />
+        <xs:attribute name="stdDES" type="xs:double" />
+        <xs:attribute name="offDES" type="xs:double" />
+        <xs:attribute name="ds" type="probability" />
+        <xs:attribute name="n" type="xs:nonNegativeInteger" />
+    </xs:complexType>
+</xs:element>
+
+<!-- seedlots -->
+<xs:element name="seedlots">
+    <xs:complexType>
+        <xs:sequence>
+            <xs:element ref="seedlot" maxOccurs="unbounded" />
+        </xs:sequence>
+    </xs:complexType>
+</xs:element>
+
+<!-- crossing -->
+<xs:element name="crossing">
+    <xs:complexType>
+        <xs:attribute name="id" type="xs:string" />
+        <xs:attribute name="plant1" type="xs:string" />
+        <xs:attribute name="plant2" type="xs:string" />
+        <xs:attribute name="seedlot" type="xs:string" />        
+    </xs:complexType>
+</xs:element>
+
+<!-- selfing -->
+<xs:element name="selfing">
+    <xs:complexType>
+        <xs:attribute name="id" type="xs:string" />
+        <xs:attribute name="plant" type="xs:string" />
+        <xs:attribute name="seedlot" type="xs:string" />        
+    </xs:complexType>
+</xs:element>
+
+<!-- crossings -->
+<xs:element name="crossings">
+    <xs:complexType>
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
+            <xs:element ref="crossing" />
+            <xs:element ref="selfing" />
+        </xs:choice>
+    </xs:complexType>
+</xs:element>
+
+<!-- crossing scheme -->
+<xs:element name="crossing_scheme">
+    <xs:complexType>
+        <xs:all>
+            <xs:element ref="seedlots" />
+            <xs:element ref="plants" />
+            <xs:element ref="crossings" />
+        </xs:all>
+        <xs:attribute name="gamma" type="probability" />
+        <xs:attribute name="gammaPrime" type="probability" />
+        <xs:attribute name="lpa" type="probability" />
+        <xs:attribute name="numGen" type="xs:nonNegativeInteger" />
+        <xs:attribute name="totalPopSize" type="xs:nonNegativeInteger" />
+        <xs:attribute name="des" type="probability" />
+    </xs:complexType>
+</xs:element>
+
+</xs:schema>

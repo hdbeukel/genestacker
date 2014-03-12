@@ -1,0 +1,107 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+<!-- define probability type: double between 0.0 and 1.0 -->
+<xs:simpleType name="probability">
+    <xs:restriction base="xs:double">
+        <xs:minInclusive value="0.0" />
+        <xs:maxInclusive value="1.0" />
+    </xs:restriction>
+</xs:simpleType>
+
+<!-- haplotype -->
+<xs:element name="haplotype">
+    <xs:complexType>
+        <xs:attribute name="targets">
+            <xs:simpleType>
+                <xs:restriction base="xs:string">
+                    <xs:pattern value="[01]*" />
+                    <xs:whiteSpace value="collapse" />
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:attribute>
+    </xs:complexType>
+</xs:element>
+
+<!-- chromosome -->
+<xs:element name="chromosome">
+    <xs:complexType>
+        <xs:sequence>
+            <xs:element ref="haplotype" minOccurs="2" maxOccurs="2" />
+        </xs:sequence>
+    </xs:complexType>
+</xs:element>
+
+<!-- genotype -->
+<xs:complexType name="t_genotype">
+    <xs:sequence>
+        <xs:element ref="chromosome" maxOccurs="unbounded" />
+    </xs:sequence>
+</xs:complexType>
+<xs:element name="genotype" type="t_genotype" />
+
+<!-- plant -->
+<xs:complexType name="t_plant">
+    <xs:sequence>
+        <xs:element ref="genotype" />
+    </xs:sequence>
+    <xs:attribute name="des" type="probability" />
+</xs:complexType>
+<xs:element name="plant" type="t_plant" />
+
+<!-- initial plants -->
+<xs:element name="initial_plants">
+    <xs:complexType>
+        <xs:sequence>
+            <xs:element ref="plant" maxOccurs="unbounded" />
+        </xs:sequence>
+    </xs:complexType>
+</xs:element>
+
+<!-- ideotype -->
+<xs:element name="ideotype" type="t_plant" />
+
+<!-- non negative double type -->
+<xs:simpleType name="distance">
+    <xs:restriction base="xs:double">
+        <xs:minInclusive value="0.0" />
+    </xs:restriction>
+</xs:simpleType>
+
+<!-- distance -->
+<xs:element name="dist">
+    <xs:complexType>
+        <xs:attribute name="cM" type="distance" />
+    </xs:complexType>
+</xs:element>
+
+<!-- distances on one chromosome -->
+<xs:element name="distances_on_chromosome">
+    <xs:complexType>
+        <xs:sequence>
+            <xs:element ref="dist" minOccurs="0" maxOccurs="unbounded" />
+        </xs:sequence>
+    </xs:complexType>
+</xs:element>
+
+<!-- genetic map -->
+<xs:element name="genetic_map">
+    <xs:complexType>
+        <xs:sequence>
+            <xs:element ref="distances_on_chromosome" maxOccurs="unbounded" />
+        </xs:sequence>
+    </xs:complexType>
+</xs:element>
+
+<!-- genestacker input -->
+<xs:element name="genestacker_input">
+    <xs:complexType>
+        <xs:all minOccurs="1" maxOccurs="1">
+            <xs:element ref="initial_plants" />
+            <xs:element ref="ideotype" />
+            <xs:element ref="genetic_map" />
+        </xs:all>
+    </xs:complexType>
+</xs:element>
+
+</xs:schema>

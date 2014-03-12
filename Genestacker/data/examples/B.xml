@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<genestacker_input xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://genestacker.ugent.be/xml/genestacker_input.xsd">
+    <initial_plants>
+        <plant>
+            <genotype>
+                <chromosome>
+                    <haplotype targets="1110" />
+                    <haplotype targets="1110" />
+                </chromosome>
+            </genotype>
+        </plant>
+        <plant>
+            <genotype>
+                <chromosome>
+                    <haplotype targets="0001" />
+                    <haplotype targets="0001" />
+                </chromosome>
+            </genotype>
+        </plant>
+    </initial_plants>
+    <ideotype>
+        <genotype>
+            <chromosome>
+                <haplotype targets="1111" />
+                <haplotype targets="1111" />
+            </chromosome>
+        </genotype>
+    </ideotype>
+    <genetic_map>
+        <distances_on_chromosome>
+            <dist cM="10000" />
+            <dist cM="10000" />
+            <dist cM="1" />
+        </distances_on_chromosome>
+    </genetic_map>
+</genestacker_input>
