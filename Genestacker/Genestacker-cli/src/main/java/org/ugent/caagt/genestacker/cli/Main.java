@@ -31,48 +31,11 @@ import org.apache.commons.compress.utils.IOUtils;
 import org.ugent.caagt.genestacker.Haplotype;
 import org.ugent.caagt.genestacker.Plant;
 import org.ugent.caagt.genestacker.exceptions.GenestackerException;
-import org.ugent.caagt.genestacker.io.CrossingSchemeGraphWriter;
-import org.ugent.caagt.genestacker.io.CrossingSchemeXMLWriter;
-import org.ugent.caagt.genestacker.io.GenestackerInput;
-import org.ugent.caagt.genestacker.io.GenestackerInputParser;
-import org.ugent.caagt.genestacker.io.GenestackerResourceBundle;
-import org.ugent.caagt.genestacker.io.GraphFileFormat;
-import org.ugent.caagt.genestacker.search.CrossingScheme;
-import org.ugent.caagt.genestacker.search.CrossingSchemeDescriptor;
-import org.ugent.caagt.genestacker.search.DefaultDominatesRelation;
-import org.ugent.caagt.genestacker.search.DefaultPopulationSizeTools;
-import org.ugent.caagt.genestacker.search.DominatesRelation;
-import org.ugent.caagt.genestacker.search.ParetoFrontier;
-import org.ugent.caagt.genestacker.search.PlantNode;
-import org.ugent.caagt.genestacker.search.PopulationSizeOnlyDominatesRelation;
-import org.ugent.caagt.genestacker.search.PopulationSizeTools;
-import org.ugent.caagt.genestacker.search.bb.BranchAndBound;
-import org.ugent.caagt.genestacker.search.bb.DefaultSeedLotConstructor;
-import org.ugent.caagt.genestacker.search.bb.SeedLotConstructor;
-import org.ugent.caagt.genestacker.search.bb.heuristics.DefaultDuplicatePlantFilter;
-import org.ugent.caagt.genestacker.search.bb.heuristics.DefaultPlantImprovement;
-import org.ugent.caagt.genestacker.search.bb.heuristics.Heuristic;
-import org.ugent.caagt.genestacker.search.bb.heuristics.HeuristicPopulationSizeBound;
-import org.ugent.caagt.genestacker.search.bb.heuristics.HeuristicSeedLotConstructor;
-import org.ugent.caagt.genestacker.search.bb.heuristics.Heuristics;
-import org.ugent.caagt.genestacker.search.bb.heuristics.ImprovementOverAncestorsHeuristic;
-import org.ugent.caagt.genestacker.search.bb.heuristics.ImprovementSeedLotFilter;
-import org.ugent.caagt.genestacker.search.bb.heuristics.InitialPlantFilter;
-import org.ugent.caagt.genestacker.search.bb.heuristics.OptimalSeedLotHeuristic;
-import org.ugent.caagt.genestacker.search.bb.heuristics.OptimalSeedLotParetoFrontierFactory;
-import org.ugent.caagt.genestacker.search.bb.heuristics.OptimalSubschemeHeuristic;
-import org.ugent.caagt.genestacker.search.bb.heuristics.RestrictedHaplotypesSeedLotFilter;
-import org.ugent.caagt.genestacker.search.bb.heuristics.SeedLotFilter;
-import org.ugent.caagt.genestacker.search.bb.heuristics.StrongGenotypeImprovement;
-import org.ugent.caagt.genestacker.search.bb.heuristics.TreeHeuristic;
-import org.ugent.caagt.genestacker.search.bb.heuristics.WeakGenotypeImprovement;
-import org.ugent.caagt.genestacker.search.constraints.Constraint;
-import org.ugent.caagt.genestacker.search.constraints.MaxCrossingsWithPlant;
-import org.ugent.caagt.genestacker.search.constraints.MaxNumGenerations;
-import org.ugent.caagt.genestacker.search.constraints.MaxPopulationSizePerGeneration;
-import org.ugent.caagt.genestacker.search.constraints.MaxLinkagePhaseAmbiguity;
-import org.ugent.caagt.genestacker.search.constraints.MaxTotalCrossings;
-import org.ugent.caagt.genestacker.search.constraints.NumberOfSeedsPerCrossing;
+import org.ugent.caagt.genestacker.io.*;
+import org.ugent.caagt.genestacker.search.*;
+import org.ugent.caagt.genestacker.search.bb.*;
+import org.ugent.caagt.genestacker.search.bb.heuristics.*;
+import org.ugent.caagt.genestacker.search.constraints.*;
 import org.ugent.caagt.genestacker.util.GenestackerConstants;
 import org.ugent.caagt.genestacker.util.TimeFormatting;
 
@@ -82,6 +45,8 @@ import org.ugent.caagt.genestacker.util.TimeFormatting;
 public class Main
 {
     
+    // options to check before parsing other options
+    private Options checkFirstOptions;
     // required parameters
     private Options requiredOptions;
     // constraints
@@ -143,20 +108,37 @@ public class Main
     private void run(String args[]){
         // setup options
         setupOptions();
-        // create command line parser
-        CommandLineParser parser = new PosixParser();
-        // parse options
+        // parse special options only
         try {
+            // create command line parser that ignores unknown options
+            CommandLineParser parser = new ExtendedPosixParser(true);
+            // parse special options
+            CommandLine cmd = parser.parse(checkFirstOptions, args, false);
+            parseSpecialOptions(cmd);
+        } catch (ParseException ex) {
+            System.err.println("---");
+            System.err.println("!! Invalid usage !!");
+            if(ex.getMessage() != null && ex.getMessage().length()>0){
+                System.err.println(ex.getMessage());
+            }
+            System.err.println("---");
+            printHelp();
+            System.exit(1);
+        }
+        // go ahead and parse full options
+        try {
+            // create command line parser
+            CommandLineParser parser = new PosixParser();
             // parse options
             CommandLine cmd = parser.parse(allOptions, args);
             parseOptions(cmd);
         } catch (ParseException ex){
-            System.out.println("---");
-            System.out.println("Invalid usage:");
+            System.err.println("---");
+            System.err.println("!! Invalid usage !!");
             if(ex.getMessage() != null && ex.getMessage().length()>0){
-                System.out.println(ex.getMessage());
+                System.err.println(ex.getMessage());
             }
-            System.out.println("---");
+            System.err.println("---");
             printHelp();
             System.exit(1);
         }
@@ -363,6 +345,8 @@ public class Main
                                                   .withDescription("specifies the number of threads used for extension of a partial scheme through crossings, by default this value is read "
                                                                     + "from the environment variable OMP_NUM_THREADS, if set, else it defaults to the number of available threads on the machine")
                                                   .create("thr");
+        Option versionOption = new Option("version", "version", false, "print Gene Stacker version (ignores other options)");
+        Option helpOption = new Option("help", "help", false, "print help (overrides -version, ignores other options)");
         
         miscOptions = new Options();
         miscOptions.addOption(debugOption);
@@ -373,6 +357,12 @@ public class Main
         miscOptions.addOption(runtimeLimitOption);
         miscOptions.addOption(minPopSizeOnlyOption);
         miscOptions.addOption(numThreadsOption);
+        miscOptions.addOption(versionOption);
+        miscOptions.addOption(helpOption);
+        // indicate which options have to be checked prior to the other options
+        checkFirstOptions = new Options();
+        checkFirstOptions.addOption(versionOption);
+        checkFirstOptions.addOption(helpOption);
         
         // group all options
         
@@ -397,6 +387,66 @@ public class Main
         while(i.hasNext()){
             allOptions.addOption((Option)i.next());
         }
+        
+    }
+    
+    // parse "special" options that ignore all other (possibly required) options
+    private void parseSpecialOptions(CommandLine cmd) {
+        // check help
+        if(cmd.hasOption("help")){
+            printHelp();
+            System.exit(0);
+        }
+        // check version
+        if(cmd.hasOption("version")){
+            printVersion();
+            System.exit(0);
+        }
+    }
+    
+    private void printVersion(){
+        System.out.println("Gene Stacker v" + PropertiesProvider.getVersion());
+    }
+    
+    private void printHelp(){
+        
+        System.out.println("");
+	System.out.println("usage:\tgenestacker [options] <input-file> <output>");
+	System.out.println("");
+        System.out.println("\texample: The following command will read the initial plants, genetic map" +
+                           "\n\tand desired ideotype from the file 'input.xml' and store the optimized" +
+                           "\n\tcrossing scheme(s) in a ZIP file 'output.zip'. The maximum number of" +
+                           "\n\tgenerations of such crossing scheme is set to 3 and the desired probability" +
+                           "\n\tof success is 0.9. In this case, no further optional constraints are given.");
+	System.out.println("");
+	System.out.println("\t\tgenestacker -g 3 -s 0.9 input.xml output");
+	System.out.println("");
+        System.out.println("\tor (long version)");
+        System.out.println("");
+	System.out.println("\t\tgenestacker --max-gen 3 --success-prob 0.9 input.xml output");
+        System.out.println("");
+        
+        HelpFormatter f = new HelpFormatter();
+        f.setWidth(100);
+        f.setSyntaxPrefix("");
+        
+        // print required params
+        f.printHelp("Required parameters:", requiredOptions);
+        System.out.println("");
+        
+        // print constraints
+        f.printHelp("Constraints:", constraintOptions);
+        System.out.println("");
+        
+        // print heuristic options
+        f.printHelp("Search heuristic presets:", heuristicPresetsOptions);
+        System.out.println("");
+        f.printHelp("Individual search heuristics:", individualHeuristicOptions);
+        System.out.println("");
+        
+        // print misc options
+        f.printHelp("Misc Options:", miscOptions);
+        System.out.println("");
         
     }
     
@@ -773,48 +823,6 @@ public class Main
                 numThreads = Runtime.getRuntime().availableProcessors();
             }
         }
-        
-    }
-    
-    private void printHelp(){
-        
-        System.out.println("");
-	System.out.println("usage:\tgenestacker [options] <input-file> <output>");
-	System.out.println("");
-        System.out.println("\texample: The following command will read the initial plants, genetic map" +
-                           "\n\tand desired ideotype from the file 'input.xml' and store the optimized" +
-                           "\n\tcrossing scheme(s) in a ZIP file 'output.zip'. The maximum number of" +
-                           "\n\tgenerations of such crossing scheme is set to 3 and the desired probability" +
-                           "\n\tof success is 0.9. In this case, no further optional constraints are given.");
-	System.out.println("");
-	System.out.println("\t\tgenestacker -g 3 -s 0.9 input.xml output");
-	System.out.println("");
-        System.out.println("\tor (long version)");
-        System.out.println("");
-	System.out.println("\t\tgenestacker --max-gen 3 --success-prob 0.9 input.xml output");
-        System.out.println("");
-        
-        HelpFormatter f = new HelpFormatter();
-        f.setWidth(100);
-        f.setSyntaxPrefix("");
-        
-        // print required params
-        f.printHelp("Required parameters:", requiredOptions);
-        System.out.println("");
-        
-        // print constraints
-        f.printHelp("Constraints:", constraintOptions);
-        System.out.println("");
-        
-        // print heuristic options
-        f.printHelp("Search heuristic presets:", heuristicPresetsOptions);
-        System.out.println("");
-        f.printHelp("Individual search heuristics:", individualHeuristicOptions);
-        System.out.println("");
-        
-        // print misc options
-        f.printHelp("Misc Options:", miscOptions);
-        System.out.println("");
         
     }
     

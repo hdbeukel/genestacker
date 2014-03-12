@@ -61,7 +61,7 @@ Documentation
 For documentation and examples of how to use Gene Stacker, see http://genestacker.ugent.be. Running
 
 ```
-java -jar bin/genestacker.jar
+java -jar bin/genestacker.jar -help
 ```
 
 prints brief usage information including an overview of all possible parameters.

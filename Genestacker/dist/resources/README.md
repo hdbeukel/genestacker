@@ -20,7 +20,7 @@ For documentation and examples of how to use Gene Stacker, see http://genestacke
 Running
 
 ```
-java -jar genestacker.jar
+java -jar genestacker.jar -help
 ```
 
 prints brief usage information including an overview of all possible parameters.

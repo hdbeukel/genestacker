@@ -6,7 +6,12 @@ Version 1.5 (under development)
 
 _**Note**: v1.5 is currently still under development_
 
- - Extended command line messages (including an explicit alert if the runtime limit has been exceeded)
+ - Added new command line options:
+   - `-help` prints help information
+   - `-version` outputs the Gene Stacker version
+   - ...
+ - Extended command line messages (including an explicit alert if the runtime limit
+   has been exceeded)
  - ...
 
 Version 1.4 (06 December 2013)
