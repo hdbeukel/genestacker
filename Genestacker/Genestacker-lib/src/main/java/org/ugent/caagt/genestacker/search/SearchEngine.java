@@ -18,12 +18,17 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.ugent.caagt.genestacker.GeneticMap;
 import org.ugent.caagt.genestacker.Genotype;
 import org.ugent.caagt.genestacker.Plant;
 import org.ugent.caagt.genestacker.exceptions.GenestackerException;
 import org.ugent.caagt.genestacker.io.GenestackerInput;
 import org.ugent.caagt.genestacker.io.GraphFileFormat;
+import org.ugent.caagt.genestacker.log.SearchStartedMessage;
+import org.ugent.caagt.genestacker.log.SearchStoppedMessage;
+import org.ugent.caagt.genestacker.util.DebugUtils;
 import org.ugent.caagt.genestacker.util.GenestackerConstants;
 
 /**
@@ -33,6 +38,9 @@ import org.ugent.caagt.genestacker.util.GenestackerConstants;
  */
 public abstract class SearchEngine{
     
+    // logger
+    Logger logger = LogManager.getLogger(SearchEngine.class);
+    
     // input
     protected Collection<Plant> initialPlants;
     protected Genotype ideotype;
@@ -40,9 +48,7 @@ public abstract class SearchEngine{
     
     // search listeners
     protected final List<SearchListener> searchListeners;
-    
-    // debug mode
-    protected final boolean DEBUG;
+
     // graph file format for debug output
     protected GraphFileFormat graphFileFormat;
     
@@ -57,15 +63,13 @@ public abstract class SearchEngine{
     }
     
     public SearchEngine(List<Plant> initialPlants, Genotype ideotype, GeneticMap map){
-        this(initialPlants, ideotype, map, false, GraphFileFormat.PDF);
+        this(initialPlants, ideotype, map, GraphFileFormat.PDF);
     }
     
-    public SearchEngine(List<Plant> initialPlants, Genotype ideotype, GeneticMap map, 
-                                    boolean debug, GraphFileFormat graphFileFormat){
+    public SearchEngine(List<Plant> initialPlants, Genotype ideotype, GeneticMap map, GraphFileFormat graphFileFormat){
         this.initialPlants = initialPlants;
         this.ideotype = ideotype;
         this.map = map;
-        DEBUG = debug;
         this.graphFileFormat = graphFileFormat;
         searchListeners = new LinkedList<>();
     }
@@ -77,16 +81,24 @@ public abstract class SearchEngine{
                                                     throws GenestackerException{
         this.runtimeLimit = runtimeLimit;
         startTime = System.currentTimeMillis();
+        logger.info(new SearchStartedMessage());
         fireSearchStarted();
         ParetoFrontier f = runSearch(runtimeLimit, numThreads);
+        
+        // if debugging, wait for enter before finishing
+        if(logger.isDebugEnabled()){
+            DebugUtils.waitForEnter("[Press enter to finish search run]");
+        }
+        
         stopTime = System.currentTimeMillis();
         fireSearchStopped();
+        logger.info(new SearchStoppedMessage(stopTime-startTime));
         
         return f;
     }
     
     // Override this method in each search engine to define its behavior
-    public abstract ParetoFrontier runSearch(long runtimeLimit, int numThreads)
+    protected abstract ParetoFrontier runSearch(long runtimeLimit, int numThreads)
                                                                throws GenestackerException;
     
     public boolean runtimeLimitExceeded(){
@@ -115,10 +127,6 @@ public abstract class SearchEngine{
         return stopTime;
     }
     
-    public boolean debugMode(){
-        return DEBUG;
-    }
-    
     public void addSearchListener(SearchListener l){
         synchronized(searchListeners){
             searchListeners.add(l);
@@ -131,11 +139,11 @@ public abstract class SearchEngine{
         }
     }
     
-    public void fireSearchMessage(String message, SearchMessageType type){
+    public void fireSearchMessage(String message){
         synchronized(searchListeners){
             Iterator<SearchListener> it = searchListeners.iterator();
             while(it.hasNext()){
-                it.next().searchMessage(message, type);
+                it.next().searchMessage(message);
             }
         }
     }

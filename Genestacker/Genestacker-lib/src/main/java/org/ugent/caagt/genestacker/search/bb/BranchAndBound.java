@@ -30,37 +30,21 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.Marker;
+import org.apache.logging.log4j.MarkerManager;
 import org.ugent.caagt.genestacker.GeneticMap;
 import org.ugent.caagt.genestacker.Genotype;
 import org.ugent.caagt.genestacker.Plant;
 import org.ugent.caagt.genestacker.SeedLot;
-import org.ugent.caagt.genestacker.exceptions.CrossingSchemeException;
-import org.ugent.caagt.genestacker.exceptions.GenestackerException;
-import org.ugent.caagt.genestacker.exceptions.GenotypeException;
-import org.ugent.caagt.genestacker.exceptions.SearchException;
-import org.ugent.caagt.genestacker.io.CrossingSchemeGraphWriter;
-import org.ugent.caagt.genestacker.io.CrossingSchemeXMLWriter;
-import org.ugent.caagt.genestacker.io.GenestackerInput;
-import org.ugent.caagt.genestacker.io.GraphFileFormat;
-import org.ugent.caagt.genestacker.search.CrossingNode;
-import org.ugent.caagt.genestacker.search.CrossingScheme;
-import org.ugent.caagt.genestacker.search.CrossingSchemeAlternatives;
-import org.ugent.caagt.genestacker.search.CrossingSchemeDescriptor;
-import org.ugent.caagt.genestacker.search.DefaultDominatesRelation;
-import org.ugent.caagt.genestacker.search.DominatesRelation;
-import org.ugent.caagt.genestacker.search.ParetoFrontier;
-import org.ugent.caagt.genestacker.search.PlantNode;
-import org.ugent.caagt.genestacker.search.PopulationSizeTools;
-import org.ugent.caagt.genestacker.search.SearchEngine;
-import org.ugent.caagt.genestacker.search.SearchMessageType;
-import org.ugent.caagt.genestacker.search.SeedLotCache;
-import org.ugent.caagt.genestacker.search.SeedLotNode;
-import org.ugent.caagt.genestacker.search.SelfingNode;
-import org.ugent.caagt.genestacker.search.bb.heuristics.Heuristics;
-import org.ugent.caagt.genestacker.search.bb.heuristics.PlantCollectionFilter;
-import org.ugent.caagt.genestacker.search.bb.heuristics.SeedLotFilter;
-import org.ugent.caagt.genestacker.search.constraints.Constraint;
-import org.ugent.caagt.genestacker.search.constraints.NumberOfSeedsPerCrossing;
+import org.ugent.caagt.genestacker.exceptions.*;
+import org.ugent.caagt.genestacker.io.*;
+import org.ugent.caagt.genestacker.search.*;
+import org.ugent.caagt.genestacker.search.bb.heuristics.*;
+import org.ugent.caagt.genestacker.search.constraints.*;
+import org.ugent.caagt.genestacker.util.DebugUtils;
+import org.ugent.caagt.genestacker.util.TimeFormatting;
 
 /**
  * Abstract branch and bound search engine.
@@ -68,6 +52,12 @@ import org.ugent.caagt.genestacker.search.constraints.NumberOfSeedsPerCrossing;
  * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
  */
 public class BranchAndBound extends SearchEngine {
+    
+    // logger
+    private Logger logger = LogManager.getLogger(BranchAndBound.class);
+    // log markers
+    private static final Marker VERBOSE = MarkerManager.getMarker("VERBOSE");
+    private static final Marker VERY_VERBOSE = MarkerManager.getMarker("VERY_VERBOSE", VERBOSE);
     
     // previously considered schemes
     private List<CrossingSchemeAlternatives> previousSchemes;
@@ -116,23 +106,23 @@ public class BranchAndBound extends SearchEngine {
                 null, seedLotConstructor, new DefaultDominatesRelation(), false);
     }
     
-    public BranchAndBound(GenestackerInput input, boolean debug, GraphFileFormat graphFileFormat,
+    public BranchAndBound(GenestackerInput input, GraphFileFormat graphFileFormat,
                                                 PopulationSizeTools popSizeTools,  List<Constraint> constraints,
                                                 NumberOfSeedsPerCrossing maxNumSeedsPerCrossing,
                                                 Heuristics heuristics, List<SeedLotFilter> seedLotFilters,
                                                 PlantCollectionFilter initialPlantFilter, SeedLotConstructor seedLotConstructor,
                                                 DominatesRelation<CrossingSchemeDescriptor> dominatesRelation,
                                                 boolean homozygousIdeotypeParents){
-        super(input.getInitialPlants(), input.getIdeotype(), input.getGeneticMap(), debug, graphFileFormat);
+        super(input.getInitialPlants(), input.getIdeotype(), input.getGeneticMap(), graphFileFormat);
         init(popSizeTools, constraints, maxNumSeedsPerCrossing, heuristics, seedLotFilters,
                 initialPlantFilter, null, seedLotConstructor, dominatesRelation, homozygousIdeotypeParents);
     }
     
-    public BranchAndBound(GenestackerInput input, boolean debug, GraphFileFormat graphFileFormat, List<Constraint> constraints, PopulationSizeTools popSizeTools,
+    public BranchAndBound(GenestackerInput input, GraphFileFormat graphFileFormat, List<Constraint> constraints, PopulationSizeTools popSizeTools,
                                 NumberOfSeedsPerCrossing maxNumSeedsPerCrossing, Heuristics heuristics, List<SeedLotFilter> seedLotFilters,
                                 PlantCollectionFilter initialPlantFilter, ParetoFrontier initialFrontier, SeedLotConstructor seedLotConstructor,
                                 DominatesRelation<CrossingSchemeDescriptor> dominatesRelation, boolean homozygousIdeotypeParents){
-        super(input.getInitialPlants(), input.getIdeotype(), input.getGeneticMap(), debug, graphFileFormat);
+        super(input.getInitialPlants(), input.getIdeotype(), input.getGeneticMap(), graphFileFormat);
         init(popSizeTools, constraints, maxNumSeedsPerCrossing, heuristics, seedLotFilters,
                 initialPlantFilter, initialFrontier, seedLotConstructor, dominatesRelation, homozygousIdeotypeParents);
     }
@@ -206,8 +196,8 @@ public class BranchAndBound extends SearchEngine {
         
         // create thread pool for scheme crossing
         
-        // inform user about number of cross workers used
-        fireSearchMessage("# Cross workers: " + numThreads, SearchMessageType.INFO);
+        // inform user about number of cross workers used (Verbose)
+        logger.info(VERBOSE, "Number of threads used for extending partial schemes: {}", numThreads);
         ExecutorService crossPool = Executors.newFixedThreadPool(numThreads);
         // cross worker future set
         Set<Future<List<CrossingSchemeAlternatives>>> futures = new HashSet<>();
@@ -223,13 +213,15 @@ public class BranchAndBound extends SearchEngine {
         // apply initial plant filter, if any
         if(initialPlantFilter != null){
 
-            fireSearchMessage("Filtering initial plants ...", SearchMessageType.INFO);
+            // verbose
+            logger.info(VERBOSE, "Filtering initial plants ...");
             
             initialPlants = initialPlantFilter.filter(initialPlants);
             
-            fireSearchMessage("Retained initial plants:", SearchMessageType.INFO);
+            //verbose
+            logger.info(VERBOSE, "Retained {} initial plants (see below)", initialPlants.size());
             for(Plant p : initialPlants){
-                fireSearchMessage("\n" + p.toString(), SearchMessageType.INFO);
+                logger.info(VERBOSE, "\n{}", p);
             }
             
         }
@@ -256,16 +248,20 @@ public class BranchAndBound extends SearchEngine {
             // get next scheme from queue
             CrossingSchemeAlternatives cur = schemeQueue.poll();
             
-            // fire progression message
-            fireSearchMessage("cur frontier: " + solutionManager.getFrontier().getNumSchemes()
-                                + " ### prog: " + previousSchemes.size()
-                                + " (" + schemeQueue.size() + ")"
-                                + " ### cur scheme: " + cur,
-                                    SearchMessageType.PROGRESS);
-            if(DEBUG){
+            // fire progression message (verbose)
+            logger.info(VERBOSE, "num solutions: {} ### prog: {} ({}) ### cur scheme: {} - T = {}",
+                                 solutionManager.getFrontier().getNumSchemes(),
+                                 previousSchemes.size(),
+                                 schemeQueue.size(),
+                                 cur,
+                                 TimeFormatting.formatTime(System.currentTimeMillis()-getStart()));
+            // debug: create diagram of current scheme (all alternatives)
+            if(logger.isDebugEnabled()){
                 for(int i=0; i<cur.nrOfAlternatives(); i++){
-                    fireSearchMessage("Cur scheme alt " + i + ": " + writeDiagram(cur.getAlternatives().get(i)), SearchMessageType.DEBUG);
+                    logger.debug("Cur scheme (alternative {}): {}", i+1, writeDiagram(cur.getAlternatives().get(i)));
                 }
+                // wait for enter
+                DebugUtils.waitForEnter();
             }
             
             // delete possible bounded alternatives
@@ -316,15 +312,17 @@ public class BranchAndBound extends SearchEngine {
                     for(int w=0; w<numThreads; w++){
                         // submit worker
                         futures.add(crossPool.submit(new CrossWorker(previousSchemesIterator, cur, solutionManager, map)));
-                        fireSearchMessage("Launched cross worker " + (w+1) + " of " + numThreads, SearchMessageType.VERBOSE);
+                        // very verbose
+                        logger.info(VERY_VERBOSE, "Launched cross worker {} of {}", w+1, numThreads);
                     }
                     // wait for completion of workers
-                    int w = 1;
+                    int w = 0;
                     for(Future<List<CrossingSchemeAlternatives>> fut : futures){
                         try {
                             // wait for next worker to complete and register its solutions
                             registerNewSchemes(fut.get(), solutionManager);
-                            fireSearchMessage("Cross worker " + w + " of " + numThreads + " finished!", SearchMessageType.VERBOSE);
+                            // very verbose
+                            logger.info(VERY_VERBOSE, "{}/{} cross workers finished", w+1, numThreads);
                             w++;
                         } catch (InterruptedException | ExecutionException ex) {
                             // something went wrong with the cross workers
@@ -341,7 +339,8 @@ public class BranchAndBound extends SearchEngine {
         }
         
         if(runtimeLimitExceeded()){
-            fireSearchMessage("Runtime limit exceeded", SearchMessageType.INFO);
+            // info
+            logger.info("Runtime limit exceeded");
         }
         
         // shutdown thread pool
@@ -373,10 +372,16 @@ public class BranchAndBound extends SearchEngine {
                         // register new solution
                         boolean frontierUpdated = solManager.registerSolution(alt);
                         if(frontierUpdated){
-                            fireSearchMessage("Pareto frontier updated", SearchMessageType.PROGRESS);
+                            // info
+                            logger.info("Pareto frontier updated ({} solution(s)) - T = {}",
+                                            solManager.getFrontier().getNumSchemes(),
+                                            TimeFormatting.formatTime(System.currentTimeMillis()-getStart()));
                         }
-                        if(DEBUG){
-                            fireSearchMessage("New solution: " + writeDiagram(alt), SearchMessageType.DEBUG);
+                        // debug: create diagram of new solution
+                        if(logger.isDebugEnabled()){
+                            logger.debug("New solution: {}", writeDiagram(alt));
+                            // wait for enter
+                            DebugUtils.waitForEnter();
                         }
                     }
                     // check if further extension of alternative should be bounded
@@ -423,7 +428,8 @@ public class BranchAndBound extends SearchEngine {
             Set<Genotype> s = new HashSet<>();
             s.add(solManager.getIdeotype());
             sl = seedLotConstructor.partialCross(p1.getGenotype(), p2.getGenotype(), s);
-            fireSearchMessage("|-- Generated new partial seed lot: " + sl.nrOfGenotypes(), SearchMessageType.VERBOSE);
+            // very verbose
+            logger.info(VERY_VERBOSE, "|-- Generated new partial seed lot (ideotype only)");
             // note: do not cache this partial seed lot (not general)
         }  else {
             // lookup full seed lot in cache
@@ -432,15 +438,18 @@ public class BranchAndBound extends SearchEngine {
                 // not yet present in cache, create full seed lot
                 sl = seedLotConstructor.cross(p1.getGenotype(), p2.getGenotype());
                 int unfiltered = sl.nrOfGenotypes();
-                fireSearchMessage("|-- Generated new seed lot: " + unfiltered, SearchMessageType.VERBOSE);
+                // very verbose
+                logger.info(VERY_VERBOSE, "|-- Generated new seed lot: {}", unfiltered);
                 // apply seed lot filters
                 sl = solManager.filterSeedLot(sl);
-                fireSearchMessage("|-- Filtered seed lot: " + unfiltered + " --> " + sl.nrOfGenotypes(), SearchMessageType.VERBOSE);
+                // very verbose
+                logger.info(VERY_VERBOSE, "|-- Filtered seed lot: {} --> {}", unfiltered, sl.nrOfGenotypes());
                 // store in cache
                 seedLotCache.cache(p1.getGenotype(), p2.getGenotype(), sl);
             } else {
                 // found seed lot in cache
-                fireSearchMessage("|-- Cached seed lot size: " + sl.nrOfGenotypes(), SearchMessageType.VERBOSE);
+                // very verbose
+                logger.info(VERY_VERBOSE, "|-- Cached seed lot size: {}", sl.nrOfGenotypes());
             }
         }
         return sl;

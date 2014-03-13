@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Log4j2 settings for option 'very verbose'.
+-->
+<Configuration>
+    <!-- no filters -->
+    <!-- write logs to console -->
+    <Appenders>
+        <Console name="STDOUT" target="SYSTEM_OUT">
+            <!-- log message format -->
+            <PatternLayout pattern="[%level] %m%n"/>
+        </Console>
+    </Appenders>
+    <Loggers>
+        <!-- only log info level or higher (e.g. error) -->
+        <Root level="info">
+            <AppenderRef ref="STDOUT"/>
+        </Root>
+    </Loggers>
+</Configuration>

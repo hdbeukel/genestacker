@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Log4j2 default settings.
+-->
+<Configuration>
+    <!-- by default, ignore all verbose messages (includes very verbose messages) -->
+    <Filters>
+        <MarkerFilter marker="VERBOSE" onMatch="DENY" onMismatch="NEUTRAL" />
+    </Filters>
+    <!-- write logs to console -->
+    <Appenders>
+        <Console name="STDOUT" target="SYSTEM_OUT">
+            <!-- log message format -->
+            <PatternLayout pattern="[%level] %m%n"/>
+        </Console>
+    </Appenders>
+    <Loggers>
+        <!-- by default, only log info level or higher (e.g. error) -->
+        <Root level="info">
+            <AppenderRef ref="STDOUT"/>
+        </Root>
+    </Loggers>
+</Configuration>

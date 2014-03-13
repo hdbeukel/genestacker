@@ -23,7 +23,7 @@ package org.ugent.caagt.genestacker.search;
 public class AbstractSearchListener implements SearchListener {
 
     @Override
-    public void searchMessage(String message, SearchMessageType type) {
+    public void searchMessage(String message) {
         // ignore event
     }
     

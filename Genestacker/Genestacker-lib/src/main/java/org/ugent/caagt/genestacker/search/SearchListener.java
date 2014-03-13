@@ -20,7 +20,7 @@ package org.ugent.caagt.genestacker.search;
  */
 public interface SearchListener {
 
-    public void searchMessage(String message, SearchMessageType type);
+    public void searchMessage(String message);
     
     public void searchStarted();
     

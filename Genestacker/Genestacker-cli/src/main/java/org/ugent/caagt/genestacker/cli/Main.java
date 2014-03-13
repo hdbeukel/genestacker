@@ -28,6 +28,9 @@ import org.apache.commons.compress.archivers.ArchiveOutputStream;
 import org.apache.commons.compress.archivers.ArchiveStreamFactory;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.utils.IOUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.ugent.caagt.genestacker.Haplotype;
 import org.ugent.caagt.genestacker.Plant;
 import org.ugent.caagt.genestacker.exceptions.GenestackerException;
@@ -45,6 +48,9 @@ import org.ugent.caagt.genestacker.util.TimeFormatting;
 public class Main
 {
     
+    // logger
+    private Logger logger = LogManager.getLogger(Main.class);
+    
     // options to check before parsing other options
     private Options checkFirstOptions;
     // required parameters
@@ -54,6 +60,8 @@ public class Main
     // heuristic options
     private Options heuristicPresetsOptions;
     private Options individualHeuristicOptions;
+    // verbosity options
+    private Options verbosityOptions;
     // general options
     private Options miscOptions;
     // groups all options
@@ -83,8 +91,6 @@ public class Main
     // option for heuristic seed lot constructor
     private int maxNumCrossovers = GenestackerConstants.UNLIMITED_CROSSOVERS;
     // misc options
-    private boolean debug;
-    private boolean verbose;
     private GraphFileFormat graphFileFormat;
     private boolean useKosambiMap;
     private boolean tree;
@@ -116,12 +122,7 @@ public class Main
             CommandLine cmd = parser.parse(checkFirstOptions, args, false);
             parseSpecialOptions(cmd);
         } catch (ParseException ex) {
-            System.err.println("---");
-            System.err.println("!! Invalid usage !!");
-            if(ex.getMessage() != null && ex.getMessage().length()>0){
-                System.err.println(ex.getMessage());
-            }
-            System.err.println("---");
+            logger.error("Invalid usage (failed to parse options)", ex);
             printHelp();
             System.exit(1);
         }
@@ -133,12 +134,7 @@ public class Main
             CommandLine cmd = parser.parse(allOptions, args);
             parseOptions(cmd);
         } catch (ParseException ex){
-            System.err.println("---");
-            System.err.println("!! Invalid usage !!");
-            if(ex.getMessage() != null && ex.getMessage().length()>0){
-                System.err.println(ex.getMessage());
-            }
-            System.err.println("---");
+            logger.error("Invalid usage (failed to parse options)", ex);
             printHelp();
             System.exit(1);
         }
@@ -150,35 +146,15 @@ public class Main
             search();
         } catch (GenestackerException ex){
             // report genestacker errors
-            System.err.println("--------------------");
-            System.err.println("!! Terminated with error !!");
-            if(ex.getMessage() != null && ex.getMessage().length()>0){
-                System.err.println("[ERROR] " + ex.getMessage());
-            }
-            System.err.println("Exception: " + ex.getClass());
-            System.err.println("--------------------");
+            logger.error("Fatal error occurred while running Gene Stacker", ex);            
             System.exit(1);
         } catch (IOException | ArchiveException ex){
             // report IO errors
-            System.err.println("--------------------");
-            System.err.println("!! Input/output error !!");
-            if(ex.getMessage() != null && ex.getMessage().length()>0){
-                System.err.println("[ERROR] " + ex.getMessage());
-            }
-            System.err.println("Exception: " + ex.getClass());
-            System.err.println("--------------------");
+            logger.error("Input/output error", ex);            
             System.exit(1);
         } catch (Exception ex){
             // unexpected error (catch-all)
-            System.err.println("--------------------");
-            System.err.println("!! Unexpected error !!");
-            if(ex.getMessage() != null && ex.getMessage().length()>0){
-                System.err.println("[ERROR] " + ex.getMessage());
-            }
-            System.err.println("Exception: " + ex.getClass());
-            System.err.println("Strack trace: ");
-            ex.printStackTrace();
-            System.err.println("--------------------");
+            logger.error("Unexpected error", ex);
             System.exit(1);
         }
     }
@@ -319,10 +295,20 @@ public class Main
         heuristicPresetsOptions.addOption(heuristicsOptionFaster);
         heuristicPresetsOptions.addOption(heuristicsOptionFastest);
         
+        // setup verbosity options
+        
+        Option verboseOption = new Option("v", "verbose", false, "be extra verbose");
+        Option veryVerboseOption = new Option("vv", "very-verbose", false, "be ridiculously verbose (overrides -v,--verbose)");
+        Option debugOption = new Option("d", "debug", false, "run in debug mode (overrides -vv,--very-verbose), which will create"
+                                            + " diagrams for every partial scheme taken from the queue and any newly reported solution");
+        
+        verbosityOptions = new Options();
+        verbosityOptions.addOption(verboseOption);
+        verbosityOptions.addOption(veryVerboseOption);
+        verbosityOptions.addOption(debugOption);
+        
         // setup misc options
         
-        Option debugOption = new Option("d", "debug", false, "run search engine in debug mode");
-        Option verboseOption = new Option("v", "verbose", false, "be extra verbose");
         Option graphFileFormatOption = OptionBuilder.withLongOpt("graph-file-format")
                                                   .hasArg()
                                                   .withArgName("f")
@@ -349,8 +335,6 @@ public class Main
         Option helpOption = new Option("help", "help", false, "print help (overrides -version, ignores other options)");
         
         miscOptions = new Options();
-        miscOptions.addOption(debugOption);
-        miscOptions.addOption(verboseOption);
         miscOptions.addOption(graphFileFormatOption);
         miscOptions.addOption(kosambiOption);
         miscOptions.addOption(treeOption);
@@ -380,6 +364,10 @@ public class Main
             allOptions.addOption((Option)i.next());
         }
         i = heuristicPresetsOptions.getOptions().iterator();
+        while(i.hasNext()){
+            allOptions.addOption((Option)i.next());
+        }
+        i = verbosityOptions.getOptions().iterator();
         while(i.hasNext()){
             allOptions.addOption((Option)i.next());
         }
@@ -442,6 +430,10 @@ public class Main
         f.printHelp("Search heuristic presets:", heuristicPresetsOptions);
         System.out.println("");
         f.printHelp("Individual search heuristics:", individualHeuristicOptions);
+        System.out.println("");
+        
+        // print verbosity options
+        f.printHelp("Verbosity Options:", verbosityOptions);
         System.out.println("");
         
         // print misc options
@@ -644,7 +636,7 @@ public class Main
             h1b = true;
             individualHeuristicsSpecified++;
             // overrides h1a
-            System.out.println("[WARNING] -h1b,--strong-improvement overrides -h1a,--weak-improvement.");
+            logger.warn("Option -h1b,--strong-improvement overrides -h1a,--weak-improvement");
             h1a = false;
         }
         if(cmd.hasOption("filter-seed-lots-weak")){
@@ -655,7 +647,7 @@ public class Main
             h2b = true;
             individualHeuristicsSpecified++;
             // overrides h2a
-            System.out.println("[WARNING] -h2b,--filter-seed-lots-strong overrides -h2a,--filter-seed-lots-weak.");
+            logger.warn("Option -h2b,--filter-seed-lots-strong overrides -h2a,--filter-seed-lots-weak");
             h2a = false;
         }
         if(cmd.hasOption("optimal-subscheme")){
@@ -665,15 +657,15 @@ public class Main
         if(cmd.hasOption("optimal-subscheme-seeded-1")){
             h3s1 = true;
             // overrides h3
-            System.out.println("[WARNING] -h3s1,--optimal-subscheme-seeded-1 overrides -h3,--optimal-subscheme.");
+            logger.warn("Option -h3s1,--optimal-subscheme-seeded-1 overrides -h3,--optimal-subscheme");
             h3 = false;
             individualHeuristicsSpecified++;
         }
         if(cmd.hasOption("optimal-subscheme-seeded-2")){
             h3s2 = true;
             // overrides h3 and h3s1
-            System.out.println("[WARNING] -h3s2,--optimal-subscheme-seeded-2 overrides -h3,--optimal-subscheme.");
-            System.out.println("[WARNING] -h3s2,--optimal-subscheme-seeded-2 overrides -h3s1,--optimal-subscheme-seeded-1.");
+            logger.warn("Option -h3s2,--optimal-subscheme-seeded-2 overrides -h3,--optimal-subscheme");
+            logger.warn("Option -h3s2,--optimal-subscheme-seeded-2 overrides -h3s1,--optimal-subscheme-seeded-1");
             h3s1 = false;
             h3 = false;
             individualHeuristicsSpecified++;
@@ -689,7 +681,7 @@ public class Main
         if(cmd.hasOption("consistent-heuristic-seedlot-construction")){
             h5c = true;
             // overrides h5
-            System.out.println("[WARNING] -h5c,--consistent-heuristic-seedlot-construction overrides  -h5,--heuristic-seedlot-construction.");
+            logger.warn("Option -h5c,--consistent-heuristic-seedlot-construction overrides  -h5,--heuristic-seedlot-construction");
             h5 = false;
             individualHeuristicsSpecified++;
         }
@@ -737,13 +729,27 @@ public class Main
             }
         }   
         
-        // ### parse misc options
+        // ### parse verbosity options
+        
+        // check for -verbose (and no -very-verbose nor -debug)
+        if(cmd.hasOption("verbose") && !cmd.hasOption("very-verbose") && !cmd.hasOption("debug")){
+            // load verbose log settings
+            Configurator.initialize("config", null, "log4j2-verbose.xml");
+        }
+        
+        // check for -very-verbose (and no -debug)
+        if(cmd.hasOption("very-verbose") && !cmd.hasOption("debug")){
+            // load very verbose log settings
+            Configurator.initialize("config", null, "log4j2-very-verbose.xml");
+        }
         
         // check for -debug
-        debug = cmd.hasOption("debug");
+        if(cmd.hasOption("debug")){
+            // load debug log settings
+            Configurator.initialize("config", null, "log4j2-debug.xml");
+        }
         
-        // check for -verbose
-        verbose = cmd.hasOption("verbose");
+        // ### parse misc options
         
         // check for -graph-file-format
         graphFileFormat = GraphFileFormat.PDF; // defaults to pdf
@@ -768,7 +774,7 @@ public class Main
                     break;
                 default:
                     graphFileFormat = GraphFileFormat.PDF;
-                    System.err.println("[WARNING] Unknown graph output file format specified, sticking to default (pdf).");
+                    logger.warn("[Unknown graph output file format specified, sticking to default (pdf)");
                     break;
             }
         }
@@ -780,7 +786,7 @@ public class Main
         tree = cmd.hasOption("tree");
         if(tree){
             // switch of initial parent filtering in case of tree structure
-            System.out.println("[WARNING] Option -tree set: producing tree structures only; overrides -h0,--filter-initial-plants.");
+            logger.warn("Option -tree set: producing tree structures only; overrides -h0,--filter-initial-plants");
             h0 = false;
         }
         
@@ -850,12 +856,12 @@ public class Main
         /* PARSE INPUT FILE */
         /********************/
 
-        System.out.println("# Parsing input file ...");
+        logger.info("Parsing input file ...");
         
         GenestackerInputParser inputParser = new GenestackerInputParser();
         GenestackerInput input = inputParser.parse(new File(inputFile), useKosambiMap);
         if(useKosambiMap){
-            System.out.println("[INFO] Using Kosambi mapping function (instead of default: Haldane).");
+            logger.info("Using Kosambi mapping function (instead of default: Haldane)");
         }
         
         /************************/
@@ -868,7 +874,7 @@ public class Main
         ParetoFrontier frontier = runBranchAndBound(input, runtimeLimit);
         
         // print total runtime
-        System.out.println("\n# Total runtime = " + TimeFormatting.formatTime(totalRuntime) + "\n");
+        logger.info("Total runtime = {}", TimeFormatting.formatTime(totalRuntime));
         
         // output results
         output(frontier, outputFile, inZIPFolder);
@@ -876,7 +882,7 @@ public class Main
     
     private ParetoFrontier runBranchAndBound(GenestackerInput input, long timeLimit) throws GenestackerException{
         // print applied heuristics/filters info
-        System.out.println("# Running Branch and Bound engine " + formatActivatedHeuristicsInfo() + " ...");
+        logger.info("Running Branch and Bound engine {} ...", formatActivatedHeuristicsInfo());
         
         // init dominates relation
         DominatesRelation<CrossingSchemeDescriptor> dominatesRelation;
@@ -884,7 +890,7 @@ public class Main
             // only minimize population size (ignore linkage phase ambiguity and number of generations)
             dominatesRelation = new PopulationSizeOnlyDominatesRelation();
             // print warning
-            System.out.println("[WARNING] Option -minp,--min-pop-size-only set: minimizing population size only.");
+            logger.warn("Option -minp,--min-pop-size-only set: minimizing population size only");
         } else {
             // default dominates relation taking into account pop size, linkage phase ambiguity and number of generations
             dominatesRelation = new DefaultDominatesRelation();
@@ -939,7 +945,7 @@ public class Main
             }
             if(maxNumCrossovers != GenestackerConstants.UNLIMITED_CROSSOVERS){
                 // print warning
-                System.out.println("[WARNING] Number of crossovers per chromosome limited to " + maxNumCrossovers + ".");
+                logger.warn("Number of crossovers per chromosome limited to {}", maxNumCrossovers);
             }
         } else {
             // default seed lot constructor
@@ -960,9 +966,9 @@ public class Main
             
             // ### one single run with specified heuristics/filters ###
             
-            BranchAndBound engine = new BranchAndBound(input, debug, graphFileFormat, popSizeTools, constraints, numSeeds, heuristics,
+            BranchAndBound engine = new BranchAndBound(input, graphFileFormat, popSizeTools, constraints, numSeeds, heuristics,
                                                             seedLotFilters, initialPlantFilter, seedLotConstructor, dominatesRelation, homozygousIdeotypeParents);
-            frontier = new SearchRunner(verbose).run(engine, timeLimit, numThreads);
+            frontier = engine.search(timeLimit, numThreads);
             totalRuntime += engine.getStop() - engine.getStart();
             
         } else {
@@ -974,12 +980,12 @@ public class Main
             heuristics.addHeuristic(h3heur);
             h3 = true;
             
-            System.out.println("# Run 1 " + formatActivatedHeuristicsInfo(true, "") + " ...");
+            logger.info("Run 1 {} ...", formatActivatedHeuristicsInfo(true, ""));
                         
             // run search
-            BranchAndBound engine = new BranchAndBound(input, debug, graphFileFormat, popSizeTools, constraints, numSeeds, heuristics,
+            BranchAndBound engine = new BranchAndBound(input, graphFileFormat, popSizeTools, constraints, numSeeds, heuristics,
                                                             seedLotFilters, initialPlantFilter, seedLotConstructor, dominatesRelation, homozygousIdeotypeParents);
-            frontier = new SearchRunner(verbose).run(engine, timeLimit, numThreads);
+            frontier = engine.search(timeLimit, numThreads);
             long run1time = engine.getStop() - engine.getStart();
             totalRuntime += run1time;
                         
@@ -990,7 +996,7 @@ public class Main
             heuristics.removeHeuristic(h3heur);
             h3 = false;
             
-            System.out.println("# Run 2 " + formatActivatedHeuristicsInfo(true, h3s2 ? " + extra seed lot filtering" : "") + " ...");
+            logger.info("Run 2 {} ...", formatActivatedHeuristicsInfo(true, h3s2 ? " + extra seed lot filtering" : ""));
             
             // check if time left for second run
             boolean timeLeft = true;
@@ -1013,7 +1019,7 @@ public class Main
                 // set initial Pareto frontier
                 engine.setInitialFrontier(frontier);
                 // second run
-                frontier = new SearchRunner(verbose).run(engine, run2timeLimit, numThreads);
+                frontier = engine.search(run2timeLimit, numThreads);
                 long run2time = engine.getStop() - engine.getStart();
                 totalRuntime += run2time;
             }
@@ -1150,7 +1156,8 @@ public class Main
                     s.print();
                 }
             }
-            System.out.println("# Generating output file ...");
+            System.out.println("");
+            logger.info("Generating output file ...");
             // create zip archive
             try (OutputStream out = new FileOutputStream(new File(outputFile));
                 ArchiveOutputStream os = new ArchiveStreamFactory().createArchiveOutputStream("zip", out);){
@@ -1186,7 +1193,7 @@ public class Main
                 }                
             }
         } else {
-            System.out.println("\n!! NO FEASIBLE SOLUTIONS FOUND !!\n");
+            System.out.println("\n!! NO SOLUTIONS FOUND !!\n");
         }
     }
     

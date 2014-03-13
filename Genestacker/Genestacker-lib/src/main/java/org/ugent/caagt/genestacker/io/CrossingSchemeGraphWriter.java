@@ -24,7 +24,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.ugent.caagt.genestacker.exceptions.CrossingSchemeException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.ugent.caagt.genestacker.exceptions.GenestackerException;
 import org.ugent.caagt.genestacker.search.CrossingNode;
 import org.ugent.caagt.genestacker.search.CrossingScheme;
@@ -38,6 +39,9 @@ import org.ugent.caagt.genestacker.search.SeedLotNode;
  * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
  */
 public class CrossingSchemeGraphWriter {
+    
+    // logger
+    private Logger logger = LogManager.getLogger(CrossingSchemeGraphWriter.class);
     
     // path to dot command line tool
     private final String DOT;
@@ -219,7 +223,7 @@ public class CrossingSchemeGraphWriter {
             p.waitFor();
         } catch (IOException ex){
             // could not run dot program, issue warning
-            System.err.println("[WARNING] Could not run external graphviz software -- skipping graph creation (check config file: ~/genestacker/config.properties)");
+            logger.warn("Failed to run external GraphViz software, skipping graph creation (check installation instructions and config file: ~/genestacker/config.properties)");
             // delete file
             outputFile.delete();
         } catch (InterruptedException shouldNotHappen) {
