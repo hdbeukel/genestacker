@@ -6,12 +6,18 @@ Version 1.5 (under development)
 
 _**Note**: v1.5 is currently still under development_
 
- - Added new command line options:
+ - Added and refactored some options:
    - `-help` prints help information
-   - `-version` outputs the Gene Stacker version
+   - `-version` outputs the version of the Gene Stacker software
+   - `-v,--verbose`, `-vv,--very-verbose` and `-debug` allow finer control
+     of the amount of command line output
    - ...
- - Extended command line messages (including an explicit alert if the runtime limit
-   has been exceeded)
+   
+ - Redesigned command line messages:
+   - by default, less output is printed than before
+   - more verbosity options to increase amount of output (see above)
+   - an explicit alert is printed when the runtime limit has been exceeded
+   
  - ...
 
 Version 1.4 (06 December 2013)
