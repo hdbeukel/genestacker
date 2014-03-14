@@ -18,7 +18,7 @@ _**Note**: v1.5 is currently still under development_
    - more verbosity options to increase amount of output (see above)
    - an explicit alert is printed when the runtime limit has been exceeded
    
- - ...
+ - Improved parallel extension of partial schedules.
 
 Version 1.4 (06 December 2013)
 -------------------------------
