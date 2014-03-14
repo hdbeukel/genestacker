@@ -26,10 +26,11 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
@@ -194,13 +195,12 @@ public class BranchAndBound extends SearchEngine {
         CrossingNode.resetIDs();
         CrossingSchemeAlternatives.resetIDs();
         
-        // create thread pool for scheme crossing
+        // create thread pool and completion service for scheme extension
         
-        // inform user about number of cross workers used (Verbose)
+        // inform user about number of cross workers used (verbose)
         logger.info(VERBOSE, "Number of threads used for extending partial schemes: {}", numThreads);
-        ExecutorService crossPool = Executors.newFixedThreadPool(numThreads);
-        // cross worker future set
-        Set<Future<List<CrossingSchemeAlternatives>>> futures = new HashSet<>();
+        ExecutorService extPool = Executors.newFixedThreadPool(numThreads);
+        CompletionService<List<CrossingSchemeAlternatives>> extCompletionService = new ExecutorCompletionService<>(extPool);
         
         // initialize solution manager
         BranchAndBoundSolutionManager solutionManager = new BranchAndBoundSolutionManager(dominatesRelation, ideotype, popSizeTools,
@@ -305,28 +305,24 @@ public class BranchAndBound extends SearchEngine {
 
                 // if useful, cross with previous schemes
                 if(numForCrossing > 0){
-                    // launch workers to cross with previous schemes
-                    futures.clear();
-                    // submit tasks
+                    // launch workers to combine with previous schemes
                     Iterator<CrossingSchemeAlternatives> previousSchemesIterator = previousSchemes.iterator();
                     for(int w=0; w<numThreads; w++){
                         // submit worker
-                        futures.add(crossPool.submit(new CrossWorker(previousSchemesIterator, cur, solutionManager, map)));
+                        extCompletionService.submit(new CrossWorker(previousSchemesIterator, cur, solutionManager, map));
                         // very verbose
                         logger.info(VERY_VERBOSE, "Launched cross worker {} of {}", w+1, numThreads);
                     }
-                    // wait for completion of workers
-                    int w = 0;
-                    for(Future<List<CrossingSchemeAlternatives>> fut : futures){
+                    // handle results of completed workers in the order in which they complete
+                    for(int w=0; w<numThreads; w++){
                         try {
                             // wait for next worker to complete and register its solutions
-                            registerNewSchemes(fut.get(), solutionManager);
+                            registerNewSchemes(extCompletionService.take().get(), solutionManager);
                             // very verbose
                             logger.info(VERY_VERBOSE, "{}/{} cross workers finished", w+1, numThreads);
-                            w++;
                         } catch (InterruptedException | ExecutionException ex) {
                             // something went wrong with the cross workers
-                            throw new SearchException("An error occured while crossing the current scheme with all previous schemes. Reason: " + ex);
+                            throw new SearchException("An error occured while extending the current scheme.", ex);
                         }
                     }
                 }
@@ -344,7 +340,7 @@ public class BranchAndBound extends SearchEngine {
         }
         
         // shutdown thread pool
-        crossPool.shutdownNow();
+        extPool.shutdownNow();
         
         return solutionManager.getFrontier();
     }
@@ -417,7 +413,7 @@ public class BranchAndBound extends SearchEngine {
             xmlWriter.write(scheme, xml);
             return graph.getAbsolutePath();
         } catch (IOException ex) {
-            throw new SearchException("Failed to create scheme diagram while debugging branch and bound search engine");
+            throw new SearchException("Failed to create scheme diagram while debugging branch and bound search engine.");
         }
     }
     
