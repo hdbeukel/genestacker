@@ -129,7 +129,7 @@ public class CrossingSchemeXMLWriter extends XMLWriter {
             writeXML(xml, outputFile);
             
         } catch (ParserConfigurationException | TransformerException ex) {
-           throw new IOException("Failed to write crossing scheme xml representation:\n" + ex.getMessage());
+           throw new IOException("Failed to write crossing scheme xml representation.", ex);
         }
     }
 }

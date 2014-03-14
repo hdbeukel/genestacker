@@ -34,4 +34,15 @@ public class GenestackerException extends Exception {
     public GenestackerException(String msg) {
         super(msg);
     }
+    
+    /**
+     * Constructs an instance of <code>GenestackerException</code> with the specified detail message,
+     * and throwable that caused this exception.
+     * @param msg the detail message.
+     * @param t cause of this exception
+     */
+    public GenestackerException(String msg, Throwable t){
+        super(msg, t);
+    }
+    
 }

@@ -34,4 +34,15 @@ public class SearchException extends GenestackerException {
     public SearchException(String msg) {
         super(msg);
     }
+    
+    /**
+     * Constructs an instance of <code>SearchException</code> with the specified detail message,
+     * and throwable that caused this exception.
+     * @param msg the detail message.
+     * @param t cause of this exception
+     */
+    public SearchException(String msg, Throwable t){
+        super(msg, t);
+    }
+    
 }

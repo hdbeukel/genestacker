@@ -96,7 +96,7 @@ public class GenestackerInputXMLWriter extends XMLWriter {
             writeXML(xml, outputFile);
             
         } catch (ParserConfigurationException | TransformerException ex) {
-           throw new IOException("Failed to write genestacker input xml file:\n" + ex.getMessage());
+           throw new IOException("Failed to write genestacker input xml file.", ex);
         }
     }
     
