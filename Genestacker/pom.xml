@@ -37,6 +37,26 @@
                     </filesets>
                 </configuration>
             </plugin>
+            <!-- create javadoc jars -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.9.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <!-- omit timestamp comments in javadoc files -->
+                    <additionalparam>-notimestamp</additionalparam>
+                    <!-- include MathJax javascript for LaTeX style Math -->
+                    <additionalparam>-header &apos;&lt;script type=&quot;text/javascript&quot; src=&quot;http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML&quot;&gt;MathJax.Hub.Config({displayAlign:&quot;left&quot;});MathJax.Hub.Config({displayIndent:&quot;2em&quot;});&lt;/script&gt;&apos;</additionalparam>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
     <modules>

@@ -1,11 +1,8 @@
 package org.ugent.caagt.genestacker.cli;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -24,10 +21,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 import org.apache.commons.compress.archivers.ArchiveException;
-import org.apache.commons.compress.archivers.ArchiveOutputStream;
-import org.apache.commons.compress.archivers.ArchiveStreamFactory;
-import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
-import org.apache.commons.compress.utils.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
@@ -839,10 +832,6 @@ public class Main
         if(!outputFile.endsWith(".zip")){
             outputFile += ".zip";
         }
-        String inZIPFolder = outputFile.substring(0, outputFile.lastIndexOf('.'));
-        if(inZIPFolder.indexOf('/') != -1){
-            inZIPFolder = inZIPFolder.substring(outputFile.lastIndexOf('/')+1);
-        }
         
         // check if output file already exists
         if(Files.exists(Paths.get(outputFile))){
@@ -874,7 +863,7 @@ public class Main
         logger.info("Total runtime = {}", TimeFormatting.formatTime(totalRuntime));
         
         // output results
-        output(frontier, outputFile, inZIPFolder);
+        output(frontier, outputFile);
     }
     
     private ParetoFrontier runBranchAndBound(GenestackerInput input, long timeLimit) throws GenestackerException{
@@ -1122,24 +1111,17 @@ public class Main
     }
     
     /**
-     * Output the results, both on the terminal as well as in a ZIP file containing an
-     *  - xml file
-     *  - graphviz file
-     *  - image file (by default: pdf)
-     * for each scheme contained in the solution. If the solution is empty, a message is printed
-     * and no ZIP file is generated.
+     * Output the results, both on the terminal as well as in a ZIP file.
+     * If the solution is empty, a message is printed and no ZIP file is generated.
      */
-    private void output(ParetoFrontier frontier, String outputFile, String inZIPFolder)
-                                    throws IOException, ArchiveException, GenestackerException{
+    private void output(ParetoFrontier frontier, String outputFile) throws IOException, ArchiveException, GenestackerException {
         System.out.println("");
         System.out.println("# Results:");
-        CrossingSchemeGraphWriter graphWriter = new CrossingSchemeGraphWriter(graphFileFormat);
-        CrossingSchemeXMLWriter xmlWriter = new CrossingSchemeXMLWriter();
-        Map<Integer, Set<CrossingScheme>> solutions = frontier.getSchemes();
-        if(!solutions.isEmpty()){
+        // any solutions found ?
+        if(frontier.getNumSchemes() > 0){
             // print to standard output
             int numScheme = 0;
-            for(Map.Entry<Integer, Set<CrossingScheme>> gen : solutions.entrySet()){
+            for(Map.Entry<Integer, Set<CrossingScheme>> gen : frontier.getSchemes().entrySet()){
                 int numGen = gen.getKey();
                 Set<CrossingScheme> schemes = gen.getValue();
                 System.out.println("");
@@ -1154,41 +1136,9 @@ public class Main
                 }
             }
             System.out.println("");
+            // generate ZIP package
             logger.info("Generating output file ...");
-            // create zip archive
-            try (OutputStream out = new FileOutputStream(new File(outputFile));
-                ArchiveOutputStream os = new ArchiveStreamFactory().createArchiveOutputStream("zip", out);){
-                // add files
-                numScheme=0;
-                for(Map.Entry<Integer, Set<CrossingScheme>> gen : solutions.entrySet()){
-                    Set<CrossingScheme> schemes = gen.getValue();
-                    for(CrossingScheme s : schemes){
-                        numScheme++;
-                        // create xml
-                        File xml = Files.createTempFile("scheme-", ".xml").toFile();
-                        xmlWriter.write(s, xml);
-                        // create graph
-                        File graph = Files.createTempFile("scheme-", "." + graphFileFormat).toFile();
-                        File graphvizSource = graphWriter.write(s, graph);
-                        // copy xml, diagram and graphviz source to zip file
-                        os.putArchiveEntry(new ZipArchiveEntry(inZIPFolder + "/scheme" + numScheme + ".xml"));
-                        IOUtils.copy(new FileInputStream(xml), os);
-                        os.closeArchiveEntry();
-                        // only copy graph if successfully created!
-                        if(graph.exists()){
-                            os.putArchiveEntry(new ZipArchiveEntry(inZIPFolder + "/scheme" + numScheme + "." + graphFileFormat));
-                            IOUtils.copy(new FileInputStream(graph), os);
-                            os.closeArchiveEntry();
-                        }
-                        os.putArchiveEntry(new ZipArchiveEntry(inZIPFolder + "/scheme" + numScheme + ".graphviz"));
-                        IOUtils.copy(new FileInputStream(graphvizSource), os);
-                        os.closeArchiveEntry();                        
-                        // delete temp files
-                        xml.delete();
-                        graph.delete();
-                    }
-                }                
-            }
+            new ZIPWriter().createZIP(frontier, graphFileFormat, outputFile);
         } else {
             System.out.println("\n!! NO SOLUTIONS FOUND !!\n");
         }
