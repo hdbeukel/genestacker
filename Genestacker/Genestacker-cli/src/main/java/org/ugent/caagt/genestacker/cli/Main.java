@@ -116,7 +116,7 @@ public class Main
             CommandLine cmd = parser.parse(checkFirstOptions, args, false);
             parseSpecialOptions(cmd);
         } catch (ParseException ex) {
-            logger.error("Invalid usage (failed to parse options)", ex);
+            logger.error("Invalid usage: {}", ex.getMessage());
             printHelp();
             System.exit(1);
         }
@@ -128,7 +128,7 @@ public class Main
             CommandLine cmd = parser.parse(allOptions, args);
             parseOptions(cmd);
         } catch (ParseException ex){
-            logger.error("Invalid usage (failed to parse options)", ex);
+            logger.error("Invalid usage: {}", ex.getMessage());
             printHelp();
             System.exit(1);
         }
@@ -144,7 +144,7 @@ public class Main
             System.exit(1);
         } catch (IOException | ArchiveException ex){
             // report IO errors
-            logger.error("Input/output error", ex);            
+            logger.error("Input/output error: {}", ex.getMessage());            
             System.exit(1);
         } catch (Exception ex){
             // unexpected error (catch-all)
