@@ -25,9 +25,6 @@ public interface SeedLotFilter {
     /**
      * Filter given seed lot. Directly modifies and returns the original seed
      * lot object.
-     * 
-     * @param seedLot
-     * @return 
      */
     public SeedLot filterSeedLot(SeedLot seedLot);
     

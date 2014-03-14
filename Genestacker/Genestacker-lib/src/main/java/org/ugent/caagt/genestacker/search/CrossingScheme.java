@@ -628,9 +628,6 @@ public class CrossingScheme {
      * in each generation. Takes into account how the seed lots were created (as the
      * result of a crossing of which plants) and also which new plants are grown from it
      * in which subsequent generation(s).
-     * 
-     * @param o
-     * @return 
      */
     @Override
     public boolean equals(Object o){
@@ -718,9 +715,6 @@ public class CrossingScheme {
      * per generation. Each generation number is mapped on a second map that contains
      * all plants grown from the seed lot in that generation, mapped on the number of
      * grown duplicates.
-     * 
-     * @param sln
-     * @return 
      */
     private Map<Integer, Map<Plant, Integer>> getChildPlants(SeedLotNode sln){
         Map<Integer,Map<Plant, Integer>> plants = new HashMap<>();

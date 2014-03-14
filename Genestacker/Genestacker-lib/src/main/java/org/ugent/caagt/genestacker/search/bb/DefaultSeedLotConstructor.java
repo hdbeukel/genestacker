@@ -144,21 +144,18 @@ public class DefaultSeedLotConstructor extends SeedLotConstructor {
      * Check if the current option may yield the desired observation, taking into account
      * the genotype of both parents. Will return true if and only if one of the following 
      * cases holds:
-     * 
-     *  - The observation contains the target TWICE at this locus and the current option also contains the target gene
-     *  - The observation does not contain the target gene and neither does the current option
-     *  - The observation contains the target gene ONCE at this locus, and one of these sub-cases holds:
-     *          - The other parent contains the target TWICE and the current option does not contain the target
-     *          - The other parent does not contain the target but the current options does
-     *          - The other parent contains the target ONCE and the current option either does or does not contain
-     *            the target (both are allowed, this is the only cases where there will be a branching during gamete generation)
-     * 
-     * @param desiredObs
-     * @param parent
-     * @param otherParent
-     * @param chromIndex
-     * @param locus
-     * @return 
+     * <ul>
+     *  <li>The observation contains the target TWICE at this locus and the current option also contains the target gene</li>
+     *  <li>The observation does not contain the target gene and neither does the current option</li>
+     *  <li>The observation contains the target gene ONCE at this locus, and one of these sub-cases holds:
+     *      <ul>
+     *          <li>The other parent contains the target TWICE and the current option does not contain the target</li>
+     *          <li>The other parent does not contain the target but the current options does</li>
+     *          <li>The other parent contains the target ONCE and the current option either does or does not contain
+     *            the target (both are allowed, this is the only cases where there will be a branching during gamete generation)</li>
+     *      </ul>
+     *  </li>
+     * </ul>
      */
     protected boolean canYieldDesiredObservation(ObservableGenotypeState desiredObs, Genotype parent, Genotype otherParent,
                                                     int chromIndex, int locus, int haplotypePicked){
@@ -211,12 +208,7 @@ public class DefaultSeedLotConstructor extends SeedLotConstructor {
      * to their observable state, and computes the probabilities and ambiguities (of each group).
      * This assumes that for any created genotype, the entire group of genotypes sharing 
      * the same observation has been generated. This is assured in the default implementations
-     * of both cross and partialCross. Else, the computations may be (strongly) inexact.
-     * 
-     * @param parent1
-     * @param parent2
-     * @param genotypeProbs
-     * @return 
+     * of both <code>cross</code> and <code>partialCross</code>.
      */
     protected SeedLot genSeedLotFromGenotypes(Genotype parent1, Genotype parent2, Map<Genotype, Double> genotypeProbs){
         

@@ -43,8 +43,6 @@ public class SeedLot {
     }
     /**
      * Create a new uniform seed lot with only one single genotype, with probability 1.0.
-     * 
-     * @param genotype 
      */
     public SeedLot(Genotype genotype){
         Map<Genotype, Double> genotypes = new HashMap<>();
@@ -56,8 +54,6 @@ public class SeedLot {
     
     /**
      * Get the remaining genotypes, after possible filtering(s).
-     * 
-     * @return 
      */
     public Set<Genotype> getGenotypes(){
         Set<Genotype> genotypes = new HashSet<>();
@@ -70,9 +66,6 @@ public class SeedLot {
     /**
      * Removes a genotype from the seed lot and returns whether this operation
      * was successful.
-     * 
-     * @param g
-     * @return 
      */
     public boolean filterGenotype(Genotype g){
         IndistinguishableGenotypeGroup group = genotypeGroups.get(g.getObservableState());
@@ -92,8 +85,6 @@ public class SeedLot {
     
     /**
      * Check whether a given genotype can be grown from this seed lot.
-     * 
-     * @param g
      */
     public boolean canProduceGenotype(Genotype g){
         if(!genotypeGroups.containsKey(g.getObservableState())){
@@ -111,8 +102,6 @@ public class SeedLot {
     
     /**
      * Get the group of genotypes with the same observable state.
-     * 
-     * @param state
      */
     public IndistinguishableGenotypeGroup getGenotypeGroup(ObservableGenotypeState state){
         return genotypeGroups.get(state);
@@ -120,7 +109,6 @@ public class SeedLot {
     
     /**
      * Get the current number of genotypes, after possible filtering(s).
-     * 
      */
     public int nrOfGenotypes(){
         int nr = 0;
@@ -133,8 +121,6 @@ public class SeedLot {
     /**
      * Get number of genotypes with a specific observable state, after possible
      * filtering(s).
-     * 
-     * @param state
      */
     public int nrOfGenotypes(ObservableGenotypeState state){
         int nr = 0;
@@ -149,8 +135,6 @@ public class SeedLot {
      * observation is obtained from it with a probability of 1.0 (possibly with
      * multiple underlying genotypes). Return value is based on the original seed
      * lot before possible filtering.
-     * 
-     * @return 
      */
     public boolean isUniform(){
         return uniform;

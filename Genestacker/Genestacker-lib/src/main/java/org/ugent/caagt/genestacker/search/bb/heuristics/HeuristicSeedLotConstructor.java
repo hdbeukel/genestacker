@@ -222,7 +222,6 @@ public class HeuristicSeedLotConstructor extends DefaultSeedLotConstructor {
      * @param ichrom respective chromosome of target genotype (ideotype)
      * @param locus current locus
      * @param haplotypePicked current picked haplotype (0/1)
-     * @return 
      */
     private boolean improvementWrtUpperTarget(DiploidChromosome chrom, DiploidChromosome ichrom, int locus, int haplotypePicked){
         return (chrom.getHaplotypes()[haplotypePicked].targetPresent(locus) == ichrom.getHaplotypes()[0].targetPresent(locus)
@@ -237,7 +236,6 @@ public class HeuristicSeedLotConstructor extends DefaultSeedLotConstructor {
      * @param ichrom respective chromosome of target genotype (ideotype)
      * @param locus current locus
      * @param haplotypePicked current picked haplotype (0/1)
-     * @return 
      */
     private boolean improvementWrtLowerTarget(DiploidChromosome chrom, DiploidChromosome ichrom, int locus, int haplotypePicked){
         return (chrom.getHaplotypes()[haplotypePicked].targetPresent(locus) == ichrom.getHaplotypes()[1].targetPresent(locus)

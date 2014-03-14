@@ -31,8 +31,6 @@ public class EventOccurrences {
 
     /**
      * Returns the first option in which each event occurs 0 times.
-     * 
-     * @return 
      */
     public int[] getFirst(){
         return new int[maxOcc.length];
@@ -41,9 +39,6 @@ public class EventOccurrences {
     /**
      * Transforms the current option into the next option for the number
      * of occurrences respecting the maxima. Modifies the input array.
-     * 
-     * @param cur
-     * @return 
      */
     public int[] successor(int[] cur){
         // go from right to left and look for first position which can be increased

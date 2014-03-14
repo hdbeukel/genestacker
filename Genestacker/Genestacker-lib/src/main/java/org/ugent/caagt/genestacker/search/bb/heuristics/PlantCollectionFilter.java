@@ -25,9 +25,6 @@ public interface PlantCollectionFilter {
 
     /**
      * Directly removes filtered plants from the given collection. Returns the original collection object after being filtered.
-     * 
-     * @param collection
-     * @return 
      */
     public Collection<Plant> filter(Collection<Plant> collection);
     

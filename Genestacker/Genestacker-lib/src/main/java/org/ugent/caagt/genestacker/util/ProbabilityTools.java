@@ -29,7 +29,6 @@ public class ProbabilityTools {
      * @param probs Probabilities of the events
      * @param maxOcc Respective maximum number of occurrences (inclusive) of each event
      * @param n Number of trials
-     * @return 
      */
     public double computeProbMaxOcc(double[] probs, int[] maxOcc, long n){
         // check input
@@ -73,9 +72,8 @@ public class ProbabilityTools {
      * of n trials.
      * 
      * @param probs Probabilities of the events
-     * @param maxOcc Respective minimum number of occurrences (inclusive) of each event
+     * @param minOcc Respective minimum number of occurrences (inclusive) of each event
      * @param n Number of trials
-     * @return 
      */
     public double computeProbMinOcc(double[] probs, int[] minOcc, long n){
          // check input

@@ -266,9 +266,6 @@ public class BranchAndBoundSolutionManager implements SearchBounder {
      * list are applied, in the order in which they occur in this list.
      * <br /><br />
      * Note: this modifies and returns the original seed lot object.
-     * 
-     * @param seedlot
-     * @return 
      */
     public SeedLot filterSeedLot(SeedLot seedlot){
         // apply basic filters (non-heuristic)
@@ -302,8 +299,6 @@ public class BranchAndBoundSolutionManager implements SearchBounder {
      * does not satisfy all constraints or if it is strictly dominated by another solution
      * that is already contained in the frontier). Any other solution that is now dominated
      * by this new solution is removed from the frontier.
-     * 
-     * @param newScheme 
      */
     public boolean registerSolution(CrossingScheme newScheme){
         // check constraints (if enabled, also check for homozygous ideotype parents)
@@ -704,9 +699,6 @@ public class BranchAndBoundSolutionManager implements SearchBounder {
     
     /**
      * Check whether we have reached the maximum generation when going to generation 'gen'.
-     * 
-     * @param gen
-     * @return 
      */
     public boolean finalGenerationReached(int gen){
         if(maxNumGen == null){
@@ -718,9 +710,6 @@ public class BranchAndBoundSolutionManager implements SearchBounder {
     
     /**
      * Check whether we have reached the penultimate generation when going to generation 'gen'.
-     * 
-     * @param gen
-     * @return 
      */
     public boolean penultimateGenerationReached(int gen){
         if(maxNumGen == null){

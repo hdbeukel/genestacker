@@ -207,8 +207,6 @@ public class SeedLotNode {
     
     /**
      * Get the children (plant nodes) of this seed lot, grouped by generation.
-     * 
-     * @return 
      */
     public Map<Integer, Set<PlantNode>> getChildren(){
         return children;

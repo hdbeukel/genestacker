@@ -111,8 +111,6 @@ public abstract class SearchEngine{
     
     /**
      * Get the startTime time in milliseconds.
-     * 
-     * @return 
      */
     public long getStart(){
         return startTime;
@@ -120,8 +118,6 @@ public abstract class SearchEngine{
     
     /**
      * Get the stopTime time in milliseconds.
-     * 
-     * @return 
      */
     public long getStop(){
         return stopTime;

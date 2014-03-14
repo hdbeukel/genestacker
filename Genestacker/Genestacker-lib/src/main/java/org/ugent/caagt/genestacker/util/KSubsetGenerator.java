@@ -34,8 +34,6 @@ public class KSubsetGenerator {
 
     /**
      * Create the first k-subset containing elements {1,2,...,k}.
-     * 
-     * @return 
      */
     public int[] first(){
         // Generate first k-subset
@@ -49,9 +47,6 @@ public class KSubsetGenerator {
     /**
      * Transforms the current k-subset into its successor. In case of roll over
      * null is returned to indicate that all k-subsets have been generated.
-     * 
-     * @param T
-     * @return 
      */
     public int[] successor(int[] T){
         

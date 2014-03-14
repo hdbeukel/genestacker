@@ -115,8 +115,6 @@ public abstract class GenericParetoFrontier<T,D> {
     /**
      * Check whether a given object is already dominated by a registered object, based
      * on its inferred descriptor.
-     * 
-     * @param object 
      */
     public synchronized boolean dominatedByRegisteredObject(D desc){
         boolean dominated = false;

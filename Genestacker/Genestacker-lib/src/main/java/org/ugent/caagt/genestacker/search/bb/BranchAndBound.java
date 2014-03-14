@@ -347,10 +347,6 @@ public class BranchAndBound extends SearchEngine {
     
     /**
      * Register new schemes.
-     * 
-     * @param alt
-     * @param solManager
-     * @throws GenestackerException 
      */
     protected void registerNewSchemes(List<CrossingSchemeAlternatives> newSchemes, BranchAndBoundSolutionManager solManager)
                                                                                     throws GenestackerException {

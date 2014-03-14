@@ -90,14 +90,7 @@ public abstract class SchemeMerger implements Callable<List<CrossingSchemeAltern
      * optimal way. Different alignments of the generations of both schemes are considered, where
      * generations can be put next to each other (parallel) or in an alternating way (sequential).
      * The latter option may be useful, e.g. to satisfy a possible constraint on the population size
-     * per generation.
-     * 
-     * @param scheme1
-     * @param scheme2
-     * @param map
-     * @param solManager
-     * @throws GenotypeException 
-     * @throws CrossingSchemeException  
+     * per generation. 
      */
     public abstract List<CrossingSchemeAlternatives> combineSchemes() throws GenotypeException, CrossingSchemeException;
     

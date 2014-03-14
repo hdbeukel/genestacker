@@ -37,9 +37,6 @@ public class ImprovementSeedLotFilter implements SeedLotFilter {
      * is removed if there is an other genotype in the seed lot that is strictly "better"
      * according the ImprovementOverAncestorsHeuristic, and which is obtained with a higher
      * or equal probability and a lower or equal LPA.
-     * 
-     * @param seedLot
-     * @return 
      */
     @Override
     public SeedLot filterSeedLot(final SeedLot seedLot) {

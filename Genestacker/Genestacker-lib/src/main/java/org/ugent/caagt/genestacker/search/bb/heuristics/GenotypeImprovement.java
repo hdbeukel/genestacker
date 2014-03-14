@@ -37,10 +37,6 @@ public abstract class GenotypeImprovement {
      * Check whether the current genotype g "improves" (heuristically) on a given other genotype.
      * This is the case if there is an improvement in at least one chromosome, as compared to at least
      * one of the target haplotypes of the respective chromosome of the ideotype.
-     * 
-     * @param g
-     * @param other
-     * @return 
      */
     public boolean improvesOnOtherGenotype(Genotype g, Genotype other){
         // go through chromosomes

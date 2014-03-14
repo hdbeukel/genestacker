@@ -16,7 +16,6 @@ package org.ugent.caagt.genestacker.search.bb;
 
 import java.util.Set;
 import org.ugent.caagt.genestacker.Plant;
-import org.ugent.caagt.genestacker.SeedLot;
 import org.ugent.caagt.genestacker.search.CrossingScheme;
 
 /**
@@ -30,17 +29,12 @@ public interface SearchBounder {
      * Check whether we should try crossing a specific partial scheme with previous
      * schemes or not (in general, *not* for crossing with a specific other scheme).
      * Method might be called several times on the same scheme during search.
-     * 
-     * @param scheme
      */
     public abstract boolean boundCrossCurrentScheme(CrossingScheme scheme);
     
     /**
      * Check whether we should try crossing a scheme with a specific, given other scheme.
      * Method might be called several times on the same scheme(s) during search.
-     * 
-     * @param scheme
-     * @param other
      */
     public abstract boolean boundCrossCurrentSchemeWithSpecificOther(CrossingScheme scheme, CrossingScheme other);
     
@@ -48,18 +42,12 @@ public interface SearchBounder {
      * Check whether we should try crossing a scheme with a specific, given other scheme, and a preselected target
      * among the offspring that will be attached to the aligned schemes. Method might be called several times on the same
      * scheme(s) during search.
-     * 
-     * @param scheme
-     * @param other
-     * @param target
      */
     public abstract boolean boundCrossCurrentSchemeWithSpecificOtherWithSelectedTarget(CrossingScheme scheme, CrossingScheme other, PlantDescriptor target);
     
     /**
      * Check whether we should try selfing a specific scheme or not.
      * Method might be called several times on the same scheme during search.
-     * 
-     * @param scheme
      */
     public abstract boolean boundSelfCurrentScheme(CrossingScheme scheme);
     
@@ -67,9 +55,6 @@ public interface SearchBounder {
      * Check whether we should self a specific scheme, given a preselected target
      * among the offspring that will be attached as child of the performed selfing.
      * Method might be called several times on the same scheme during search.
-     * 
-     * @param scheme
-     * @param target
      */
     public abstract boolean boundSelfCurrentSchemeWithSelectedTarget(CrossingScheme scheme, PlantDescriptor target);
     
@@ -77,27 +62,18 @@ public interface SearchBounder {
      * Check whether we should bound the given current scheme. Method might be called several
      * times on the same scheme during search, even when it is still under construction. Therefore
      * the presence of possible dangling and/or dummy plant nodes must be carefully handled.
-     * 
-     * @param scheme
      */
     public abstract boolean boundCurrentScheme(CrossingScheme scheme);
     
     /**
      * Check whether we should bound the search when considering to grow a specific plant
      * with given ancestors.
-     * 
-     * @param ancestors
-     * @param p 
      */
     public abstract boolean boundGrowPlantFromAncestors(Set<PlantDescriptor> ancestors, PlantDescriptor p);
     
     /**
      * Check whether we should bound the search when considering to grow a given
      * plant in a generation >= the given generation
-     * 
-     * @param p
-     * @param generation
-     * @return 
      */
     public abstract boolean boundGrowPlantInGeneration(Plant p, int generation);
     
@@ -108,12 +84,7 @@ public interface SearchBounder {
      * be encountered in case of multiple calls on the same scheme, e.g. if the computations
      * have some side effects. Furthermore, it is also assured that this method will never be
      * called on schemes that are under construction (e.g. containing dummy and/or dangling
-     * plant nodes)
-     * 
-     * Note: this detects possible bounded schemes at a later stage than boundCurrentScheme (tradeoff).
-     * 
-     * @param s
-     * @return 
+     * plant nodes).
      */
     public abstract boolean boundQueueScheme(CrossingScheme s);
     
@@ -123,9 +94,6 @@ public interface SearchBounder {
      * just after it is taken from the BFS queue. It can be used to remove schemes that seemed
      * interesting when they were queued but are no longer interesting at the time of being
      * dequeued.
-     * 
-     * @param s
-     * @return 
      */
     public abstract boolean boundDequeueScheme(CrossingScheme s);
 
