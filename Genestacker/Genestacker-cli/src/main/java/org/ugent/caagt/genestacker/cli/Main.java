@@ -90,6 +90,7 @@ public class Main
     private long runtimeLimit = GenestackerConstants.NO_RUNTIME_LIMIT;
     private boolean minimizePopSizeOnly;
     private int numThreads;
+    private boolean writeIntermediateOutput;
     
     // total runtime (ms)
     private long totalRuntime;
@@ -326,6 +327,9 @@ public class Main
                                                   .create("thr");
         Option versionOption = new Option("version", "version", false, "print Gene Stacker version (ignores other options)");
         Option helpOption = new Option("help", "help", false, "print help (overrides -version, ignores other options)");
+        Option intOutputOption = new Option("int", "intermediate-output", false, "create and update intermediate ZIP package whenever the current Pareto frontier has changed,"
+                                                                                + " where a suffix \"-int\" is appended to the output file name for this intermediate file; note that this"
+                                                                                + " is expected to slow down the application (intermediate output file is deleted if the search completes)");
         
         miscOptions = new Options();
         miscOptions.addOption(graphFileFormatOption);
@@ -336,6 +340,7 @@ public class Main
         miscOptions.addOption(numThreadsOption);
         miscOptions.addOption(versionOption);
         miscOptions.addOption(helpOption);
+        miscOptions.addOption(intOutputOption);
         // indicate which options have to be checked prior to the other options
         checkFirstOptions = new Options();
         checkFirstOptions.addOption(versionOption);
@@ -820,6 +825,9 @@ public class Main
             }
         }
         
+        // check for intermediate-output
+        writeIntermediateOutput = cmd.hasOption("intermediate-output");
+        
     }
     
     private void search() throws GenestackerException, IOException, ArchiveException{
@@ -946,14 +954,19 @@ public class Main
             heuristics.addHeuristic(new HeuristicPopulationSizeBound(input.getInitialPlants(), input.getIdeotype(), input.getGeneticMap(), popSizeTools));
         }
 
+        // create B&B engine
+        BranchAndBound engine = new BranchAndBound(input, graphFileFormat, popSizeTools, constraints, numSeeds, heuristics,
+                                                    seedLotFilters, initialPlantFilter, seedLotConstructor, dominatesRelation, homozygousIdeotypeParents);
+        // write intermediate output files ?
+        if(writeIntermediateOutput){
+            engine.enableIntermediateOutput(getIntermediateOutputFileName());
+        }
         // run B&B engine
         ParetoFrontier frontier;
         if(!dualRun()){
             
-            // ### one single run with specified heuristics/filters ###
+            // ### single run  ###
             
-            BranchAndBound engine = new BranchAndBound(input, graphFileFormat, popSizeTools, constraints, numSeeds, heuristics,
-                                                            seedLotFilters, initialPlantFilter, seedLotConstructor, dominatesRelation, homozygousIdeotypeParents);
             frontier = engine.search(timeLimit, numThreads);
             totalRuntime += engine.getStop() - engine.getStart();
             
@@ -965,25 +978,14 @@ public class Main
             Heuristic h3heur = new OptimalSubschemeHeuristic(dominatesRelation);
             heuristics.addHeuristic(h3heur);
             h3 = true;
-            
-            logger.info("Run 1 {} ...", formatActivatedHeuristicsInfo(true, ""));
-                        
+            engine.setHeuristics(heuristics);
+                                    
             // run search
-            BranchAndBound engine = new BranchAndBound(input, graphFileFormat, popSizeTools, constraints, numSeeds, heuristics,
-                                                            seedLotFilters, initialPlantFilter, seedLotConstructor, dominatesRelation, homozygousIdeotypeParents);
+            logger.info("Run 1 {} ...", formatActivatedHeuristicsInfo(true, ""));
             frontier = engine.search(timeLimit, numThreads);
             long run1time = engine.getStop() - engine.getStart();
             totalRuntime += run1time;
-                        
-            // second run:  disable h3
-            // if h3s2 is set: enable extra seed lot filtering based on haplotypes
-            //                 occurring in the solutions found in the first run
-            
-            heuristics.removeHeuristic(h3heur);
-            h3 = false;
-            
-            logger.info("Run 2 {} ...", formatActivatedHeuristicsInfo(true, h3s2 ? " + extra seed lot filtering" : ""));
-            
+
             // check if time left for second run
             boolean timeLeft = true;
             long run2timeLimit = GenestackerConstants.NO_RUNTIME_LIMIT;
@@ -992,7 +994,11 @@ public class Main
                 timeLeft = run2timeLimit > 0;
             }
             if(timeLeft){
-                // in case of h3s2 only: add extra seed lot filter
+                // second run:  disable h3
+                heuristics.removeHeuristic(h3heur);
+                h3 = false;
+                engine.setHeuristics(heuristics);
+                // in case of h3s2 only: add extra seed lot filter based on haplotypes occurring in the solutions found in the first run
                 if(h3s2){
                     // gather occurring haplotypes
                     List<Set<Haplotype>> haplotypes = gatherHaplotypes(input, frontier);
@@ -1000,11 +1006,10 @@ public class Main
                     seedLotFilters.add(new RestrictedHaplotypesSeedLotFilter(haplotypes));
                     engine.setSeedLotFilters(seedLotFilters); // note: this will (and should!) clear the engine's seed lot cache as a side effect
                 }
-                // set updated heuristics
-                engine.setHeuristics(heuristics);
                 // set initial Pareto frontier
                 engine.setInitialFrontier(frontier);
                 // second run
+                logger.info("Run 2 {} ...", formatActivatedHeuristicsInfo(true, h3s2 ? " + extra seed lot filtering" : ""));
                 frontier = engine.search(run2timeLimit, numThreads);
                 long run2time = engine.getStop() - engine.getStart();
                 totalRuntime += run2time;
@@ -1139,9 +1144,18 @@ public class Main
             // generate ZIP package
             logger.info("Generating output file ...");
             new ZIPWriter().createZIP(frontier, graphFileFormat, outputFile);
+            // remove intermediate output file if generated
+            if(writeIntermediateOutput){
+                logger.info("Deleting intermediate output file ...");
+                new File(getIntermediateOutputFileName()).delete();
+            }
         } else {
             System.out.println("\n!! NO SOLUTIONS FOUND !!\n");
         }
+    }
+    
+    private String getIntermediateOutputFileName(){
+        return outputFile.replace(".zip", "-int.zip");
     }
     
 }

@@ -31,6 +31,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import org.apache.commons.compress.archivers.ArchiveException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
@@ -99,6 +100,11 @@ public class BranchAndBound extends SearchEngine {
     
     // homozygous ideotype parents required ?
     private boolean homozygousIdeotypeParents;
+    
+    // write intermediate output files ? (default: false)
+    private boolean writeIntermediateOutput = false;
+    // file name of intermediate output
+    private String intermediatOutputFileName = null;
     
     public BranchAndBound(GenestackerInput input, PopulationSizeTools popSizeTools, List<Constraint> constraints, NumberOfSeedsPerCrossing maxNumSeedsPerCrossing,
                             Heuristics heuristics, List<SeedLotFilter> seedLotFilters, PlantCollectionFilter initialPlantFilter, SeedLotConstructor seedLotConstructor){
@@ -177,6 +183,21 @@ public class BranchAndBound extends SearchEngine {
     
     public void setInitialFrontier(ParetoFrontier frontier){
         this.initialFrontier = frontier;
+    }
+    
+    /**
+     * Write intermediate output whenever the Pareto frontier is updated.
+     */
+    public void enableIntermediateOutput(String intermediateOutputFileName){
+        writeIntermediateOutput = true;
+        this.intermediatOutputFileName = intermediateOutputFileName;
+    }
+    
+    /**
+     * Disable intermediate output, as is the default setting.
+     */
+    public void disableIntermediateOutput(){
+        writeIntermediateOutput = false;
     }
     
     @Override
@@ -368,6 +389,15 @@ public class BranchAndBound extends SearchEngine {
                             logger.info("Pareto frontier updated ({} solution(s)) - T = {}",
                                             solManager.getFrontier().getNumSchemes(),
                                             TimeFormatting.formatTime(System.currentTimeMillis()-getStart()));
+                            // update intermediate output file, if enabled
+                            if(writeIntermediateOutput){
+                                try {
+                                    new ZIPWriter().createZIP(solManager.getFrontier(), graphFileFormat, intermediatOutputFileName);
+                                    logger.info("Updated intermediate output file {}.", intermediatOutputFileName);
+                                } catch (IOException | ArchiveException ex) {
+                                    throw new SearchException("Failed to write intermediate output file." , ex);
+                                }
+                            }
                         }
                         // debug: create diagram of new solution
                         if(logger.isDebugEnabled()){
@@ -394,7 +424,7 @@ public class BranchAndBound extends SearchEngine {
 
     }
     
-    protected String writeDiagram(CrossingScheme scheme) throws GenestackerException{
+    protected String writeDiagram(CrossingScheme scheme) throws GenestackerException {
         CrossingSchemeGraphWriter epsWriter = new CrossingSchemeGraphWriter(graphFileFormat);
         CrossingSchemeXMLWriter xmlWriter = new CrossingSchemeXMLWriter();
         try {
