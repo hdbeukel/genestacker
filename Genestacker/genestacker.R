@@ -16,7 +16,6 @@ genestacker.run <- function(input,          # input file path
                             gf=NA,          # graphics file format
                             k=FALSE,        # kosambi mapping function
                             tree=FALSE,     # construct schedules with tree structure (no reuse)
-                            v=FALSE,        # be extra verbose
                             minp=FALSE,     # minimize the population size only
                             rt=NA,          # runtime limit
                             thr=NA,         # number of threads used to extend partial schedule
@@ -36,21 +35,13 @@ genestacker.run <- function(input,          # input file path
                             h4=FALSE,       # heuristic H4
                             h5=FALSE,       # heuristic H5
                             h5c=FALSE,      # heuristic H5c
-                            h6=FALSE,	    # heuristic H6
+                            h6=FALSE,       # heuristic H5c
+                            v=FALSE,        # be extra verbose
+                            vv=FALSE,       # be ridiculously verbose (overrides v)
+                            int=FALSE,      # create intermediate output file whenever Pareto frontier has changed
                             mem="2g")       # reserved RAM memory (defaults to 2 GB)
                             {
-    
-    # set path to Gene Stacker CLI
-    cli = "genestacker.jar"
-    # try bin folder if not found in current directory
-    if(!file.exists(cli)){
-        cli = "bin/genestacker.jar"
-    }
-    # if CLI not found, terminate with error message
-    if(!file.exists(cli)){
-        stop("Gene Stacker CLI jar file not found.")
-    }
-    
+        
     # setup options
     
     # required
@@ -84,9 +75,6 @@ genestacker.run <- function(input,          # input file path
     }
     if(tree){
         options = paste("-tree", options)
-    }
-    if(v){
-        options = paste("-v", options)
     }
     if(minp){
         options = paste("-minp", options)
@@ -148,15 +136,42 @@ genestacker.run <- function(input,          # input file path
     if(h6){
         options = paste("-h6", options)
     }
-    
+    if(v){
+        options = paste("-v", options)
+    }
+    if(vv){
+        options = paste("-vv", options)
+    }
+    if(int){
+        options = paste("-int", options)
+    }
+	
     # run CLI
     mem = paste("-Xmx", mem, sep="")
-    system(paste("java", mem, "-jar", cli, options, input, output))
+    system(paste("java", mem, "-jar", genestacker.jar(), options, input, output))
     
 }
 
+# get Gene Stacker version
+genestacker.version <- function(){
+    system(paste("java -jar", genestacker.jar(), "-version"))
+}
 
-
+# get path to jar file
+genestacker.jar <- function(){
+    # get path to Gene Stacker CLI jar file
+    cli = "genestacker.jar"
+    # try bin folder if not found in current directory
+    if(!file.exists(cli)){
+      cli = "bin/genestacker.jar"
+    }
+    # if CLI not found, terminate with error message
+    if(!file.exists(cli)){
+      stop("Gene Stacker CLI jar file not found.")
+    }
+    # return path
+    return(cli)
+} 
 
 
 
