@@ -731,22 +731,19 @@ public class Main
         
         // ### parse verbosity options
         
-        // check for -verbose (and no -very-verbose nor -debug)
-        if(cmd.hasOption("verbose") && !cmd.hasOption("very-verbose") && !cmd.hasOption("debug")){
-            // load verbose log settings
-            Configurator.initialize("config", null, "log4j2-verbose.xml");
-        }
-        
-        // check for -very-verbose (and no -debug)
-        if(cmd.hasOption("very-verbose") && !cmd.hasOption("debug")){
-            // load very verbose log settings
-            Configurator.initialize("config", null, "log4j2-very-verbose.xml");
-        }
-        
-        // check for -debug
+        // check for -debug, -very-verbose and -verbose in this order
         if(cmd.hasOption("debug")){
             // load debug log settings
             Configurator.initialize("config", null, "log4j2-debug.xml");
+        } else if (cmd.hasOption("very-verbose")){
+            // load very verbose log settings
+            Configurator.initialize("config", null, "log4j2-very-verbose.xml");
+        } else if (cmd.hasOption("verbose")){
+            // load verbose log settings
+            Configurator.initialize("config", null, "log4j2-verbose.xml");
+        } else {
+            // load default log settings
+            Configurator.initialize("config", null, "log4j2.xml");
         }
         
         // ### parse misc options
