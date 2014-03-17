@@ -1,17 +1,19 @@
 Gene Stacker Changes
 ====================
 
-Version 1.5 (under development)
+Version 1.5 (17 March 2014)
 ------------------------------
 
-_**Note**: v1.5 is currently still under development_
-
- - Added and refactored some options:
-   - `-help` prints help information
-   - `-version` outputs the version of the Gene Stacker software
-   - `-v,--verbose`, `-vv,--very-verbose` and `-debug` allow finer control
-     of the amount of command line output
-   - ...
+ - Added and refactored several command line options:
+   - Option `-help` prints brief usage information, including an overview of all parameters.
+   - Option `-version` outputs the version of the Gene Stacker software.
+   - Options `-v,--verbose`, `-vv,--very-verbose` and `-debug` allow finer control
+     of the amount of console output
+   - When `-int,--intermediate-output` is enabled, an intermediate ZIP package will be
+     created and updated whenever the current Pareto frontier has changed, containing all
+     constructed schedules which are currently not dominated by any other (constructed) schedule.
+     This option may be useful to obtain intermediate results, but is expected to slow down the
+     application.
    
  - Redesigned command line messages:
    - by default, less output is printed than before
