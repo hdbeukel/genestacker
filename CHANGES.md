@@ -16,9 +16,9 @@ Version 1.5 (17 March 2014)
      application.
    
  - Redesigned command line messages:
-   - by default, less output is printed than before
-   - more verbosity options to increase amount of output (see above)
-   - an explicit alert is printed when the runtime limit has been exceeded
+   - By default, less output is printed than before.
+   - More verbosity options to increase amount of output (see above).
+   - An explicit alert is printed when the runtime limit has been exceeded.
    
  - Improved parallel extension of partial schedules.
 
