@@ -5,11 +5,11 @@
     <parent>
         <groupId>org.ugent.caagt</groupId>
         <artifactId>Genestacker</artifactId>
-        <version>1.5-SNAPSHOT</version>
+        <version>1.5</version>
     </parent>
     <groupId>org.ugent.caagt</groupId>
     <artifactId>Genestacker-lib</artifactId>
-    <version>1.5-SNAPSHOT</version>
+    <version>1.5</version>
     <name>Genestacker-lib</name>
     <url>http://maven.apache.org</url>
     <build>
