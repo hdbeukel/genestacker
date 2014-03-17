@@ -8,7 +8,7 @@ Version 1.5 (17 March 2014)
    - Option `-help` prints brief usage information, including an overview of all parameters.
    - Option `-version` outputs the version of the Gene Stacker software.
    - Options `-v,--verbose`, `-vv,--very-verbose` and `-debug` allow finer control
-     of the amount of console output
+     of the amount of console output.
    - When `-int,--intermediate-output` is enabled, an intermediate ZIP package will be
      created and updated whenever the current Pareto frontier has changed, containing all
      constructed schedules which are currently not dominated by any other (constructed) schedule.
