@@ -17,6 +17,7 @@ package org.ugent.caagt.genestacker.search;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import org.ugent.caagt.genestacker.Genotype;
 import org.ugent.caagt.genestacker.ObservableGenotypeState;
 import org.ugent.caagt.genestacker.SeedLot;
 import org.ugent.caagt.genestacker.util.ProbabilityTools;
@@ -80,13 +81,13 @@ public class DefaultPopulationSizeTools extends PopulationSizeTools {
             /***************************/
 
             // 1) compute max and sum of seeds required for each plant individually,
-            //    count the number of occurences of each observable state, and track
-            //    the probability of obtaining each observation from the parent seed lot
+            //    count the number of occurences of each genotoype and store it together
+            //    with the corresponding probability with which this genotoype is produced
 
             long maxSeeds = 0;
             long sumSeeds = 0;
-            Map<ObservableGenotypeState, Integer> observationsFreqMap = new HashMap<>();
-            Map<ObservableGenotypeState, Double> observationsProbMap = new HashMap<>();
+            Map<Genotype, Integer> genoFreqMap = new HashMap<>();
+            Map<Genotype, Double> genoProbMap = new HashMap<>();
             for(PlantNode pn : plantNodes){
                 // compute seeds required for plant
                 long seeds = computeRequiredSeedsForTargetPlant(pn);
@@ -95,15 +96,15 @@ public class DefaultPopulationSizeTools extends PopulationSizeTools {
                     maxSeeds = seeds;
                 }
                 sumSeeds += seeds;
-                // group according to observable state
-                ObservableGenotypeState o = pn.getPlant().getGenotype().getObservableState();
-                if(!observationsFreqMap.containsKey(o)){
-                    // first genotype with this observation
-                    observationsFreqMap.put(o, 1);
-                    observationsProbMap.put(o, pn.getProbabilityOfPhaseKnownGenotype());
+                // track number of plants with identical genotypes
+                Genotype g = pn.getPlant().getGenotype();
+                if(!genoFreqMap.containsKey(g)){
+                    // first plant with this genotype
+                    genoFreqMap.put(g, 1);
+                    genoProbMap.put(g, pn.getProbabilityOfPhaseKnownGenotype());
                 } else {
                     // increase counter
-                    observationsFreqMap.put(o, observationsFreqMap.get(o)+1);
+                    genoFreqMap.put(g, genoFreqMap.get(g)+1);
                 }
             }
 
@@ -117,25 +118,25 @@ public class DefaultPopulationSizeTools extends PopulationSizeTools {
             // compute desired combined success probability
             double desiredSuccessProbForAllTargets = Math.pow(successProbPerTarget, plantNodes.size());
             // compute obtained combined success probability
-            double[] observationProbs = new double[observationsFreqMap.size()];
-            int[] observationFreqs = new int[observationsFreqMap.size()];
+            double[] genoProbs = new double[genoFreqMap.size()];
+            int[] genoFreqs = new int[genoFreqMap.size()];
             int i=0;
-            for(ObservableGenotypeState o : observationsFreqMap.keySet()){
-                observationProbs[i] = observationsProbMap.get(o);
-                observationFreqs[i] = observationsFreqMap.get(o);
+            for(Genotype g : genoFreqMap.keySet()){
+                genoProbs[i] = genoProbMap.get(g);
+                genoFreqs[i] = genoFreqMap.get(g);
                 i++;
             }
             // compute actual obtained success rate
-            double obtainedSuccessProbForAllTargets = ptools.computeProbMinOcc(observationProbs, observationFreqs, requiredSeeds);
+            double obtainedSuccessProbForAllTargets = ptools.computeProbMinOcc(genoProbs, genoFreqs, requiredSeeds);
 
-            // 3) if necessary, increase number of seeds using logarithmic search
+            // 3) if necessary, increase number of seeds using binary search
 
             if(obtainedSuccessProbForAllTargets < desiredSuccessProbForAllTargets){
                 long lbound = requiredSeeds;
                 long ubound = sumSeeds;
                 while(Math.abs(ubound-lbound) > 1){
                     long newGuess = (lbound+ubound)/2;
-                    obtainedSuccessProbForAllTargets = ptools.computeProbMinOcc(observationProbs, observationFreqs, newGuess);
+                    obtainedSuccessProbForAllTargets = ptools.computeProbMinOcc(genoProbs, genoFreqs, newGuess);
                     if(obtainedSuccessProbForAllTargets < desiredSuccessProbForAllTargets){
                         // not enough seeds --> move lower bound
                         lbound = newGuess;
