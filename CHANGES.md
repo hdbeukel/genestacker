@@ -1,6 +1,14 @@
 Gene Stacker Changes
 ====================
 
+Version 1.6 (under development)
+------------------------------
+
+ - Fixed bug in joint population size computation when simultaneously targeting different
+   phase-known genotypes with the same observed genotype scores.
+   
+ - Cleaned up Javadoc in source code.
+
 Version 1.5 (17 March 2014)
 ------------------------------
 
