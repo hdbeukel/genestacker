@@ -20,7 +20,7 @@ import java.util.Comparator;
  * Compares doubles up to a certain precision. By default, the precision is set
  * to 0.0001.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class DoubleComparatorWithPrecision implements Comparator<Double> {
 

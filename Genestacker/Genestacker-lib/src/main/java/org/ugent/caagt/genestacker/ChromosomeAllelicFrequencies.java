@@ -17,39 +17,39 @@ package org.ugent.caagt.genestacker;
 import java.util.Arrays;
 
 /**
- * Represents the observable state of a diploid chromosome. For each target locus, the observable
- * state indicates whether the target gene is present once, twice or not at all.
+ * Represents the observable allelic frequencies of a diploid chromosome. For each target locus,
+ * it is indicated whether the target allele is present once, twice or not at all.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
-public class ObservableDiploidChromosomeState {
+public class ChromosomeAllelicFrequencies {
     
     // state
-    private ObservableDiploidTargetState[] targetStates;
+    private AllelicFrequency[] freqs;
     
     /**
-     * Construct a new observable diploid chromosome state.
+     * Create new instance, given the array of allelic frequencies.
      * 
-     * @param targetStates 
+     * @param freqs allelic frequency of each locus
      */
-    public ObservableDiploidChromosomeState(ObservableDiploidTargetState[] targetStates){
-        this.targetStates = targetStates;
+    public ChromosomeAllelicFrequencies(AllelicFrequency[] freqs){
+        this.freqs = freqs;
     }
     
-    public ObservableDiploidTargetState[] getTargetStates(){
-        return targetStates;
+    public AllelicFrequency[] getAllelicFrequencies(){
+        return freqs;
     }
     
     public int nrOfLoci(){
-        return targetStates.length;
+        return freqs.length;
     }
     
     @Override
     public boolean equals(Object s){
         boolean equal = false;
-        if(s instanceof ObservableDiploidChromosomeState){
-            ObservableDiploidChromosomeState ss = (ObservableDiploidChromosomeState) s;
-            equal = (Arrays.equals(targetStates, ss.targetStates));
+        if(s instanceof ChromosomeAllelicFrequencies){
+            ChromosomeAllelicFrequencies ss = (ChromosomeAllelicFrequencies) s;
+            equal = (Arrays.equals(freqs, ss.freqs));
         }
         return equal;
     }
@@ -57,13 +57,13 @@ public class ObservableDiploidChromosomeState {
     @Override
     public int hashCode() {
         int hash = 7;
-        hash = 97 * hash + Arrays.deepHashCode(targetStates);
+        hash = 97 * hash + Arrays.deepHashCode(freqs);
         return hash;
     }
     
     @Override
     public String toString(){
-        return Arrays.toString(targetStates);
+        return Arrays.toString(freqs);
     }
     
 }

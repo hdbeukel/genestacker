@@ -24,7 +24,7 @@ import org.ugent.caagt.genestacker.search.GenericParetoFrontierWithoutDescriptor
  *      - duplicates
  *      - plants which are strictly dominated by an other initial plant, according to a given plant improvement criterion
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class InitialPlantFilter implements PlantCollectionFilter {
 

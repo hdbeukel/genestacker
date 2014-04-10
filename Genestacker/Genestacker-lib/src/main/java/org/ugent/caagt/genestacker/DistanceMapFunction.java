@@ -18,7 +18,7 @@ package org.ugent.caagt.genestacker;
  * Interface for functions mapping genetic distance to recombination
  * fractions, e.g. the Haldane and Kosambi map.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public interface DistanceMapFunction {
 

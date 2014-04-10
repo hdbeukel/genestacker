@@ -35,8 +35,12 @@ import org.ugent.caagt.genestacker.search.SeedLotNode;
 import org.ugent.caagt.genestacker.search.SelfingNode;
 
 /**
- *
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * Responsible for merging two partial crossing schedules when they are combined through
+ * an additional crossing. Considers all possible alignments of generations of the partial
+ * schedules, but only retains those that are Pareto optimal w.r.t. the number of generations
+ * and the amount of reuse.
+ * 
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public abstract class SchemeMerger implements Callable<List<CrossingSchemeAlternatives>>{
 
@@ -54,14 +58,14 @@ public abstract class SchemeMerger implements Callable<List<CrossingSchemeAltern
     // ancestor plants from parent schemes
     protected Set<PlantDescriptor> ancestors;
     
-    // bounding matrix for pairs of alternatives of parent schemes
-    protected boolean[][] boundCross;
-    // set of bounded genotypes
-    protected Set<Genotype> boundedGenotypes;
+    // pruning matrix for pairs of alternatives of parent schemes
+    protected boolean[][] pruneCross;
+    // set of pruned genotypes
+    protected Set<Genotype> prunedGenotypes;
     
     public SchemeMerger(CrossingSchemeAlternatives scheme1, CrossingSchemeAlternatives scheme2, GeneticMap map,
                                         BranchAndBoundSolutionManager solManager, SeedLot seedLot, Set<PlantDescriptor> ancestors,
-                                        boolean[][] boundCross, Set<Genotype> boundedGenotypes){
+                                        boolean[][] pruneCross, Set<Genotype> prunedGenotypes){
         this.scheme1 = scheme1;
         this.scheme2 = scheme2;
         ancestors = new HashSet<>();
@@ -71,8 +75,8 @@ public abstract class SchemeMerger implements Callable<List<CrossingSchemeAltern
         this.solManager = solManager;
         this.seedLot = seedLot;
         this.ancestors = ancestors;
-        this.boundCross = boundCross;
-        this.boundedGenotypes = boundedGenotypes;
+        this.pruneCross = pruneCross;
+        this.prunedGenotypes = prunedGenotypes;
         cont = true;
     }
     
@@ -86,17 +90,52 @@ public abstract class SchemeMerger implements Callable<List<CrossingSchemeAltern
     }
     
     /**
-     * Cross the final plants of two crossing schemes, and merge their history in a Pareto
-     * optimal way. Different alignments of the generations of both schemes are considered, where
-     * generations can be put next to each other (parallel) or in an alternating way (sequential).
-     * The latter option may be useful, e.g. to satisfy a possible constraint on the population size
+     * Cross the final plants of two partial crossing schemes, and merge these schemes into a larger scheme
+     * in a Pareto optimal way (input is specified in the constructor). Different alignments of the generations
+     * of both schemes are considered, where generations can be put next to each other (parallel) or in an alternating
+     * way (sequential). The latter option may e.g. be useful to satisfy a possible constraint on the population size
      * per generation. 
+     * 
+     * @return list of crossing scheme alternatives resulting from the combination of two smaller schemes through
+     *         an additional crossing
+     * @throws GenotypeException if incompatible genotypes are crossed, or anything else goes wrong while creating
+     *         the seed lot resulting from the performed crossing
+     * @throws CrossingSchemeException if anything goes wrong while creating the extended crossing scheme alternatives
      */
     public abstract List<CrossingSchemeAlternatives> combineSchemes() throws GenotypeException, CrossingSchemeException;
     
-    protected void mergeHistory(MergedSchemes mergedSchemes, CrossingScheme curScheme, CrossingScheme alt1, Map<String, PlantNode> danglingPlantNodes1,
-                                int nextGen1, CrossingScheme alt2, Map<String, PlantNode> danglingPlantNodes2, int nextGen2, BranchAndBoundSolutionManager solManager)
-                                                                                                            throws CrossingSchemeException {
+    /**
+     * <p>
+     * Merge two partial crossing scheme by recursively aligning their generations. In every step, three options
+     * are considered: (1) include one more generation of both schemes (parallel), (2) include an additional generation
+     * of scheme 1 only, or (3) include an additional generation of scheme 2 only. When merging additional generations
+     * into the combined schedule, material (plant nodes and seed lot nodes) is reused if already available.
+     * </p>
+     * <p>
+     * Only Pareto optimal alignments are retained, and during construction of all possible merges, new alignments
+     * are pruned if known to be suboptimal compared to already obtained other alignments, or compared to already
+     * obtained full solutions.
+     * </p>
+     * 
+     * @param mergedSchemes already constructed alignments, initially empty and extended during recursion
+     * @param curAlignment current combined scheme containing already aligned generations (under construction)
+     * @param scheme1 partial crossing scheme 1 to be combined with partial scheme 2
+     * @param danglingPlantNodes1 dangling plant nodes (i.e. which have not yet been assigned a parental seed lot)
+     *                            in the combined scheme, originating from scheme 1; unique IDs of new plant nodes
+     *                            in the merged scheme are mapped on plant nodes from the original scheme 1
+     * @param nextGen1 next generation of scheme 1 to be inserted in to combined scheme (bottom up)
+     * @param scheme2 partial crossing scheme 2 to be combined with partial scheme 1
+     * @param danglingPlantNodes2 dangling plant nodes (i.e. which have not yet been assigned a parental seed lot)
+     *                            in the combined scheme, originating from scheme 2; unique IDs of new plant nodes
+     *                            in the merged scheme are mapped on plant nodes from the original scheme 2
+     * @param nextGen2 next generation of scheme 2 to be inserted in to combined scheme (bottom up)
+     * @param solManager branch and bound solution manager, used for pruning etc.
+     * @throws CrossingSchemeException if anything goes wrong while creating the extended crossing schedules
+     */
+    protected void merge(MergedSchemes mergedSchemes, CrossingScheme curAlignment, CrossingScheme scheme1,
+                         Map<String, PlantNode> danglingPlantNodes1, int nextGen1, CrossingScheme scheme2,
+                         Map<String, PlantNode> danglingPlantNodes2, int nextGen2,
+                         BranchAndBoundSolutionManager solManager) throws CrossingSchemeException {
                
         if(cont){
             if(nextGen2 == 0 && nextGen1 == 0){
@@ -111,11 +150,11 @@ public abstract class SchemeMerger implements Callable<List<CrossingSchemeAltern
                 remDanglingPlantNodes.putAll(danglingPlantNodes2);
                 remDanglingPlantNodes.putAll(danglingPlantNodes1);
                 for(String plantID : remDanglingPlantNodes.keySet()){
-                    PlantNode plant = curScheme.getPlantNodeWithUniqueID(plantID);
+                    PlantNode plant = curAlignment.getPlantNodeWithUniqueID(plantID);
                     PlantNode origPlant = remDanglingPlantNodes.get(plantID);
                     SeedLotNode origParentLot = origPlant.getParent();
                     // check if initial seedlot already present
-                    SeedLotNode newParentLot = curScheme.getSeedLotNodeFromGenerationWithID(0, origParentLot.getID());
+                    SeedLotNode newParentLot = curAlignment.getSeedLotNodeFromGenerationWithID(0, origParentLot.getID());
                     if(newParentLot == null){
                         newParentLot = new SeedLotNode(origParentLot.getSeedLot(), 0, origParentLot.getID(), 0);
                     }
@@ -123,18 +162,18 @@ public abstract class SchemeMerger implements Callable<List<CrossingSchemeAltern
                     plant.setParent(newParentLot);
                     newParentLot.addChild(plant);
                     // reinit scheme
-                    curScheme.reinitScheme();
+                    curAlignment.reinitScheme();
                 }
 
                 // register scheme
-                if(!solManager.boundCurrentScheme(curScheme)
-                        && !solManager.boundGrowPlantInGeneration(
-                                    curScheme.getFinalPlantNode().getPlant(),
-                                    curScheme.getNumGenerations()
+                if(!solManager.pruneCurrentScheme(curAlignment)
+                        && !solManager.pruneGrowPlantInGeneration(
+                                    curAlignment.getFinalPlantNode().getPlant(),
+                                    curAlignment.getNumGenerations()
                            )
-                        && curScheme.resolveDepletedSeedLots(solManager)){
+                        && curAlignment.resolveDepletedSeedLots(solManager)){
                     
-                    mergedSchemes.registerMergedScheme(curScheme);
+                    mergedSchemes.registerMergedScheme(curAlignment);
                     
                 }     
 
@@ -149,48 +188,48 @@ public abstract class SchemeMerger implements Callable<List<CrossingSchemeAltern
 
                 // OPTION 1: attach next generation of both schemes
                 if(nextGen1 > 0 && nextGen2 > 0){
-                    extended = new CrossingScheme(curScheme.getPopulationSizeTools(), curScheme.getFinalPlantNode().deepShiftedUpwardsCopy());
+                    extended = new CrossingScheme(curAlignment.getPopulationSizeTools(), curAlignment.getFinalPlantNode().deepShiftedUpwardsCopy());
                     newDanglingPlantNodes1 = new HashMap<>(danglingPlantNodes1);
                     newDanglingPlantNodes2 = new HashMap<>(danglingPlantNodes2);
                     // scheme 1
-                    mergeGeneration(extended, nextGen1, newDanglingPlantNodes1, solManager);
+                    insertGeneration(extended, nextGen1, newDanglingPlantNodes1, solManager);
                     // scheme 2
-                    mergeGeneration(extended, nextGen2, newDanglingPlantNodes2, solManager);
+                    insertGeneration(extended, nextGen2, newDanglingPlantNodes2, solManager);
                     // recursion
-                    if(!solManager.boundCurrentScheme(extended) 
-                            && !mergedSchemes.boundScheme(extended, alt1, newDanglingPlantNodes1.values(),
-                                    nextGen1-1, alt2, newDanglingPlantNodes2.values(), nextGen2-1)){
-                        mergeHistory(mergedSchemes, extended, alt1, newDanglingPlantNodes1, nextGen1-1, alt2, newDanglingPlantNodes2, nextGen2-1, solManager);
+                    if(!solManager.pruneCurrentScheme(extended) 
+                            && !mergedSchemes.pruneAlignment(extended, scheme1, newDanglingPlantNodes1.values(),
+                                    nextGen1-1, scheme2, newDanglingPlantNodes2.values(), nextGen2-1)){
+                        merge(mergedSchemes, extended, scheme1, newDanglingPlantNodes1, nextGen1-1, scheme2, newDanglingPlantNodes2, nextGen2-1, solManager);
                     }
                 }
 
                 // OPTION 2: attach next generation of scheme 1 only
                 if(nextGen1 > 0){
-                    extended = new CrossingScheme(curScheme.getPopulationSizeTools(), curScheme.getFinalPlantNode().deepShiftedUpwardsCopy());
+                    extended = new CrossingScheme(curAlignment.getPopulationSizeTools(), curAlignment.getFinalPlantNode().deepShiftedUpwardsCopy());
                     newDanglingPlantNodes1 = new HashMap<>(danglingPlantNodes1);
                     newDanglingPlantNodes2 = new HashMap<>(danglingPlantNodes2);
                     // scheme 1
-                    mergeGeneration(extended, nextGen1, newDanglingPlantNodes1, solManager);
+                    insertGeneration(extended, nextGen1, newDanglingPlantNodes1, solManager);
                     // recursion
-                    if(!solManager.boundCurrentScheme(extended)
-                            && !mergedSchemes.boundScheme(extended, alt1, newDanglingPlantNodes1.values(),
-                                    nextGen1-1, alt2, newDanglingPlantNodes2.values(), nextGen2)){
-                        mergeHistory(mergedSchemes, extended, alt1, newDanglingPlantNodes1, nextGen1-1, alt2, newDanglingPlantNodes2, nextGen2, solManager);
+                    if(!solManager.pruneCurrentScheme(extended)
+                            && !mergedSchemes.pruneAlignment(extended, scheme1, newDanglingPlantNodes1.values(),
+                                    nextGen1-1, scheme2, newDanglingPlantNodes2.values(), nextGen2)){
+                        merge(mergedSchemes, extended, scheme1, newDanglingPlantNodes1, nextGen1-1, scheme2, newDanglingPlantNodes2, nextGen2, solManager);
                     }
                 }
 
                 // OPTION 3: attach next generation of scheme 2 only
                 if(nextGen2 > 0){
-                    extended = new CrossingScheme(curScheme.getPopulationSizeTools(), curScheme.getFinalPlantNode().deepShiftedUpwardsCopy());
+                    extended = new CrossingScheme(curAlignment.getPopulationSizeTools(), curAlignment.getFinalPlantNode().deepShiftedUpwardsCopy());
                     newDanglingPlantNodes1 = new HashMap<>(danglingPlantNodes1);
                     newDanglingPlantNodes2 = new HashMap<>(danglingPlantNodes2);
                     // scheme 2
-                    mergeGeneration(extended, nextGen2, newDanglingPlantNodes2, solManager);
+                    insertGeneration(extended, nextGen2, newDanglingPlantNodes2, solManager);
                     // recursion
-                    if(!solManager.boundCurrentScheme(extended)
-                            && !mergedSchemes.boundScheme(extended, alt1, newDanglingPlantNodes1.values(),
-                                    nextGen1, alt2, newDanglingPlantNodes2.values(), nextGen2-1)){
-                        mergeHistory(mergedSchemes, extended, alt1, newDanglingPlantNodes1, nextGen1, alt2, newDanglingPlantNodes2, nextGen2-1, solManager);
+                    if(!solManager.pruneCurrentScheme(extended)
+                            && !mergedSchemes.pruneAlignment(extended, scheme1, newDanglingPlantNodes1.values(),
+                                    nextGen1, scheme2, newDanglingPlantNodes2.values(), nextGen2-1)){
+                        merge(mergedSchemes, extended, scheme1, newDanglingPlantNodes1, nextGen1, scheme2, newDanglingPlantNodes2, nextGen2-1, solManager);
                     }
                 }
 
@@ -199,9 +238,30 @@ public abstract class SchemeMerger implements Callable<List<CrossingSchemeAltern
 
     }
     
-    // directly updates crossing scheme, and map with dangling plant nodes (attached nodes are removed; new dangling
-    // nodes are added)
-    protected void mergeGeneration(CrossingScheme curScheme, int mergedGen, Map<String, PlantNode> danglingPlantNodes,
+    /**
+     * <p>
+     * Insert an additional generation of one of both smaller crossing schemes at the top level (0th generation)
+     * of the combined, larger scheme. For every dangling plant node originating from the considered smaller scheme,
+     * it is checked whether its parental seed lot node is part of the generation to be merged, and if so, it is
+     * inserted in the combined scheme (or reused if already available in the 0th generation). When inserting a new
+     * seed lot node, its parental crossing and corresponding plant nodes are also inserted (again, plant nodes are
+     * reused if already available in the 0th generation, for example when performing multiple crossing with the same
+     * plant). Newly inserted plant nodes are inserted as dangling nodes, i.e. their parental seed lots are to be
+     * inserted later.
+     * </p>
+     * <p>
+     * Note that this method directly updates the combined scheme and the map with dangling plant nodes originating
+     * from the considered smaller scheme (nodes that are now attached to their parental seed lot node are removed,
+     * new dangling plant nodes are added).
+     * </p>
+     * 
+     * @param curScheme current, combined scheme (under construction)
+     * @param mergedGen generation of smaller scheme to insert into the combined scheme (at the top level)
+     * @param danglingPlantNodes dangling plant nodes originating from the smaller scheme
+     * @param solManager branch and bound solution manager
+     * @throws CrossingSchemeException if anything goes wrong during extensions of the combined scheme
+     */
+    protected void insertGeneration(CrossingScheme curScheme, int mergedGen, Map<String, PlantNode> danglingPlantNodes,
                                         BranchAndBoundSolutionManager solManager) throws CrossingSchemeException {
         
         Iterator<Map.Entry<String, PlantNode>> it = danglingPlantNodes.entrySet().iterator();
@@ -277,7 +337,8 @@ public abstract class SchemeMerger implements Callable<List<CrossingSchemeAltern
                 }
                 // attach dangling plant to its parent lot
                 plant.setParent(newParentLot);
-                newParentLot.addChild(plant); // manual attachment of child required, because node was originally created without parent
+                newParentLot.addChild(plant); // manual attachment of child required, because
+                                              // node was originally created without parent
                 // reinit scheme (to update seed/plant indices, pop sizes, etc.)
                 curScheme.reinitScheme();
             }

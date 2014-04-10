@@ -35,7 +35,7 @@ import org.w3c.dom.Element;
  * chromosomes, haplotypes, etc. Also provides methods for writing an XML source
  * to a file.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public abstract class XMLWriter {
 

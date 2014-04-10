@@ -20,121 +20,147 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Represents a seed lot containing seeds with different possible genotypes.
+ * Represents a seed lot modelling all possible offspring of a crossing and the probability with
+ * which each specific genotype is obtained.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class SeedLot {
     
-    // map: observable genotype state -> indistinguishable genotype group
-    private Map<ObservableGenotypeState, IndistinguishableGenotypeGroup> genotypeGroups;
+    // map: allelic frequencies -> genotype group
+    private Map<GenotypeAllelicFrequencies, GenotypeGroupWithSameAllelicFrequencies> genotypeGroups;
     
     // flags uniform seed lots
     private boolean uniform;
     
     /**
-     * Create a new seed lot with given genotype groups.
+     * Create a new seed lot with the given genotype groups. Note that not all genotypes have necessarily been created,
+     * in case heuristics have been applied to omit non-promising genotypes. However, probabilities are available for
+     * all constructed genotypes.
      * 
-     * @param genotypeGroups  
+     * @param uniform indicates whether the seed lot is uniform (i.e. whether the parents are both homozygous)
+     * @param genotypeGroups genotype groups (grouped by overlapping allelic frequencies)
      */
-    public SeedLot(boolean uniform, Map<ObservableGenotypeState, IndistinguishableGenotypeGroup> genotypeGroups){
+    public SeedLot(boolean uniform, Map<GenotypeAllelicFrequencies, GenotypeGroupWithSameAllelicFrequencies> genotypeGroups){
         this.genotypeGroups = genotypeGroups;
         this.uniform = uniform;
     }
     /**
      * Create a new uniform seed lot with only one single genotype, with probability 1.0.
+     * 
+     * @param genotype the single genotype in this seed lot
      */
     public SeedLot(Genotype genotype){
         Map<Genotype, Double> genotypes = new HashMap<>();
         genotypes.put(genotype, 1.0);
         genotypeGroups = new HashMap<>();
-        genotypeGroups.put(genotype.getObservableState(), new IndistinguishableGenotypeGroup(1.0, genotype.getObservableState(), genotypes));
+        genotypeGroups.put(genotype.getAllelicFrequencies(), new GenotypeGroupWithSameAllelicFrequencies(1.0, genotype.getAllelicFrequencies(), genotypes));
         uniform = true;
     }
     
     /**
      * Get the remaining genotypes, after possible filtering(s).
+     * 
+     * @return set of (remaining) genotypes
      */
     public Set<Genotype> getGenotypes(){
         Set<Genotype> genotypes = new HashSet<>();
-        for(IndistinguishableGenotypeGroup group : genotypeGroups.values()){
+        for(GenotypeGroupWithSameAllelicFrequencies group : genotypeGroups.values()){
             genotypes.addAll(group.getGenotypes());
         }
         return genotypes;
     }
     
     /**
-     * Removes a genotype from the seed lot and returns whether this operation
-     * was successful.
+     * Removes a genotype from the seed lot.
+     * 
+     * @param g genotype to be removed
+     * @return <code>true</code> if the given genotype has been successfully removed
      */
     public boolean filterGenotype(Genotype g){
-        IndistinguishableGenotypeGroup group = genotypeGroups.get(g.getObservableState());
+        GenotypeGroupWithSameAllelicFrequencies group = genotypeGroups.get(g.getAllelicFrequencies());
         if(group == null){
-            // genotype's observable state not present
+            // genotype's alleic frequencies not present
             return false;
         } else {
             // remove genotype from its group
             boolean removed = group.filterGenotype(g);
             // if the group is now empty, remove it as well
             if(group.nrOfGenotypes() == 0){
-                genotypeGroups.remove(g.getObservableState());
+                genotypeGroups.remove(g.getAllelicFrequencies());
             }
             return removed;
         }
     }
     
     /**
-     * Check whether a given genotype can be grown from this seed lot.
+     * Check whether a given genotype is contained in this seed lot.
+     * 
+     * @param g considered genotype
+     * @return <code>true</code> if the considered genotype is contained in this seed lot
      */
-    public boolean canProduceGenotype(Genotype g){
-        if(!genotypeGroups.containsKey(g.getObservableState())){
+    public boolean contains(Genotype g){
+        if(!genotypeGroups.containsKey(g.getAllelicFrequencies())){
             // observable state not obtainable, so genotype definitely not obtainable
             return false;
         } else {
             // observable state is obtainable, check for specific genotype
-            return genotypeGroups.get(g.getObservableState()).contains(g);
+            return genotypeGroups.get(g.getAllelicFrequencies()).contains(g);
         }
     }
     
-    public Set<ObservableGenotypeState> getObservableGenotypeStates(){
+    /**
+     * Get the allelic frequencies of all genotypes contained in this seed lot.
+     * 
+     * @return set of allelic frequencies
+     */
+    public Set<GenotypeAllelicFrequencies> getAllelicFrequencies(){
         return genotypeGroups.keySet();
     }
     
     /**
-     * Get the group of genotypes with the same observable state.
+     * Get the group of genotypes with the given allelic frequencies.
+     * 
+     * @param freqs allelic frequencies
+     * @return genotype group containing all genotypes from this seed lot with the given allelic frequencies
      */
-    public IndistinguishableGenotypeGroup getGenotypeGroup(ObservableGenotypeState state){
-        return genotypeGroups.get(state);
+    public GenotypeGroupWithSameAllelicFrequencies getGenotypeGroup(GenotypeAllelicFrequencies freqs){
+        return genotypeGroups.get(freqs);
     }
     
     /**
      * Get the current number of genotypes, after possible filtering(s).
+     * 
+     * @return number of (remaining) genotypes
      */
     public int nrOfGenotypes(){
         int nr = 0;
-        for(IndistinguishableGenotypeGroup group : genotypeGroups.values()){
+        for(GenotypeGroupWithSameAllelicFrequencies group : genotypeGroups.values()){
             nr += group.nrOfGenotypes();
         }
         return nr;
     }
     
     /**
-     * Get number of genotypes with a specific observable state, after possible
+     * Get number of genotypes with specific allelic frequencies, after possible
      * filtering(s).
+     * 
+     * @param freqs allelic frequencies
+     * @return number of (remaining) genotypes with the given allelic frequencies
      */
-    public int nrOfGenotypes(ObservableGenotypeState state){
+    public int nrOfGenotypes(GenotypeAllelicFrequencies freqs){
         int nr = 0;
-        if(genotypeGroups.containsKey(state)){
-            nr = genotypeGroups.get(state).nrOfGenotypes();
+        if(genotypeGroups.containsKey(freqs)){
+            nr = genotypeGroups.get(freqs).nrOfGenotypes();
         }
         return nr;
     }
     
     /**
-     * Check whether this seed lot is uniform, i.e. whether only one single
-     * observation is obtained from it with a probability of 1.0 (possibly with
-     * multiple underlying genotypes). Return value is based on the original seed
-     * lot before possible filtering.
+     * Check whether this seed lot is uniform, i.e whether it has been obtained by
+     * crossing two homozygous genotypes so that the offspring is fixed to a single possibility.
+     * 
+     * @return <code>true</code> if this seed lot is uniform
      */
     public boolean isUniform(){
         return uniform;

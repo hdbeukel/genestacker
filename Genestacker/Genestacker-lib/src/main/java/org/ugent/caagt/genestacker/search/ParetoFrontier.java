@@ -20,9 +20,11 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Represents a Pareto frontier containing all Pareto optimal schemes during construction.
+ * Represents the current Pareto frontier of non dominated solutions that have been constructed so far.
+ * The Pareto frontier contains objects of type {@link CrossingScheme} which are compared using descriptors
+ * of type {@link CrossingSchemeDescriptor}.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class ParetoFrontier extends GenericParetoFrontier<CrossingScheme,CrossingSchemeDescriptor> {
     
@@ -36,7 +38,7 @@ public class ParetoFrontier extends GenericParetoFrontier<CrossingScheme,Crossin
     /**
      * Create a new Pareto frontier with given dominates relation.
      * 
-     * @param dominatesRelation 
+     * @param dominatesRelation given dominates relation
      */
     public ParetoFrontier(DominatesRelation<CrossingSchemeDescriptor> dominatesRelation){
         super(dominatesRelation);
@@ -46,6 +48,7 @@ public class ParetoFrontier extends GenericParetoFrontier<CrossingScheme,Crossin
      * Return the current solutions contained in the Pareto frontier, grouped
      * by the number of generations of the schemes.
      * 
+     * @return currently contained schedules, grouped per number of generations
      */
     public Map<Integer, Set<CrossingScheme>> getSchemes(){
         Map<Integer, Set<CrossingScheme>> grouped = new HashMap<>();
@@ -61,6 +64,12 @@ public class ParetoFrontier extends GenericParetoFrontier<CrossingScheme,Crossin
         return grouped;
     }
 
+    /**
+     * Infer the crossing scheme descriptor which is used for comparisons.
+     * 
+     * @param scheme crossing scheme
+     * @return inferred descriptor used for comparisons
+     */
     @Override
     public CrossingSchemeDescriptor inferDescriptor(CrossingScheme scheme) {
         return scheme.getDescriptor();

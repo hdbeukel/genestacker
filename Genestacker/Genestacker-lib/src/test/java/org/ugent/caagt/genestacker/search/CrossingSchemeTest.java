@@ -32,8 +32,8 @@ import org.ugent.caagt.genestacker.Genotype;
 import org.ugent.caagt.genestacker.GenotypeTest;
 import org.ugent.caagt.genestacker.HaldaneMapFunction;
 import org.ugent.caagt.genestacker.Haplotype;
-import org.ugent.caagt.genestacker.IndistinguishableGenotypeGroup;
-import org.ugent.caagt.genestacker.ObservableGenotypeState;
+import org.ugent.caagt.genestacker.GenotypeGroupWithSameAllelicFrequencies;
+import org.ugent.caagt.genestacker.GenotypeAllelicFrequencies;
 import org.ugent.caagt.genestacker.Plant;
 import org.ugent.caagt.genestacker.SeedLot;
 import org.ugent.caagt.genestacker.exceptions.GenestackerException;
@@ -47,7 +47,7 @@ import org.ugent.caagt.genestacker.search.bb.SeedLotConstructor;
 
 /**
  *
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class CrossingSchemeTest extends TestCase {
     
@@ -313,8 +313,10 @@ public class CrossingSchemeTest extends TestCase {
         
         SeedLotConstructor seedLotConstructor = new DefaultSeedLotConstructor(map);            
         
-        BranchAndBoundSolutionManager solManager = new BranchAndBoundSolutionManager(ideotype, popSizeTools, null, null, null, null);
-        BranchAndBound bb = new BranchAndBound(new GenestackerInput(null, ideotype, map), popSizeTools, null, null, null, null, null, seedLotConstructor);
+        BranchAndBoundSolutionManager solManager = new BranchAndBoundSolutionManager(new DefaultDominatesRelation(),
+                                                        ideotype, popSizeTools, null, null, null, null, false);
+        BranchAndBound bb = new BranchAndBound(new GenestackerInput(null, ideotype, map), popSizeTools, null, null,
+                                                                         null, null, null, seedLotConstructor);
 
         List<CrossingSchemeAlternatives> schemes = new ArrayList<>();
         schemes.add(new CrossingSchemeAlternatives(s1));
@@ -555,9 +557,9 @@ public class CrossingSchemeTest extends TestCase {
         g1map.put(g1, 0.5);
         Map<Genotype, Double> g2map = new HashMap<>();
         g2map.put(g2, 0.5);
-        Map<ObservableGenotypeState, IndistinguishableGenotypeGroup> states = new HashMap<>();
-        states.put(g1.getObservableState(), new IndistinguishableGenotypeGroup(0.5, g1.getObservableState(), g1map));
-        states.put(g2.getObservableState(), new IndistinguishableGenotypeGroup(0.5, g2.getObservableState(), g2map));
+        Map<GenotypeAllelicFrequencies, GenotypeGroupWithSameAllelicFrequencies> states = new HashMap<>();
+        states.put(g1.getAllelicFrequencies(), new GenotypeGroupWithSameAllelicFrequencies(0.5, g1.getAllelicFrequencies(), g1map));
+        states.put(g2.getAllelicFrequencies(), new GenotypeGroupWithSameAllelicFrequencies(0.5, g2.getAllelicFrequencies(), g2map));
         seedlot = new SeedLot(false, states);
         
         // create seed lot node

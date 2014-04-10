@@ -18,7 +18,7 @@ package org.ugent.caagt.genestacker.search;
  * With this relation, scheme s1 dominates scheme s2 when it has a lower population size,
  * i.e. with this definition the linkage phase ambiguity and number of generations are ignored.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class PopulationSizeOnlyDominatesRelation extends DominatesRelation<CrossingSchemeDescriptor> {
 

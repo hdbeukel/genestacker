@@ -35,33 +35,37 @@ import org.ugent.caagt.genestacker.search.bb.PlantDescriptor;
  * Computes a heuristic lower bound on the population size of any extension of a given partial scheme, based on
  * the probabilities of those crossovers that are necessarily still required to obtain the ideotype. More precisely,
  * the following bound is computed:
- * <ul>
+ * <ol>
  *  <li>
- *      For every pair of consecutive loci on the same chromosome, the desired allelic stretch(es) of length 2 are inferred from the ideotype.
- *      In case of a homozygous ideotype, there will be one such desired stretch for every two consecutive loci. In case of a heterozygous
- *      ideotype, there might be two desired stretches, if the ideotype is heterozygous at at least one of the considered loci.
+ *      For every pair of consecutive loci on the same chromosome, the desired "two allele stretches" are inferred from
+ *      the ideotype. In case of a homozygous ideotype, there will be one such desired stretch for every two consecutive
+ *      loci. In case of a heterozygous ideotype, there might be two desired stretches, if the ideotype is heterozygous
+ *      at at least one of the two consecutive loci.
  *  </li>
  * <li>
- *      The set of initial parents is inspected to filter all stretches, from those identified in the previous step, which do not occur
- *      in any initial parent. For each such stretch, a crossover between the two corresponding loci is necessarily required to obtain the ideotype.
+ *      The set of initial parents is inspected to retain all stretches, from those identified in the previous step,
+ *      which do <b>not</b> occur in any initial parent. For each such stretch, a crossover between the two corresponding
+ *      loci is necessarily required to obtain the ideotype.
  * </li>
  * <li>
- *      During search, given a currently constructed partial scheme, it is checked which of the stretches have not yet been obtained and the
- *      population size required to obtain each of the corresponding crossovers is accounted for.
+ *      During search, given a currently constructed partial scheme, it is checked which of those stretches have not
+ *      yet been obtained in any plant throughout the scheme, and the population size required to obtain each of the
+ *      corresponding crossovers is accounted for.
  * </li>
- * </ul>
- * This bound is not exact as it might be possible to obtain multiple target genotypes from the same seed lot in the same generation, in which case
- * the total population size to obtain each target is accounted for, which might be lower than the sum of the individual population sizes.
- * The heuristic bound does not take this possibility into account, which makes it an inexact bound. However, it will hold in many cases,
- * so it is expected to be a good heuristic in general.
+ * </ol>
+ * This bound is not exact as it might be possible to obtain multiple target genotypes from the same seed lot in the
+ * same generation, in which case the joint population size is accounted for, which might be lower than the sum of the
+ * individual population sizes. The heuristic bound does not take this option into account, which makes it an inexact
+ * bound. However, it will hold in many cases, so it is expected to be a good heuristic in general.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class HeuristicPopulationSizeBound extends Heuristic {
     
-    // stretches consisting of two consecutive loci (alleles) which do not occur in any initial parent:
-    //  chromosome index --> 1st locus --> stretches (1 or 2)
-    private List<List<Set<TwoAlleleStretch>>> stretches;
+    // desired two allele stretches, consisting of two consecutive alleles,
+    // which do not occur in any initial parent; data structure:
+    // chromosome index --> 1st locus --> stretches (1 or 2)
+    private List<List<Set<TwoAlleleStretch>>> desiredStretchesNotOccurringInInitialParents;
     
     // genetic map
     private GeneticMap map;
@@ -69,6 +73,14 @@ public class HeuristicPopulationSizeBound extends Heuristic {
     // population size tools
     private PopulationSizeTools popSizeTools;
     
+    /**
+     * Create a new instance.
+     * 
+     * @param initialPlants collection of initial plants
+     * @param ideotype desired ideotype
+     * @param map genetic map
+     * @param popSizeTools population size tools used to compute population sizes
+     */
     public HeuristicPopulationSizeBound(Collection<Plant> initialPlants, Genotype ideotype, GeneticMap map, PopulationSizeTools popSizeTools){
         this.map = map;
         this.popSizeTools = popSizeTools;
@@ -76,10 +88,18 @@ public class HeuristicPopulationSizeBound extends Heuristic {
         identifyNecessaryCrossovers(initialPlants, ideotype);
     }
 
+    /**
+     * Private method that infers the collection of stretches consisting of two consecutive alleles that are desired
+     * (i.e occur in the ideotype) but which are not yet contained in any initial plant. The result is store in the
+     * private field <code>desiredStretchesNotOccurringInInitialParents</code>.
+     * 
+     * @param initialPlants collection of initial plants
+     * @param ideotype desired ideotype
+     */
     private void identifyNecessaryCrossovers(Collection<Plant> initialPlants, Genotype ideotype){
         
         // infer all two allele stretches from ideotype
-        stretches = new ArrayList<>();
+        desiredStretchesNotOccurringInInitialParents = new ArrayList<>();
         // go through chromosomes
         for(int c=0; c<ideotype.nrOfChromosomes(); c++){
             DiploidChromosome chrom = ideotype.getChromosomes().get(c);
@@ -97,17 +117,17 @@ public class HeuristicPopulationSizeBound extends Heuristic {
                 }
                 chromStretches.add(locusStretches);
             }
-            stretches.add(chromStretches);
+            desiredStretchesNotOccurringInInitialParents.add(chromStretches);
         }
         
         // go through initial parents and remove all stretches that are already present in at least one parent
 
         // go through chromosomes
-        for(int c=0; c<stretches.size(); c++){
+        for(int c=0; c<desiredStretchesNotOccurringInInitialParents.size(); c++){
             // go through pairs of consecutive loci
-            for(int l=0; l<stretches.get(c).size(); l++){
+            for(int l=0; l<desiredStretchesNotOccurringInInitialParents.get(c).size(); l++){
                 // filter stretches (continue as long as not all present in some initial parent)
-                Set<TwoAlleleStretch> locusStretches = stretches.get(c).get(l);
+                Set<TwoAlleleStretch> locusStretches = desiredStretchesNotOccurringInInitialParents.get(c).get(l);
                 Iterator<Plant> it = initialPlants.iterator();
                 while(!locusStretches.isEmpty() && it.hasNext()){
                     // check next parent (both haplotypes)
@@ -127,7 +147,13 @@ public class HeuristicPopulationSizeBound extends Heuristic {
     }
     
     /**
-     * Compute minimum additional population size, when given collection of genotypes have already been obtained.
+     * Compute minimum additional population size, when a certain collection of genotypes has already been obtained.
+     * 
+     * @param genotypes already obtained genotypes
+     * @param minNumTargetsFromNonUniformSeedLots minimum number of targets grown from nonuniform seed lots in the
+     *                                            respective crossing schedule (used for population size computations)
+     * @return the (heuristic) minimum increase in population size to obtain all desired stretches consisting of two
+     *         consecutive alleles, which have not yet been obtained so far
      */
     public long computeMinAdditionalPopSize(Collection<Genotype> genotypes, int minNumTargetsFromNonUniformSeedLots){
         long popsize = 0;
@@ -136,11 +162,11 @@ public class HeuristicPopulationSizeBound extends Heuristic {
         
         Set<TwoAlleleStretch> found = new HashSet<>();
         // go through chromosomes
-        for(int c=0; c<stretches.size(); c++){
+        for(int c=0; c<desiredStretchesNotOccurringInInitialParents.size(); c++){
             // go through pairs of consecutive loci
-            for(int l=0; l<stretches.get(c).size(); l++){
+            for(int l=0; l<desiredStretchesNotOccurringInInitialParents.get(c).size(); l++){
                 // filter stretches (continue as long as not all present in some genotype)
-                Set<TwoAlleleStretch> locusStretches = stretches.get(c).get(l);
+                Set<TwoAlleleStretch> locusStretches = desiredStretchesNotOccurringInInitialParents.get(c).get(l);
                 Iterator<Genotype> it = genotypes.iterator();
                 found.clear();
                 while(found.size() < locusStretches.size() && it.hasNext()){
@@ -246,7 +272,7 @@ public class HeuristicPopulationSizeBound extends Heuristic {
     }
     
     /**
-     * Private class representing a two allele stretch
+     * Private class representing a two allele stretch.
      */
     
     private class TwoAlleleStretch {

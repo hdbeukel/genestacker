@@ -26,7 +26,7 @@ import org.ugent.caagt.genestacker.search.bb.DefaultSeedLotConstructor;
 
 /**
  *
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class ComputeLPA {
 
@@ -121,12 +121,12 @@ public class ComputeLPA {
         System.out.println(g2);
         System.out.println("child:");
         System.out.println(c);
-        System.out.println("LPA = " + df.format(100 * sl.getGenotypeGroup(c.getObservableState()).getLinkagePhaseAmbiguity(c)) + "%");
-        System.out.println("p(obs) = " + df.format(sl.getGenotypeGroup(c.getObservableState()).getProbabilityOfPhaseKnownGenotype(c)));
+        System.out.println("LPA = " + df.format(100 * sl.getGenotypeGroup(c.getAllelicFrequencies()).getLinkagePhaseAmbiguity(c)) + "%");
+        System.out.println("p(obs) = " + df.format(sl.getGenotypeGroup(c.getAllelicFrequencies()).getProbabilityOfPhaseKnownGenotype(c)));
         System.out.println("pop = " + popSizeTools.computeRequiredSeedsForTargetPlant(
                                         new FuturePlantNode(
                                             numTargetsFromNonUniformSeedLot,
-                                            sl.getGenotypeGroup(c.getObservableState()).getProbabilityOfPhaseKnownGenotype(c)
+                                            sl.getGenotypeGroup(c.getAllelicFrequencies()).getProbabilityOfPhaseKnownGenotype(c)
                                         )
                                       ));
         System.out.println("----------");

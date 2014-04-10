@@ -18,7 +18,7 @@ package org.ugent.caagt.genestacker;
  * Represents a genetic map that indicates the distance between any pair of genetic
  * markers on the genotype.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class GeneticMap {
     
@@ -37,9 +37,9 @@ public class GeneticMap {
     
     /**
      * Create a new genetic map with given distances between markers, per
-     * chromosome (in cM units), with default Haldane map function
+     * chromosome (in cM units), with default Haldane map function.
      * 
-     * @param distances 
+     * @param distances 2D array of distances between subsequent loci per chromosome
      */
     public GeneticMap(double[][] distances){
         this(distances, new HaldaneMapFunction());
@@ -49,8 +49,8 @@ public class GeneticMap {
      * Create a new genetic map with given distances between markers, per
      * chromosome (in cM units).
      * 
-     * @param distances 
-     * @param mapFunction 
+     * @param distances 2D array of distances between subsequent loci per chromosome
+     * @param mapFunction mapping function applied to convert distances to recombination rates
      */
     public GeneticMap(double[][] distances, DistanceMapFunction mapFunction){
         this.distances = distances;

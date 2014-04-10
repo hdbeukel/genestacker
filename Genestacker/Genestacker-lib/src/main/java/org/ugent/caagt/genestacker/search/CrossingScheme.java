@@ -30,18 +30,16 @@ import org.ugent.caagt.genestacker.exceptions.CrossingSchemeException;
 import org.ugent.caagt.genestacker.search.bb.BranchAndBoundSolutionManager;
 
 /**
- * Represents a crossing scheme. The entire scheme can be reconstructed by using
- * backpointers starting from the final plant node.
+ * Represents a crossing scheme.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class CrossingScheme {
     
     // population size tools: used to compute population sizes
     private PopulationSizeTools popSizeTools;
     
-    // linkage phase ambiguity = 
-    // risk of selecting at least one genotype with undesired linkage phase
+    // linkage phase ambiguity = risk of selecting at least one genotype with undesired linkage phase
     private double linkagePhaseAmbiguity;
     
     // number of generations
@@ -85,8 +83,10 @@ public class CrossingScheme {
         
     /**
      * Create a new crossing scheme with given final plant node, from which the
-     * entire scheme can be reconstructed by following back-pointers. The desired
-     * success rate is stated.
+     * entire scheme can be reconstructed by following back-pointers.
+     * 
+     * @param popSizeTools utility used to compute population sizes
+     * @param finalPlantNode final plant node of the crossing schedule
      */
     public CrossingScheme(PopulationSizeTools popSizeTools, PlantNode finalPlantNode){
         this.popSizeTools = popSizeTools;
@@ -109,13 +109,9 @@ public class CrossingScheme {
     }
     
     /**
-     * Compute the required seeds at each seed lot node, given the overall success
-     * probability. If the crossing scheme contains n plant nodes grown from 
-     * genetically non-uniform seedlots, the probability of success for each
-     * plant is set to be the n-th root of successProbability.
-     * 
-     * Also computes the linkage phase ambiguity of the scheme and creates indices for quick access
-     * to specific seed lots and plant nodes.
+     * Reinitialise the schedule, recomputing all properties. Computes the population sizes
+     * and linkage phase ambiguities, and creates indices for quick access to seed lot, plant
+     * and crossing nodes.
      */
     final public void reinitScheme(){        
         seedLotIndex.clear();
@@ -164,14 +160,14 @@ public class CrossingScheme {
                     } else {
                         slChildCounter.put(sl.getUniqueID(), 1);
                     }
-                    // update seedlot index and put seedlot in queue, only if
+                    // update seed lot index and put seedlot in queue, only if
                     // all children of the seedlot have already been processed
                     // (assures that seedlots with multiple children are only
-                    // considered once in the recursion)
+                    // considered once)
                     if(slChildCounter.get(sl.getUniqueID()) == sl.nrOfChildren()){
-                        // update seedlot index
+                        // update seed lot index
                         indexSeedLotNode(sl);
-                        // put seedlot in the queue
+                        // put seed lot in the queue
                         if(!sl.isInitialSeedLot()){
                             seedLotQueues.get(sl.getGeneration()).addLast(sl);
                         }
@@ -274,6 +270,8 @@ public class CrossingScheme {
     
     /**
      * Get the total population size in the entire scheme.
+     * 
+     * @return total population size
      */
     public long getTotalPopulationSize(){
         return totalPopulationSize;
@@ -290,6 +288,7 @@ public class CrossingScheme {
     /**
      * Get the maximum population size in one generation across the scheme.
      * 
+     * @return maximum number of plants grown in a single generation
      */
     public long getMaxPopulationSizePerGeneration(){
         long max = popSizePerGeneration[0];
@@ -302,10 +301,9 @@ public class CrossingScheme {
     }
     
     /**
-     * Get the maximum number of times that a specific plant is used for crossings.
-     * Selfings are counted twice because here the same plant is used as both
-     * mother and father in the crossing.
+     * Get the maximum number of times that any plant is used for crossings.
      * 
+     * @return maximum number of crossings with any plant in this scheme
      */
     public int getMaxCrossingsWithPlant(){
         int max = 0;
@@ -321,6 +319,8 @@ public class CrossingScheme {
     
     /**
      * Get the total number of crossings.
+     * 
+     * @return total number of crossings through the schedule
      */
     public int getNumCrossings(){
         return crossingIndex.size();
@@ -366,8 +366,9 @@ public class CrossingScheme {
      * Get the UNIQUE seed lot node with given ID in a given generation, or null
      * in case no such seed lot is present.
      * 
-     * @param generation
-     * @param ID
+     * @param generation generation in which to look up the seed lot node
+     * @param ID ID of the desired seed lot node
+     * @return seed lot node with given ID in given generation, if it exists, else <code>null</code>
      */
     public SeedLotNode getSeedLotNodeFromGenerationWithID(int generation, long ID){
         List<SeedLotNode> seedLots = seedLotsPerGeneration.get(generation);
@@ -377,7 +378,7 @@ public class CrossingScheme {
             found = (seedLots.get(i).getID() == ID);
             i++;
         }
-        if(found){
+        if(seedLots != null && found){
             return seedLots.get(i-1);
         } else {
             return null;
@@ -406,6 +407,8 @@ public class CrossingScheme {
     
     /**
      * Get the set IDs of all initial seed lots that are used in this scheme.
+     * 
+     * @return set of IDs of initial seed lots
      */
     public Set<Long> getInitialSeedLotNodeIDs(){
         Set<Long> ids = new HashSet<>();
@@ -473,18 +476,22 @@ public class CrossingScheme {
      * If seed lots can not be refilled without violating constraints or if the
      * extended scheme is dominated by an existing solution, false is returned.
      * 
-     * @param solManager 
-     * @throws CrossingSchemeException  
-    */
+     * @param solManager solution manager
+     * @return <code>false</code> if the schedule should be discarded after
+     *         resolving depleted seed lots, e.g. because it no longer satisfies
+     *         all constraints or is dominated by an existing solution
+     * 
+     * @throws CrossingSchemeException if anything goes wrong while duplicating crossings and plants
+     */
     public boolean resolveDepletedSeedLots(BranchAndBoundSolutionManager solManager) throws CrossingSchemeException{
         // get list of depleted seed lots, depending on the constraints that
         // are given in the Pareto Frontier
         List<SeedLotNode> depleted = solManager.getDepletedSeedLots(this);
-        boolean bounded = false;
-        while(!bounded && depleted != null && !depleted.isEmpty()){
+        boolean pruned = false;
+        while(!pruned && depleted != null && !depleted.isEmpty()){
             // iteratively fix all depleted seed lots
             int i=0;
-            while(!bounded && i < depleted.size()){
+            while(!pruned && i < depleted.size()){
                 SeedLotNode depletedLot = depleted.get(i);
                 // get one of the parent crossings of the seed lot (arbitrary,
                 // as they are all duplicates of the same crossing anyway)
@@ -533,14 +540,14 @@ public class CrossingScheme {
                 }               
                 // reinit scheme (to recompute population sizes etc. with the updated scheme structure)
                 reinitScheme();
-                // check for bounding
-                bounded = solManager.boundCurrentScheme(this);
+                // check pruning
+                pruned = solManager.pruneCurrentScheme(this);
                 i++;
             }
             // check for any new depleted seed lots, resulting from extending the scheme
             depleted = solManager.getDepletedSeedLots(this);
         }
-        return !bounded;
+        return !pruned;
     }
     
     /**
@@ -610,12 +617,14 @@ public class CrossingScheme {
         System.out.println("\n### OTHER VARIABLES ###\n");
         System.out.println("LPA: " + linkagePhaseAmbiguity);
         System.out.println("Grown from non-uniform seed lot: " + numTargetsFromNonUniformSeedLots);
-        System.out.println("Gamma: " + popSizeTools.getSuccessProbability());
+        System.out.println("Gamma: " + popSizeTools.getGlobalSuccessRate());
         System.out.println("Gamma':" + popSizeTools.computeDesiredSuccessProbPerTarget(numTargetsFromNonUniformSeedLots));
     }
     
     /**
      * String showing only most basic scheme info.
+     * 
+     * @return basic string representation
      */
     @Override
     public String toString(){
@@ -628,6 +637,9 @@ public class CrossingScheme {
      * in each generation. Takes into account how the seed lots were created (as the
      * result of a crossing of which plants) and also which new plants are grown from it
      * in which subsequent generation(s).
+     * 
+     * @param o object to compare for equality with this scheme
+     * @return <code>true</code> if the given object is also a crossing scheme and is equal to this crossing scheme
      */
     @Override
     public boolean equals(Object o){
@@ -635,11 +647,6 @@ public class CrossingScheme {
         if(o instanceof CrossingScheme){
             CrossingScheme s = (CrossingScheme) o;
             // first check some properties (quick), if not equal then schemes are surely not equivalent
-            /*System.out.println("# Gen: " + numGenerations + " - " + s.getNumGenerations());
-            System.out.println("Pop size: " + totalPopulationSize + " - " + s.getTotalPopulationSize());
-            System.out.println("Non uniform: " + nrOfNonUniformPlantNodes + " - " + s.getNumTargetsFromNonUniformSeedLots());
-            System.out.println("Pop size per gen: " + Arrays.toString(popSizePerGeneration) + " - " + Arrays.toString(s.getPopSizePerGeneration()));
-            System.out.println("Final plant: " + finalPlantNode.getPlant() + " - " + s.getFinalPlantNode().getPlant());*/
             if(numGenerations == s.getNumGenerations()
                     && totalPopulationSize == s.getTotalPopulationSize()
                     && numTargetsFromNonUniformSeedLots == s.getNumTargetsFromNonUniformSeedLots()
@@ -715,6 +722,9 @@ public class CrossingScheme {
      * per generation. Each generation number is mapped on a second map that contains
      * all plants grown from the seed lot in that generation, mapped on the number of
      * grown duplicates.
+     * 
+     * @param sln seed lot node
+     * @return map containing child plant frequencies per generation
      */
     private Map<Integer, Map<Plant, Integer>> getChildPlants(SeedLotNode sln){
         Map<Integer,Map<Plant, Integer>> plants = new HashMap<>();

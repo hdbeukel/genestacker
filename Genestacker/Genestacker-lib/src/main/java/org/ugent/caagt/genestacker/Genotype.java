@@ -19,37 +19,39 @@ import java.util.List;
 /**
  * Represents a diploid plant genotype w.r.t. the target genes.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class Genotype {
     
     // chromosomes containing target genes
     private List<DiploidChromosome> chromosomes;
     
-    // observable state
-    private ObservableGenotypeState observableState;
+    // observable allelic frequencies
+    private GenotypeAllelicFrequencies allelicFreqs;
     
     /**
      * Create genotype with given chromosomes.
      * 
-     * @param chromosomes 
+     * @param chromosomes list of chromosomes
      */
     public Genotype(List<DiploidChromosome> chromosomes){
         this.chromosomes = chromosomes;
-        observableState = new ObservableGenotypeState(this);
+        allelicFreqs = new GenotypeAllelicFrequencies(this);
     }
     
     /**
      * Get the observable state of the genotype.
      * 
+     * @return observed genotype scores (allelic frequencies)
      */
-    public ObservableGenotypeState getObservableState(){
-        return observableState;
+    public GenotypeAllelicFrequencies getAllelicFrequencies(){
+        return allelicFreqs;
     }
     
     /**
      * Get the number of chromosomes in this genotype.
      * 
+     * @return the number of chromosomes
      */
     public int nrOfChromosomes(){
         return chromosomes.size();
@@ -58,6 +60,7 @@ public class Genotype {
     /**
      * Get the total number of loci across all chromosomes.
      * 
+     * @return the number of loci across all chromosomes
      */
     public int nrOfLoci(){
         int nr = 0;
@@ -82,12 +85,14 @@ public class Genotype {
     /**
      * Check whether all chromosomes of the genotype contain only homozygous target loci.
      * 
+     * @return <code>true</code> if this genotype is homozygous at all considered loci,
+     *         across all chromosomes
      */
-    public boolean isHomozygousAtAllTargetLoci(){
+    public boolean isHomozygousAtAllContainedLoci(){
         boolean homozygous = true;
         int c=0;
         while(homozygous && c<nrOfChromosomes()){
-            homozygous = chromosomes.get(c).isHomozygousAtAllTargetLoci();
+            homozygous = chromosomes.get(c).isHomozygousAtAllContainedLoci();
             c++;
         }
         return homozygous;
@@ -98,7 +103,9 @@ public class Genotype {
      * Compatible means that both genotypes have the same number of chromosomes
      * and each respective pair of chromosomes has the same number of targets.
      * 
-     * @param other
+     * @param other other genotype to check for compatibility
+     * @return <code>true</code> if the given other genotype has exactly the same number
+     *         of chromosomes and exactly the same number of loci per chromosome
      */
     public boolean compatibleWith(Genotype other){
         boolean compatible = (chromosomes.size() == other.chromosomes.size());

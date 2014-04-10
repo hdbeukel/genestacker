@@ -15,9 +15,12 @@
 package org.ugent.caagt.genestacker.util;
 
 /**
- * Generates all k-subsets.
+ * Generates all k-subset, using the revolving door algorithm from "Combinatorial Algorithms: Generation,
+ * Enumeration and Search", Donald Kreher and Douglas Stinson, CRC Press, 1999 (chapter 2, p. 43-52).
+ * This algorithm generates k-subsets in a specific minimal change ordering called the revolving door
+ * ordering.
  * 
- * @author hermandebeukelaer
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class KSubsetGenerator {
 
@@ -26,7 +29,12 @@ public class KSubsetGenerator {
     // nr of elements in entire set
     private int n;
 
-
+    /**
+     * Create a k-subset generator that generates all subsets of k out of n elements.
+     * 
+     * @param k subset size
+     * @param n full set size
+     */
     public KSubsetGenerator(int k, int n){
         this.k = k;
         this.n = n;
@@ -34,6 +42,8 @@ public class KSubsetGenerator {
 
     /**
      * Create the first k-subset containing elements {1,2,...,k}.
+     * 
+     * @return first k-subset: [1,2,...,k]
      */
     public int[] first(){
         // Generate first k-subset
@@ -45,10 +55,13 @@ public class KSubsetGenerator {
     }
 
     /**
-     * Transforms the current k-subset into its successor. In case of roll over
-     * null is returned to indicate that all k-subsets have been generated.
+     * Transforms the current k-subset into its successor. In case of a rollover,
+     * <code>null</code> is returned to indicate that all k-subsets have been generated.
+     * 
+     * @param curKSubset current k-subset
+     * @return next k-subset
      */
-    public int[] successor(int[] T){
+    public int[] successor(int[] curKSubset){
         
         // special case: k = n --> only one ksubset (entire set) so no successors
         if(k == n){
@@ -60,7 +73,7 @@ public class KSubsetGenerator {
         int[] S = new int[k+2];
         S[0] = 0; // t_0
         for(int i = 1; i < k+1; i++) {
-            S[i] = T[i-1];
+            S[i] = curKSubset[i-1];
         }
         S[k+1] = n+1; // t_{k+1}
 
@@ -86,16 +99,16 @@ public class KSubsetGenerator {
         }
 
         for(int i = 1; i < k+1; i++) {
-            T[i-1] = S[i];
+            curKSubset[i-1] = S[i];
         }
         
         // check for roll over
-        if(T[k-1] == k){
+        if(curKSubset[k-1] == k){
             // roll over --> give termination signal
             return null;
         } else {
             // return successor
-            return T;
+            return curKSubset;
         }
     }
 }

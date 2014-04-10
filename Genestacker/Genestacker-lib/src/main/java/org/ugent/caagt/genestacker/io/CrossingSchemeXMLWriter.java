@@ -31,7 +31,7 @@ import org.w3c.dom.Element;
 /**
  * Responsible for writing crossing schemes to XML files.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class CrossingSchemeXMLWriter extends XMLWriter {
 
@@ -51,7 +51,7 @@ public class CrossingSchemeXMLWriter extends XMLWriter {
             Element schemeEl = xml.createElement("crossing_scheme");
             schemeEl.setAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
             schemeEl.setAttribute("xsi:noNamespaceSchemaLocation", XML_SCHEMA);
-            schemeEl.setAttribute("gamma", "" + scheme.getPopulationSizeTools().getSuccessProbability());
+            schemeEl.setAttribute("gamma", "" + scheme.getPopulationSizeTools().getGlobalSuccessRate());
             schemeEl.setAttribute("gammaPrime", "" + scheme.getPopulationSizeTools().computeDesiredSuccessProbPerTarget(scheme.getNumTargetsFromNonUniformSeedLots()));
             schemeEl.setAttribute("numGen", "" + scheme.getNumGenerations());
             schemeEl.setAttribute("totalPopSize", "" + scheme.getTotalPopulationSize());

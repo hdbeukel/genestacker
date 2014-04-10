@@ -15,15 +15,16 @@
 package org.ugent.caagt.genestacker;
 
 /**
- *
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * Allelic frequency.
+ * 
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
-public enum ObservableDiploidTargetState {
+public enum AllelicFrequency {
     NONE("0"), ONCE("1"), TWICE("2");
     
     private final String str;
     
-    private ObservableDiploidTargetState(String str){
+    private AllelicFrequency(String str){
         this.str = str;
     }
     

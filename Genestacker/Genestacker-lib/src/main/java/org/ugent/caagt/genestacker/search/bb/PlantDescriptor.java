@@ -21,7 +21,7 @@ import org.ugent.caagt.genestacker.Plant;
  * Represents a plant and the corresponding probability and linkage phase ambiguity
  * when growing this plant from its parent seed lot.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class PlantDescriptor {
     

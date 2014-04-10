@@ -19,7 +19,7 @@ import org.ugent.caagt.genestacker.search.CrossingSchemeDescriptor;
 /**
  * Constraint on the total number of crossings in the scheme.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class MaxTotalCrossings implements Constraint {
 

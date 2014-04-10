@@ -20,7 +20,7 @@ package org.ugent.caagt.genestacker.search;
  * It represents the key properties of the plant node and the extended scheme to which it will be attached
  * which are required to be able to compute the population size required to grow this target.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class FuturePlantNode extends PlantNode {
     

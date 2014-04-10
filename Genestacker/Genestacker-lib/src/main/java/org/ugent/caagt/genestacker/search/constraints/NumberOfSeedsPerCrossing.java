@@ -24,7 +24,7 @@ import org.ugent.caagt.genestacker.search.SeedLotNode;
  * Expresses the number of seeds that are produced from one crossing, and is used
  * to detect and resolve possible depleted seed lots.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class NumberOfSeedsPerCrossing {
     
@@ -36,12 +36,13 @@ public class NumberOfSeedsPerCrossing {
     }
     
     /**
-     * Returns a list of depleted seed lots, i.e. seed lots from which more seeds
+     * Returns a list of depleted seed lots, i.e seed lots from which more seeds
      * are taken than the total number of available seeds in this lot (taking into
      * account the number of parent crossings of the seed lot). Initial seed lots
      * are assumed never to be depleted.
      * 
-     * @param scheme 
+     * @param scheme crossing scheme in which depleted seed lots are identified
+     * @return list of all depleted seed lot nodes
      */
     public List<SeedLotNode> getDepletedSeedLots(CrossingScheme scheme){
         // get seed lot nodes in scheme

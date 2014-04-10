@@ -18,7 +18,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import org.ugent.caagt.genestacker.Genotype;
-import org.ugent.caagt.genestacker.ObservableGenotypeState;
 import org.ugent.caagt.genestacker.SeedLot;
 import org.ugent.caagt.genestacker.util.ProbabilityTools;
 
@@ -26,6 +25,8 @@ import org.ugent.caagt.genestacker.util.ProbabilityTools;
  * Computes population sizes so that each target is observed at least once with a desired success rate.
  * The success rate per target is automatically inferred from the given total success rate, so that the
  * entire crossing scheme will have this total success rate.
+ * 
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class DefaultPopulationSizeTools extends PopulationSizeTools {
 
@@ -43,13 +44,13 @@ public class DefaultPopulationSizeTools extends PopulationSizeTools {
      */
     @Override
     public double computeDesiredSuccessProbPerTarget(int numTargetsFromNonUniformSeedLots){
-        return Math.pow(getSuccessProbability(), 1.0 / numTargetsFromNonUniformSeedLots);
+        return Math.pow(getGlobalSuccessRate(), 1.0 / numTargetsFromNonUniformSeedLots);
     }
     
     @Override
     public double computeTargetProbLowerBound(SeedLot seedLot, int maxPopSizePerGen){
         // lower bound based on gamma instead of gamma'; still holds as gamma' >= gamma
-        return 1 - Math.pow(1-getSuccessProbability(), 1.0/maxPopSizePerGen); // same for any seed lot
+        return 1 - Math.pow(1-getGlobalSuccessRate(), 1.0/maxPopSizePerGen); // same for any seed lot
     }
     
     /**

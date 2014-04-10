@@ -36,7 +36,7 @@ import org.ugent.caagt.genestacker.search.bb.heuristics.OptimalSeedLotParetoFron
 
 /**
  *
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class OptimalSeedLotHeuristicTest extends TestCase {
     
@@ -147,7 +147,7 @@ public class OptimalSeedLotHeuristicTest extends TestCase {
         /* TEST HEURISTIC */
         /******************/
         
-        assertFalse(heur.boundCurrentScheme(scheme));
+        assertFalse(heur.pruneCurrentScheme(scheme));
         
         /***************/
         /* TEST CASE 2 */
@@ -165,7 +165,7 @@ public class OptimalSeedLotHeuristicTest extends TestCase {
         /* TEST HEURISTIC */
         /******************/
         
-        assertFalse(heur.boundCurrentScheme(scheme));
+        assertFalse(heur.pruneCurrentScheme(scheme));
                 
     }
 

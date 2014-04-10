@@ -21,37 +21,59 @@ import java.util.Set;
 import org.ugent.caagt.genestacker.SeedLot;
 
 /**
- *
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * Tools used to compute population sizes based on the probability of obtaining the desired target genotypes.
+ * 
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public abstract class PopulationSizeTools {
 
-    // desired success probability
-    private double successProbability;
+    // desired global success probability
+    private double globalSuccessRate;
     
-    public PopulationSizeTools(double successProbability){
-        this.successProbability = successProbability;
-    }
-    
-    public double getSuccessProbability(){
-        return successProbability;
+    /**
+     * Create a new instance.
+     * 
+     * @param globalSuccessRate desired global success rate for each entire schedule
+     */
+    public PopulationSizeTools(double globalSuccessRate){
+        this.globalSuccessRate = globalSuccessRate;
     }
     
     /**
-     * Computes the desired success probability per target.
+     * Get the desired global success rate for each entire schedule.
+     * 
+     * @return desired global success rate
+     */
+    public double getGlobalSuccessRate(){
+        return globalSuccessRate;
+    }
+    
+    /**
+     * Computes the success rate per target, based on the desired global success rate
+     * and the number of targets obtained from nonuniform seed lots throughout the schedule.
+     * 
+     * @param numTargetsFromNonUniformSeedLots number of targets obtained from nonuniform seed lots
+     * @return success rate per target that guarantees the desired global success rate
      */
     public abstract double computeDesiredSuccessProbPerTarget(int numTargetsFromNonUniformSeedLots);
     
     /**
-     * Computes a lower bound for the probability to observe any target as offspring of a given seed lot,
-     * taking into account the maximum allowed population size per generation.
+     * Computes a necessary lower bound for the probability to obtain any target among the offspring
+     * of a given seed lot, taking into account the maximum allowed population size per generation.
+     * 
+     * @param seedLot considered seed lot
+     * @param maxPopSizePerGen maximum population size per generation
+     * @return necessary lower bound for probability of desired target genotype to fall within the constraints
      */
     public abstract double computeTargetProbLowerBound(SeedLot seedLot, int maxPopSizePerGen);
     
     /**
-     * Compute the required number of seeds taken from this seed lot per
-     * generation in which some plants are grown from this seed lot. Returns a map
-     * indicating how many seeds are taken in each generation.
+     * Compute the required number of seeds taken from this seed lot per generation in which
+     * plants are grown from this seed lot. Returns a map indicating how many seeds are taken
+     * in each generation.
+     * 
+     * @param seedLotNode seed lot node
+     * @return map containing number of seeds taken from this seed lot, per generation
      */
     public Map<Integer, Long> computeSeedsTakenFromSeedLotPerGeneration(SeedLotNode seedLotNode){
         // compute seeds required for each generation in which plants are grown from this seed lot

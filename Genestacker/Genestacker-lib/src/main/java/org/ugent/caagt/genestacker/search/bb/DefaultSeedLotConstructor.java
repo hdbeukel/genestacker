@@ -25,21 +25,21 @@ import org.ugent.caagt.genestacker.DiploidChromosome;
 import org.ugent.caagt.genestacker.GeneticMap;
 import org.ugent.caagt.genestacker.Genotype;
 import org.ugent.caagt.genestacker.Haplotype;
-import org.ugent.caagt.genestacker.IndistinguishableGenotypeGroup;
-import org.ugent.caagt.genestacker.ObservableDiploidChromosomeState;
-import org.ugent.caagt.genestacker.ObservableDiploidTargetState;
-import org.ugent.caagt.genestacker.ObservableGenotypeState;
+import org.ugent.caagt.genestacker.GenotypeGroupWithSameAllelicFrequencies;
+import org.ugent.caagt.genestacker.ChromosomeAllelicFrequencies;
+import org.ugent.caagt.genestacker.AllelicFrequency;
+import org.ugent.caagt.genestacker.GenotypeAllelicFrequencies;
 import org.ugent.caagt.genestacker.SeedLot;
 import org.ugent.caagt.genestacker.exceptions.GenotypeException;
 import org.ugent.caagt.genestacker.exceptions.IncompatibleGeneticMapException;
 import org.ugent.caagt.genestacker.exceptions.IncompatibleGenotypesException;
 
 /**
- * Default seed lot constructor that creates the entire seed lot obtained from
- * a given crossing or selfing of plants, containing all possible child genotypes
+ * Default seed lot constructor that creates the seed lot obtained from
+ * a given crossing or selfing, containing all possible child genotypes
  * with their respective probability and linkage phase ambiguity.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class DefaultSeedLotConstructor extends SeedLotConstructor {
     
@@ -65,10 +65,28 @@ public class DefaultSeedLotConstructor extends SeedLotConstructor {
     }
     
     /**
-     * Generate all gametes that can be produced by a single chromosome of a given genotype.
+     * Recursively generate all haplotypes that can be produced by a single chromosome of a given genotype.
+     * 
+     * @param parent parental genotype
+     * @param chromIndex index of chromosome for which the possible gametes have to be computed
+     * @param haplotypes currently constructed haplotypes, extended during recursion
+     * @param curHaplotype current haplotype under construction, extended during recursion
+     * @param curP current probability of gamete under construction, updated during recursion
+     * @param locus index of current considered locus in chromosome
+     * @param previousHeterozygousLocus index of last heterozygous locus before the current locus, -1 if none
+     * @param previousHaplotypePicked index of haplotype (0/1) of the considered chromosome that passed on its
+     *                                allele to the constructed gamete at the last heterozygous locus before the
+     *                                current locus, -1 if none
+     * @param desiredAllelicFreqs optional: only construct gametes that may yield the desired allelic frequencies
+     *                            when crossing <code>parent</code> with <code>otherParent</code>; may be null
+     * @param otherParent optional: other genotype with which <code>parent</code> will be crossed; should
+     *                    only be provided if <code>desiredAllelicFreqs</code> is stated, and will then be
+     *                    used to skip options that cannot yield the desired allelic frequencies when crossing
+     *                    with this other genotype
+     * @throws GenotypeException if anything goes wrong when construction the haplotypes of the generated gametes
      */
-    protected void genChromosomeGametes(Genotype parent, Genotype otherParent, ObservableGenotypeState desiredObservation,
-                                        int chromIndex, Map<Haplotype, Double> gametes, LinkedList<Boolean> curTargets,
+    protected void genChromosomeGametes(Genotype parent, Genotype otherParent, GenotypeAllelicFrequencies desiredAllelicFreqs,
+                                        int chromIndex, Map<Haplotype, Double> haplotypes, LinkedList<Boolean> curHaplotype,
                                         double curP, int locus, int previousHeterozygousLocus, int previousHaplotypePicked)
                                             throws GenotypeException{
         
@@ -76,9 +94,9 @@ public class DefaultSeedLotConstructor extends SeedLotConstructor {
         
         // check if construction complete
         if(locus >= chrom.nrOfLoci()){
-            // store completed gamete (copy target list !!)
-            List<Boolean> targetsCopy = new ArrayList<>(curTargets);
-            gametes.put(new Haplotype(targetsCopy), curP);
+            // store completed gamete (copy haplotype !!)
+            List<Boolean> hapCopy = new ArrayList<>(curHaplotype);
+            haplotypes.put(new Haplotype(hapCopy), curP);
             return;
         }
         
@@ -89,12 +107,12 @@ public class DefaultSeedLotConstructor extends SeedLotConstructor {
             // homozygous target is immune for recombination!
 
             // extend current targets with the only possible option
-            curTargets.add(chrom.getHaplotypes()[0].targetPresent(locus));
+            curHaplotype.add(chrom.getHaplotypes()[0].targetPresent(locus));
             // recursion (probability does not change)
-            genChromosomeGametes(parent, otherParent, desiredObservation, chromIndex, gametes, curTargets, curP, locus+1,
+            genChromosomeGametes(parent, otherParent, desiredAllelicFreqs, chromIndex, haplotypes, curHaplotype, curP, locus+1,
                                     previousHeterozygousLocus, previousHaplotypePicked);
             // backtracking: remove target
-            curTargets.removeLast();
+            curHaplotype.removeLast();
         } else {
                         
             // heterozygous target: create both possible extended gametes
@@ -102,12 +120,19 @@ public class DefaultSeedLotConstructor extends SeedLotConstructor {
             
             for(int haplotypePicked=0; haplotypePicked <= 1; haplotypePicked++){
                 
-                // check if currently considered option can lead to the desired observation, if any
-                if(desiredObservation == null || canYieldDesiredObservation(desiredObservation, parent, otherParent,
-                                                    chromIndex, locus, haplotypePicked)){
+                // check if currently considered option can lead to the desired observation, if any,
+                // through a crossing of the considered genotype with the given other genotype
+                if(desiredAllelicFreqs == null
+                        || canYieldDesiredObservation(
+                                desiredAllelicFreqs.getChromosomeAllelicFrequencies().get(chromIndex)
+                                                   .getAllelicFrequencies()[locus],
+                                otherParent.getAllelicFrequencies().getChromosomeAllelicFrequencies()
+                                           .get(chromIndex).getAllelicFrequencies()[locus],
+                                chrom.getHaplotypes()[haplotypePicked].targetPresent(locus)
+                        )){
                 
                     // extend current targets with the selected option
-                    curTargets.add(chrom.getHaplotypes()[haplotypePicked].targetPresent(locus));
+                    curHaplotype.add(chrom.getHaplotypes()[haplotypePicked].targetPresent(locus));
 
                     // update probability: depends on recombination factors
                     double r, newP;
@@ -128,9 +153,10 @@ public class DefaultSeedLotConstructor extends SeedLotConstructor {
                     }
 
                     // recursion
-                    genChromosomeGametes(parent, otherParent, desiredObservation, chromIndex, gametes, curTargets, newP, locus+1, locus, haplotypePicked);
+                    genChromosomeGametes(parent, otherParent, desiredAllelicFreqs, chromIndex, haplotypes,
+                                                        curHaplotype, newP, locus+1, locus, haplotypePicked);
                     // backtracking: remove last target
-                    curTargets.removeLast();
+                    curHaplotype.removeLast();
                 
                 }
                 
@@ -141,44 +167,63 @@ public class DefaultSeedLotConstructor extends SeedLotConstructor {
     }
     
     /**
-     * Check if the current option may yield the desired observation, taking into account
-     * the genotype of both parents. Will return true if and only if one of the following 
-     * cases holds:
+     * Check if the selected allele at a specific locus of the considered chromosome (either the allele of the top or
+     * bottom haplotype) may yield the desired allelic frequencies, when the parental genotype is crossed with a fixed
+     * other genotype. Will return <code>true</code> if and only if one of the following cases holds:
      * <ul>
-     *  <li>The observation contains the target TWICE at this locus and the current option also contains the target gene</li>
-     *  <li>The observation does not contain the target gene and neither does the current option</li>
-     *  <li>The observation contains the target gene ONCE at this locus, and one of these sub-cases holds:
+     *  <li>Frequency TWICE is desired at this locus, and the selected allele is 1.</li>
+     *  <li>Frequency NONE is desired at this locus, and the selected allele is 0.</li>
+     *  <li>Frequency ONCE is desired at this locus, and one of these sub-cases holds:
      *      <ul>
-     *          <li>The other parent contains the target TWICE and the current option does not contain the target</li>
-     *          <li>The other parent does not contain the target but the current options does</li>
-     *          <li>The other parent contains the target ONCE and the current option either does or does not contain
-     *            the target (both are allowed, this is the only cases where there will be a branching during gamete generation)</li>
+     *          <li>
+     *              The other parent has frequency TWICE at this locus and the selected allele is 0.
+     *          </li>
+     *          <li>
+     *              The other parent has frequency NONE at this locus and the selected allele is 1.
+     *          </li>
+     *          <li>
+     *              The other parent has frequency ONCE at this locus, regardless of the selected allele
+     *              (both 0 and 1 are allowed here, which will cause branching during recursive construction
+     *              of gametes).
+     *          </li>
      *      </ul>
      *  </li>
      * </ul>
+     * 
+     * @param desiredAllelicFrequency desired allelic frequency at the considered locus
+     * @param otherParentAllelicFrequency allelic frequency of other fixed parental genotype
+     * @param selectedAllele currently selected allele (allele of either top or bottom haplotype
+     *                       at the considered locus of the considered chromosome of the parental
+     *                       genotype for which gametes are being constructed)
+     * @return <code>true</code> if the selected allele may yield the desired frequency, taking into
+     *         account the allelic frequency of the other parent at the considered locus
      */
-    protected boolean canYieldDesiredObservation(ObservableGenotypeState desiredObs, Genotype parent, Genotype otherParent,
-                                                    int chromIndex, int locus, int haplotypePicked){
-        
-        ObservableDiploidTargetState desiredLocusObs = desiredObs.getObservableChromosomeStates().get(chromIndex).getTargetStates()[locus];
-        DiploidChromosome parentChrom = parent.getChromosomes().get(chromIndex);
-        ObservableDiploidTargetState otherParentLocusObs = otherParent.getChromosomes().get(chromIndex).getObservableState().getTargetStates()[locus];
-        
-        return   ( desiredLocusObs == ObservableDiploidTargetState.TWICE && parentChrom.getHaplotypes()[haplotypePicked].targetPresent(locus)
-                || desiredLocusObs == ObservableDiploidTargetState.NONE && !parentChrom.getHaplotypes()[haplotypePicked].targetPresent(locus)
-                || desiredLocusObs == ObservableDiploidTargetState.ONCE &&
+    protected boolean canYieldDesiredObservation(AllelicFrequency desiredAllelicFrequency,
+                                                 AllelicFrequency otherParentAllelicFrequency,
+                                                 boolean selectedAllele){
+                
+        return   ( desiredAllelicFrequency == AllelicFrequency.TWICE && selectedAllele
+                || desiredAllelicFrequency == AllelicFrequency.NONE && !selectedAllele
+                || desiredAllelicFrequency == AllelicFrequency.ONCE &&
                     (
-                           otherParentLocusObs == ObservableDiploidTargetState.TWICE && !parentChrom.getHaplotypes()[haplotypePicked].targetPresent(locus)
-                        || otherParentLocusObs == ObservableDiploidTargetState.NONE && parentChrom.getHaplotypes()[haplotypePicked].targetPresent(locus)
-                        || otherParentLocusObs == ObservableDiploidTargetState.ONCE
+                           otherParentAllelicFrequency == AllelicFrequency.TWICE && !selectedAllele
+                        || otherParentAllelicFrequency == AllelicFrequency.NONE && selectedAllele
+                        || otherParentAllelicFrequency == AllelicFrequency.ONCE
                     ));
         
     }
         
     /**
-     * Combine possible chromosomes to create the set of all possible genotypes, with their respective probability.
-     * If the map with complete genotypes already contains some entries upon calling this method, these will be retained
-     * and new genotypes will be added to the map.
+     * Recursively combine possible chromosomes to create the set of all possible genotypes, with their respective
+     * probability. If the map with complete genotypes already contains some entries upon calling this method, these
+     * will be retained and new genotypes will be added to the map.
+     * 
+     * @param possibleChromosomes list containing possible outcomes (and the respective probability) per chromosome
+     * @param chromIndex index of chromosome for which each option is considered through recursion
+     * @param curP current probability of the complete genotype, updated during recursion
+     * @param curGenotype currently constructed complete genotype, extended during recursion by adding more chromosomes
+     * @param completeGenotypes set of complete genotypes resulting from the combination of possible chromosomes,
+     *                          extended during recursion
      */
     protected void combineChromosomes(List<Map<DiploidChromosome, Double>> possibleChromosomes, int chromIndex, double curP,
                                         LinkedList<DiploidChromosome> curGenotype, Map<Genotype, Double> completeGenotypes){
@@ -204,49 +249,79 @@ public class DefaultSeedLotConstructor extends SeedLotConstructor {
     }
     
     /**
-     * Creates the seed lot containing all generated genotypes by grouping them according
-     * to their observable state, and computes the probabilities and ambiguities (of each group).
-     * This assumes that for any created genotype, the entire group of genotypes sharing 
-     * the same observation has been generated. This is assured in the default implementations
-     * of both <code>cross</code> and <code>partialCross</code>.
+     * Creates the seed lot containing all generated genotypes by grouping them according to their allelic
+     * frequencies, and computes all probabilities and linkage phase ambiguities (per group). This assumes
+     * that for any created genotype, the entire group of genotypes sharing  the same allelic frequencies
+     * has been generated. This is assured in the default implementations of both {@link #cross(Genotype, Genotype)}
+     * and {@link #partialCross(Genotype, Genotype, Set)}.
+     * 
+     * @param parent1 parental genotype 1
+     * @param parent2 parental genotype 2
+     * @param genotypes all genotypes (and corresponding probabilities) that may be produced by crossing
+     *                  the given parental genotypes
+     * @return a seed lot modelling all possible genotypes, grouped according to shared allelic frequencies,
+     *         including all probabilities and linkage phase ambiguities
      */
-    protected SeedLot genSeedLotFromGenotypes(Genotype parent1, Genotype parent2, Map<Genotype, Double> genotypeProbs){
+    protected SeedLot genSeedLotFromGenotypes(Genotype parent1, Genotype parent2, Map<Genotype, Double> genotypes){
         
         // group genotypes by observable state and compute probability of each genotype group:
-        Map<ObservableGenotypeState, Map<Genotype, Double>> groups = new HashMap<>();
-        Map<ObservableGenotypeState, Double> observableStateProbs = new HashMap<>();
-        for(Genotype g : genotypeProbs.keySet()){
-            ObservableGenotypeState state = g.getObservableState();
+        Map<GenotypeAllelicFrequencies, Map<Genotype, Double>> groups = new HashMap<>();
+        Map<GenotypeAllelicFrequencies, Double> observableStateProbs = new HashMap<>();
+        for(Genotype g : genotypes.keySet()){
+            GenotypeAllelicFrequencies state = g.getAllelicFrequencies();
             if(groups.containsKey(state)){
                 // group already registered
-                groups.get(state).put(g, genotypeProbs.get(g));
-                observableStateProbs.put(state, observableStateProbs.get(state) + genotypeProbs.get(g));
+                groups.get(state).put(g, genotypes.get(g));
+                observableStateProbs.put(state, observableStateProbs.get(state) + genotypes.get(g));
             } else {
                 // first genotype from group
                 Map<Genotype, Double> genotypeMap = new HashMap<>();
-                genotypeMap.put(g, genotypeProbs.get(g));
+                genotypeMap.put(g, genotypes.get(g));
                 groups.put(state, genotypeMap);
-                observableStateProbs.put(state, genotypeProbs.get(g));
+                observableStateProbs.put(state, genotypes.get(g));
             }
         }
         
         // create seed lot
-        Map<ObservableGenotypeState, IndistinguishableGenotypeGroup> genotypeGroups = new HashMap<>();
-        for(ObservableGenotypeState state : groups.keySet()){
+        Map<GenotypeAllelicFrequencies, GenotypeGroupWithSameAllelicFrequencies> genotypeGroups = new HashMap<>();
+        for(GenotypeAllelicFrequencies state : groups.keySet()){
             // pack genotype group for registration in seed lot
-            genotypeGroups.put(state, new IndistinguishableGenotypeGroup(observableStateProbs.get(state), state, groups.get(state)));
+            genotypeGroups.put(state, new GenotypeGroupWithSameAllelicFrequencies(observableStateProbs.get(state), state, groups.get(state)));
         }
         // uniform seed lot if both parents are fully homozygous
-        boolean uniform = parent1.isHomozygousAtAllTargetLoci() && parent2.isHomozygousAtAllTargetLoci();
+        boolean uniform = parent1.isHomozygousAtAllContainedLoci() && parent2.isHomozygousAtAllContainedLoci();
         return new SeedLot(uniform, genotypeGroups);
         
     }
     
+    /**
+     * Generate the possible gametes that may be produced from each chromosome of the given parental genotype.
+     * 
+     * @param parent parental genotype
+     * @return collection of possible gametes that may be produced from each chromosome of the given
+     *         parental genotype, with their probabilities
+     * @throws GenotypeException if anything goes wrong while creating the possible gametes
+     */
     public List<Map<Haplotype, Double>> genGametesPerChromosome(Genotype parent) throws GenotypeException{
         return genGametesPerChromosome(parent, null, null);
     }
     
-    protected List<Map<Haplotype, Double>> genGametesPerChromosome(Genotype parent, Genotype otherParent, ObservableGenotypeState desiredObservation)
+    /**
+     * Generate the possible gametes that may be produced from each chromosome of the given parental genotype,
+     * and that can yield the desired allelic frequencies when being combined with a gamete produced by the given
+     * other genotype. This is used to obtain partial seed lots containing information about a predefined subset
+     * of the possible offspring of a crossing with these two genotypes.
+     * 
+     * @param parent parental genotype
+     * @param otherParent other genotype
+     * @param desiredAllelicFreqs desired allelic frequencies
+     * @return subset of possible gametes (and corresponding probabilities) produced per chromosome of
+     *         <code>parent</code>, so that the desired allelic frequencies may be obtained when combining
+     *         the constructed gametes with a gamete produced by the respective chromosome of <code>otherParent</code>
+     * @throws GenotypeException if anything goes wrong while creating the possible gametes
+     */
+    protected List<Map<Haplotype, Double>> genGametesPerChromosome(Genotype parent, Genotype otherParent,
+                                                                   GenotypeAllelicFrequencies desiredAllelicFreqs)
                                                                                 throws GenotypeException{
         List<Map<Haplotype, Double>> gametesPerChromosome = new ArrayList<>();
         // generate chromosome gametes
@@ -255,7 +330,7 @@ public class DefaultSeedLotConstructor extends SeedLotConstructor {
             LinkedList<Boolean> curTargets = new LinkedList<>();
             Map<Haplotype, Double> chromGametes = new HashMap<>();
             // recursive backtracking
-            genChromosomeGametes(parent, otherParent, desiredObservation, c, chromGametes, curTargets, 1.0, 0, -1, -1);
+            genChromosomeGametes(parent, otherParent, desiredAllelicFreqs, c, chromGametes, curTargets, 1.0, 0, -1, -1);
             // store chromosome gametes
             gametesPerChromosome.add(chromGametes);
         }
@@ -264,11 +339,12 @@ public class DefaultSeedLotConstructor extends SeedLotConstructor {
     }
         
     /**
-     * Generate entire seed lot created by crossing two given genotypes.
+     * Generate entire seed lot obtained by crossing two given genotypes.
      * 
-     * @param g1
-     * @param g2
-     * @throws GenotypeException  
+     * @param g1 genotype 1
+     * @param g2 genotype 2
+     * @return entire seed lot obtained by crossing the two given genotypes
+     * @throws GenotypeException  if anything goes wrong while creating the seed lot
      */
     @Override
     public SeedLot cross(Genotype g1, Genotype g2) throws GenotypeException {
@@ -326,16 +402,17 @@ public class DefaultSeedLotConstructor extends SeedLotConstructor {
     }
     
     /**
-     * Generate PART of the seed lot from crossing two given parent genotypes, restricted
-     * to the set of desired child genotypes. This will also compute the probability of
-     * genotypes with the same observation as one of the desired children to allow computation
-     * of the respective linkage phase ambiguities. Note: the cache is not used here because these
-     * computations are not general.
+     * Generate PART of the seed lot obtained by crossing two given genotypes, confined to a predefined
+     * set of genotypes among the offspring for which properties (LPA, probability) are to be inferred.
+     * For every genotype in <code>childGenotypes</code> the entire group of genotypes among the offspring
+     * with the same allelic frequencies as this genotype will be generated, so that linkage phase ambiguities
+     * can be inferred. Other genotype groups are not generated.
      * 
-     * @param g1
-     * @param g2
-     * @param childGenotypes
-     * @throws GenotypeException  
+     * @param g1 genotype 1
+     * @param g2 genotype 2
+     * @param childGenotypes genotypes among the offspring, obtained by crossing the two given genotypes,
+     *                       for which properties (LPA, probability) are to be inferred
+     * @throws GenotypeException if anything goes wrong while creating the seed lot
      */
     @Override
     public SeedLot partialCross(Genotype g1, Genotype g2, Set<Genotype> childGenotypes) throws GenotypeException {
@@ -345,15 +422,15 @@ public class DefaultSeedLotConstructor extends SeedLotConstructor {
         checkCompatibility(g1, g2);
 
         // convert to set of genotype observations
-        Set<ObservableGenotypeState> observations = new HashSet<>();
+        Set<GenotypeAllelicFrequencies> observations = new HashSet<>();
         for(Genotype g : childGenotypes){
-            observations.add(g.getObservableState());
+            observations.add(g.getAllelicFrequencies());
         }
         
         // generate all genotypes for each observation (mutually exclusive)
         Map<Genotype, Double> offspring = new HashMap<>();
         LinkedList<DiploidChromosome> curDipChromComb = new LinkedList<>();
-        for(ObservableGenotypeState obs : observations){
+        for(GenotypeAllelicFrequencies obs : observations){
             // get possible haplotypes per chromosome of g1 w.r.t desired observation (do not use the cache)
             List<Map<Haplotype, Double>> gametesPerChromosome1 = genGametesPerChromosome(g1, g2, obs);
             // for each chromosome: combine all options with the complementary haplotype from g2,
@@ -366,7 +443,7 @@ public class DefaultSeedLotConstructor extends SeedLotConstructor {
                 for(Map.Entry<Haplotype, Double> h1 : gametesPerChromosome1.get(c).entrySet()){
                     // compute complementary haplotype from g2
                     List<Boolean> complementaryHaplotype = new ArrayList<>();
-                    double h2p = createComplementaryHaplotype(c, h1.getKey(), obs.getObservableChromosomeStates().get(c), g2, complementaryHaplotype);
+                    double h2p = createComplementaryHaplotype(c, h1.getKey(), obs.getChromosomeAllelicFrequencies().get(c), g2, complementaryHaplotype);
                     // combine haplotypes to create diploid chromosome
                     DiploidChromosome dipChrom = new DiploidChromosome(h1.getKey(), new Haplotype(complementaryHaplotype));
                     // compute probability of this new combination
@@ -393,14 +470,23 @@ public class DefaultSeedLotConstructor extends SeedLotConstructor {
     }
     
     /**
-     * Create a new haplotype from the indicated chromosome of the given parent genotype, which is complementary to the given haplotype
-     * (coming from the other parent), meaning that the combination of both haplotypes gives the desired chromosome observation.
-     * The list of targets is filled and the probability of obtaining this complementary haplotype is returned. It is assumed that
-     * the desired observation can indeed be created from a combination of the already constructed haplotype and a complementary haplotype
-     * of this parent, else the behavior of this method is undefined.
+     * Create a new haplotype from the indicated chromosome of the given parent genotype, which is complementary to
+     * the given haplotype (produced by the other parent), in the sense that the combination of both haplotypes gives
+     * the desired allelic frequencies. The list <code>complementaryHaplotype</code> is filled during execution of
+     * this method and the probability of obtaining this complementary haplotype is returned. It is assumed that
+     * the desired observation can indeed be created from a combination of the already constructed haplotype and
+     * a complementary haplotype produced by this parent; else, the behaviour of this method is undefined.
+     * 
+     * @param parent parent genotype
+     * @param chromIndex index of considered chromosome of parent genotype, from which a haplotype is produced
+     * @param curHap already obtained haplotype, produced by the other parent
+     * @param desiredAllelicFreqs desired allelic frequencies when combining <code>curHap</code> with the haplotype
+     *                            produced by this method, from the considered chromosome of the given genotype
+     * @param complementaryHaplotype produced complementary haplotype, filled during execution of this method
+     * @return probability with which the constructed complementary haplotype is produced
      */
-    private double createComplementaryHaplotype(int chromIndex, Haplotype curHap, ObservableDiploidChromosomeState desiredObs,
-                                                    Genotype parent, List<Boolean> complementaryHaplotype) throws GenotypeException{
+    private double createComplementaryHaplotype(int chromIndex, Haplotype curHap, ChromosomeAllelicFrequencies desiredAllelicFreqs,
+                                                            Genotype parent, List<Boolean> complementaryHaplotype){
         double p = 1.0;
         DiploidChromosome parentChrom = parent.getChromosomes().get(chromIndex);
         // go through loci on chromosome
@@ -413,8 +499,8 @@ public class DefaultSeedLotConstructor extends SeedLotConstructor {
                 complementaryHaplotype.add(parentChrom.getHaplotypes()[0].targetPresent(l));
             } else {
                 // heterozygous: compute desired complementary target
-                boolean complementaryTarget = (!curHap.targetPresent(l) && desiredObs.getTargetStates()[l] == ObservableDiploidTargetState.ONCE
-                                            || curHap.targetPresent(l) && desiredObs.getTargetStates()[l] == ObservableDiploidTargetState.TWICE);
+                boolean complementaryTarget = (!curHap.targetPresent(l) && desiredAllelicFreqs.getAllelicFrequencies()[l] == AllelicFrequency.ONCE
+                                            || curHap.targetPresent(l) && desiredAllelicFreqs.getAllelicFrequencies()[l] == AllelicFrequency.TWICE);
                 // select the complementary target from the parent's chromosome (and update probability)
                 complementaryHaplotype.add(complementaryTarget);
                 double r;

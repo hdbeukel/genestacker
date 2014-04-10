@@ -25,7 +25,7 @@ import org.ugent.caagt.genestacker.search.bb.PlantDescriptor;
 /**
  * Groups a set of alternative ways to construct a specific crossing scheme.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class CrossingSchemeAlternatives {
     

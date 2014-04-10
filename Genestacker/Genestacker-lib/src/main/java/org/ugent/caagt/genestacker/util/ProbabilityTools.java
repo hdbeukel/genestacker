@@ -15,20 +15,20 @@
 package org.ugent.caagt.genestacker.util;
 
 /**
- * Offers a set of tools for computing success probabilities of crossings etc.
+ * Utilities for computing advanced probabilities.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class ProbabilityTools {
 
     /**
-     * Computes the probability of obtaining each of the events LESS times than
-     * the maximum number (inclusive) indicated in the input arguments, in a total
-     * of n trials.
+     * Computes the probability of obtaining each of the events i at most <code>maxOcc[i]</code> times (inclusive),
+     * in a total of n Bernoulli trials, where the probability of obtaining event i is equal to <code>probs[i]</code>.
      * 
-     * @param probs Probabilities of the events
-     * @param maxOcc Respective maximum number of occurrences (inclusive) of each event
-     * @param n Number of trials
+     * @param probs probabilities of the events
+     * @param maxOcc maximum number of occurrences (inclusive) of each event
+     * @param n number of Bernoulli trials
+     * @return probability that each event will be obtained at most the desired maximum number of times, in n trials
      */
     public double computeProbMaxOcc(double[] probs, int[] maxOcc, long n){
         // check input
@@ -67,13 +67,13 @@ public class ProbabilityTools {
     }
  
     /**
-     * Computes the probability of obtaining each of the events AT LEAST as many times
-     * as the minimum number (inclusive) indicated in the input arguments, in a total
-     * of n trials.
+     * Computes the probability of obtaining each of the events i at least <code>minOcc[i]</code> times (inclusive),
+     * in a total of n Bernoulli trials, where the probability of obtaining event i is equal to <code>probs[i]</code>.
      * 
-     * @param probs Probabilities of the events
-     * @param minOcc Respective minimum number of occurrences (inclusive) of each event
-     * @param n Number of trials
+     * @param probs probabilities of the events
+     * @param minOcc minimum number of occurrences (inclusive) of each event
+     * @param n number of Bernoulli trials
+     * @return probability that each event will be obtained at least the desired minimum number of times, in n trials
      */
     public double computeProbMinOcc(double[] probs, int[] minOcc, long n){
          // check input
@@ -107,7 +107,7 @@ public class ProbabilityTools {
             // add/subtract (depending on sign) term to prob
             prob += term;
             // update sign
-            sign = sign * -1;
+            sign = -sign;
         }
         
         return prob;

@@ -49,9 +49,9 @@ import org.ugent.caagt.genestacker.util.DebugUtils;
 import org.ugent.caagt.genestacker.util.TimeFormatting;
 
 /**
- * Abstract branch and bound search engine.
+ * Branch and bound generation algorithm.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class BranchAndBound extends SearchEngine {
     
@@ -187,6 +187,8 @@ public class BranchAndBound extends SearchEngine {
     
     /**
      * Write intermediate output whenever the Pareto frontier is updated.
+     * 
+     * @param intermediateOutputFileName file name used for intermediate output file
      */
     public void enableIntermediateOutput(String intermediateOutputFileName){
         writeIntermediateOutput = true;
@@ -263,7 +265,7 @@ public class BranchAndBound extends SearchEngine {
         registerNewSchemes(initialParentSchemes, solutionManager);
         
         // now iteratively cross schemes with previous schemes to create larger schemes,
-        // until all solutions have been inspected or bounded
+        // until all solutions have been inspected or pruned
         while(!runtimeLimitExceeded() && !schemeQueue.isEmpty()){
             
             // get next scheme from queue
@@ -285,7 +287,7 @@ public class BranchAndBound extends SearchEngine {
                 DebugUtils.waitForEnter();
             }
             
-            // delete possible bounded alternatives
+            // delete possible pruned alternatives
             Iterator<CrossingScheme> it = cur.iterator();
             int numForCrossing = 0;
             int numForSelfing = 0;
@@ -295,22 +297,22 @@ public class BranchAndBound extends SearchEngine {
                 if(previousSchemeAlternatives.contains(alt)){
                     // equivalent scheme alternative generated before, delete current alternative
                     it.remove();
-                } else if (solutionManager.boundDequeueScheme(alt)){
-                    // dequeing of scheme bounded (e.g. by the optimal subscheme heuristic)
+                } else if (solutionManager.pruneDequeueScheme(alt)){
+                    // prune dequeued scheme (e.g. by the optimal subscheme heuristic)
                     it.remove();
                 } else {
-                    // check bounding for crossing/selfing
-                    boolean boundCross = solutionManager.boundCrossCurrentScheme(alt);
-                    boolean boundSelf = solutionManager.boundSelfCurrentScheme(alt);
-                    if(boundCross && boundSelf){
+                    // check pruning for crossing/selfing
+                    boolean pruneCross = solutionManager.pruneCrossCurrentScheme(alt);
+                    boolean pruneSelf = solutionManager.pruneSelfCurrentScheme(alt);
+                    if(pruneCross && pruneSelf){
                         // alternative not useful anymore
                         it.remove();
                     } else {
                         // count nr of alternatives useful for crossing or selfing
-                        if(!boundCross){
+                        if(!pruneCross){
                             numForCrossing++;
                         }
-                        if(!boundSelf){
+                        if(!pruneSelf){
                             numForSelfing++;
                         }
                     }
@@ -367,7 +369,11 @@ public class BranchAndBound extends SearchEngine {
     }
     
     /**
-     * Register new schemes.
+     * Register new schemes in the Pareto frontier.
+     * 
+     * @param newSchemes newly created crossing schemes
+     * @param solManager solution manager
+     * @throws GenestackerException if anything goes wrong while creating (intermediate or debug) output
      */
     protected void registerNewSchemes(List<CrossingSchemeAlternatives> newSchemes, BranchAndBoundSolutionManager solManager)
                                                                                     throws GenestackerException {
@@ -376,7 +382,7 @@ public class BranchAndBound extends SearchEngine {
             for(CrossingSchemeAlternatives scheme : newSchemes){
                 // go through alternatives to:
                 //  1) register possible solutions
-                //  2) remove bounded alternatives
+                //  2) remove pruned alternatives
                 Iterator<CrossingScheme> it = scheme.iterator();
                 while(it.hasNext()){
                     CrossingScheme alt = it.next();
@@ -406,11 +412,11 @@ public class BranchAndBound extends SearchEngine {
                             DebugUtils.waitForEnter();
                         }
                     }
-                    // check if further extension of alternative should be bounded
-                    if(solManager.boundCrossCurrentScheme(alt) && solManager.boundSelfCurrentScheme(alt)){
+                    // check if further extension of alternative should be pruned
+                    if(solManager.pruneCrossCurrentScheme(alt) && solManager.pruneSelfCurrentScheme(alt)){
                         // alternative not useful for further crossing or selfing, so delete it
                         it.remove();
-                    } else if(solManager.boundQueueScheme(alt)){
+                    } else if(solManager.pruneQueueScheme(alt)){
                         // do not queue this scheme alternative (e.g. because some heuristic prevents it)
                         it.remove();
                     }
@@ -480,11 +486,14 @@ public class BranchAndBound extends SearchEngine {
     /**
      * Create all possible crossing schemes obtained by selfing the final plant of the given scheme.
      * 
-     * @param scheme
-     * @param map
-     * @param solManager
-     * @throws GenotypeException
-     * @throws CrossingSchemeException  
+     * @param scheme crossing scheme to be extended by a selfing of its final plant
+     * @param map genetic map
+     * @param solManager solution manager
+     * @return list of crossing scheme alternatives resulting from the extension
+     * @throws GenotypeException if something goes wrong when creating the seed lot
+     *         obtained from the performed selfing
+     * @throws CrossingSchemeException if anything goes wrong while extending the crossing
+     *         schedule with new nodes
      */
     public List<CrossingSchemeAlternatives> selfScheme(CrossingSchemeAlternatives scheme, GeneticMap map, BranchAndBoundSolutionManager solManager)
                                                                         throws GenotypeException,
@@ -503,18 +512,18 @@ public class BranchAndBound extends SearchEngine {
             Plant p = new Plant(g);
             PlantDescriptor pdesc = new PlantDescriptor(
                         p,
-                        sl.getGenotypeGroup(g.getObservableState()).getProbabilityOfPhaseKnownGenotype(g),
-                        sl.getGenotypeGroup(g.getObservableState()).getLinkagePhaseAmbiguity(g),
+                        sl.getGenotypeGroup(g.getAllelicFrequencies()).getProbabilityOfPhaseKnownGenotype(g),
+                        sl.getGenotypeGroup(g.getAllelicFrequencies()).getLinkagePhaseAmbiguity(g),
                         sl.isUniform()
                     );
-            if(!solManager.boundGrowPlantFromAncestors(scheme.getAncestorDescriptors(), pdesc)){
+            if(!solManager.pruneGrowPlantFromAncestors(scheme.getAncestorDescriptors(), pdesc)){
                 // list containing alternatives of new scheme
                 List<CrossingScheme> newAlts = new ArrayList<>();
                 // go through alternatives
                 for(int i=0; i<scheme.nrOfAlternatives(); i++){
                     CrossingScheme alt = scheme.getAlternatives().get(i);
-                    // check bounding
-                    if(!solManager.boundSelfCurrentSchemeWithSelectedTarget(alt, pdesc)){                    
+                    // check pruning
+                    if(!solManager.pruneSelfCurrentSchemeWithSelectedTarget(alt, pdesc)){                    
                             // deep copy current node structure
                             PlantNode selfed = alt.getFinalPlantNode().deepUpwardsCopy();
                             // create new selfing node and connect with parent plant
@@ -527,7 +536,7 @@ public class BranchAndBound extends SearchEngine {
                             PlantNode newFinalPlantNode = new PlantNode(p, alt.getNumGenerations()+1, sln);
                             // create new crossing scheme and resolve possible depleted seed lots
                             CrossingScheme newScheme = new CrossingScheme(alt.getPopulationSizeTools(), newFinalPlantNode);
-                            if(!solManager.boundCurrentScheme(newScheme)
+                            if(!solManager.pruneCurrentScheme(newScheme)
                                 && newScheme.resolveDepletedSeedLots(solManager)){
                                 // depleted seed lots successfully resolved, satisfying constraints
                                 newAlts.add(newScheme);
@@ -543,10 +552,23 @@ public class BranchAndBound extends SearchEngine {
         return newSchemes;
     }
     
+    /**
+     * Create all possible crossing schemes obtained by crossing the final plants of the given schemes, and merging
+     * these schemes.
+     * 
+     * @param scheme1 first crossing scheme
+     * @param scheme2 second crossing scheme
+     * @param map genetic map
+     * @param solManager solution manager
+     * @return list of crossing scheme alternatives resulting from the extension
+     * @throws GenotypeException if something goes wrong when creating the seed lot
+     *         obtained from the performed crossing
+     * @throws CrossingSchemeException if anything goes wrong while extending the crossing
+     *         schedule with new nodes
+     */
     public List<CrossingSchemeAlternatives> combineSchemes(CrossingSchemeAlternatives scheme1, CrossingSchemeAlternatives scheme2,
                                                            GeneticMap map, BranchAndBoundSolutionManager solManager)
-                                                                                throws  SearchException,
-                                                                                        GenotypeException,
+                                                                                throws  GenotypeException,
                                                                                         CrossingSchemeException{
         
         /************************/
@@ -557,33 +579,33 @@ public class BranchAndBound extends SearchEngine {
         SeedLot sl = constructSeedLot(Math.max(scheme1.getMinNumGen(), scheme2.getMinNumGen())+1,
                                         scheme1.getFinalPlant(), scheme2.getFinalPlant(), map, solManager);
 
-        // BOUNDING
+        // PRUNING
         
-        // compute bounded genotypes
+        // compute pruned genotypes
         Set<PlantDescriptor> ancestors = new HashSet<>();
         ancestors.addAll(scheme1.getAncestorDescriptors());
         ancestors.addAll(scheme2.getAncestorDescriptors());
-        Set<Genotype> boundedGenotypes = new HashSet<>();
+        Set<Genotype> prunedGenotypes = new HashSet<>();
         Iterator<Genotype> it = sl.getGenotypes().iterator();
         while(it.hasNext()){
             Genotype g = it.next();
-            if(solManager.boundGrowPlantFromAncestors(ancestors, new PlantDescriptor(
+            if(solManager.pruneGrowPlantFromAncestors(ancestors, new PlantDescriptor(
                         new Plant(g),
-                        sl.getGenotypeGroup(g.getObservableState()).getProbabilityOfPhaseKnownGenotype(g),
-                        sl.getGenotypeGroup(g.getObservableState()).getLinkagePhaseAmbiguity(g),
+                        sl.getGenotypeGroup(g.getAllelicFrequencies()).getProbabilityOfPhaseKnownGenotype(g),
+                        sl.getGenotypeGroup(g.getAllelicFrequencies()).getLinkagePhaseAmbiguity(g),
                         sl.isUniform()
                     ))){
-                boundedGenotypes.add(g);
+                prunedGenotypes.add(g);
             }
         }
         
-        // compute bounded pairs of parent schemes
-        boolean[][] boundCross = new boolean[scheme1.nrOfAlternatives()][scheme2.nrOfAlternatives()];
+        // compute pruned pairs of parent schemes
+        boolean[][] pruneCross = new boolean[scheme1.nrOfAlternatives()][scheme2.nrOfAlternatives()];
         for(int alt1i=0; alt1i<scheme1.nrOfAlternatives(); alt1i++){
             CrossingScheme alt1 = scheme1.getAlternatives().get(alt1i);
             for(int alt2i=0; alt2i<scheme2.nrOfAlternatives(); alt2i++){
                 CrossingScheme alt2 = scheme2.getAlternatives().get(alt2i);
-                boundCross[alt1i][alt2i] = solManager.boundCrossCurrentSchemeWithSpecificOther(alt1, alt2);
+                pruneCross[alt1i][alt2i] = solManager.pruneCrossCurrentSchemeWithSpecificOther(alt1, alt2);
             }
         }
         
@@ -591,13 +613,14 @@ public class BranchAndBound extends SearchEngine {
         /* RUN MERGER */
         /**************/
         
-        return new MergeFirstSchemeMerger(scheme1, scheme2, map, solManager, sl, ancestors, boundCross, boundedGenotypes).combineSchemes();
+        return new MergeFirstSchemeMerger(scheme1, scheme2, map, solManager, sl, ancestors, pruneCross, prunedGenotypes).combineSchemes();
         
     }
     
     /**
-     * Private implementation of a cross worker which is responsible of crossing the currently considered
-     * scheme with a given subset of the previously considered schemes.
+     * Private implementation of a cross worker which is responsible for combining the currently considered
+     * scheme with previously considered schemes, through an additional crossing. All cross workers operate
+     * and synchronize on a shared iterator that iterates over the previously considered schemes.
      */
     private final class CrossWorker implements Callable<List<CrossingSchemeAlternatives>>{
         
@@ -641,19 +664,19 @@ public class BranchAndBound extends SearchEngine {
                 }
                 // cross with previous scheme
                 if(toExtend != null){
-                    // check bounding
-                    boolean bound = true;
+                    // check pruning
+                    boolean prune = true;
                     Iterator<CrossingScheme> it1 = curScheme.iterator();
-                    while(bound && it1.hasNext()){
+                    while(prune && it1.hasNext()){
                         CrossingScheme alt1 = it1.next();
                         Iterator<CrossingScheme> it2 = toExtend.iterator();
-                        while(bound && it2.hasNext()){
+                        while(prune && it2.hasNext()){
                             CrossingScheme alt2 = it2.next();
-                            bound = solManager.boundCrossCurrentSchemeWithSpecificOther(alt1, alt2);
+                            prune = solManager.pruneCrossCurrentSchemeWithSpecificOther(alt1, alt2);
                         }
                     }
                     // create new schemes
-                    if(!bound){
+                    if(!prune){
                         newSchemes.addAll(combineSchemes(curScheme, toExtend, map, solManager));
                     }
                 }

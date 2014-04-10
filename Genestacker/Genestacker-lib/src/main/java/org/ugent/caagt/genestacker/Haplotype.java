@@ -21,7 +21,7 @@ import org.ugent.caagt.genestacker.exceptions.EmptyHaplotypeException;
 /**
  * Represents a haplotype.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class Haplotype implements Comparable<Haplotype> {
 
@@ -41,10 +41,10 @@ public class Haplotype implements Comparable<Haplotype> {
     }
     
     /**
-     * Copy constructor (deep copy)
+     * Copy constructor (deep copy).
      * 
-     * @param h
-     * @throws EmptyHaplotypeException  
+     * @param h haplotype to copy (deep copy)
+     * @throws EmptyHaplotypeException if the given haplotype is empty, i.e. has 0 loci
      */
     public Haplotype(Haplotype h) throws EmptyHaplotypeException{
         List<Boolean> targetList = new ArrayList<>(h.nrOfLoci());
@@ -77,9 +77,10 @@ public class Haplotype implements Comparable<Haplotype> {
     }
     
     /**
-     * Check for presence of target at a specific locus in this haplotype
+     * Check for presence of target at a specific locus in this haplotype.
      * 
-     * @param locus
+     * @param locus locus at which presence of the target allele is checked
+     * @return <code>true</code> if the target allele is present at this locus
      */
     public boolean targetPresent(int locus){
         return targets.get(locus);
@@ -122,10 +123,12 @@ public class Haplotype implements Comparable<Haplotype> {
     
     /**
      * Haplotype h1 is smaller than h2 if and only if h1 has fewer targets or h1
-     * has a 0 at the first locus where h1 and h2 differ (i.e. h2 has a 1 at this locus).
+     * has a 0 at the first locus where h1 and h2 differ (h2 has a 1 at this locus).
      * If no such locus exists h1 and h2 are equal.
      * 
-     * @param h
+     * @param h haplotype to which this haplotype should be compared
+     * @return a strictly negative integer if this haplotype is smaller than h, 0 if they are equal,
+     *         and a strictly positive integer if h is larger.
      */
     @Override
     public int compareTo(Haplotype h) {

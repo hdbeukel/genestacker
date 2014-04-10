@@ -23,7 +23,7 @@ import org.junit.Test;
 
 /**
  *
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class ProbabilityToolsTest {
     

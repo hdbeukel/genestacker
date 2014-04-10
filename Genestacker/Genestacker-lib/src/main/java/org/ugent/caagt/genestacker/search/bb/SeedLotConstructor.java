@@ -27,7 +27,7 @@ import org.ugent.caagt.genestacker.exceptions.GenotypeException;
 /**
  * Seed lot constructor interface.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public abstract class SeedLotConstructor {
     
@@ -39,7 +39,7 @@ public abstract class SeedLotConstructor {
     
     public SeedLotConstructor(GeneticMap map){
         this.map = map;
-        // use concurrent hash map (accessed in parallel by different cross workers)
+        // use concurrent hash map for caching (accessed in parallel by different cross workers)
         cachedGametesPerChrom = new ConcurrentHashMap<>();
     }
     
@@ -48,17 +48,46 @@ public abstract class SeedLotConstructor {
     }
     
     /**
-     * Create seed lot obtained by crossing the two given genotypes.
+     * Create entire seed lot obtained by crossing the two given genotypes.
+     * 
+     * @param g1 genotype 1
+     * @param g2 genotype 2
+     * @return seed lot obtained by crossing the given genotypes
+     * @throws GenotypeException if anything goes wrong while creating the seed lot
      */
     public abstract SeedLot cross(Genotype g1, Genotype g2) throws GenotypeException;
+    
+    /**
+     * Generate PART of the seed lot obtained by crossing two given genotypes, confined to a predefined
+     * set of genotypes among the offspring for which properties (LPA, probability) are to be inferred.
+     * 
+     * @param g1 genotype 1
+     * @param g2 genotype 2
+     * @param desiredChildGenotypes child genotypes to be included in the seed lot
+     * @return partial seed lot obtained by crossing the given genotypes, confined to the predefined set of children
+     * @throws GenotypeException if anything goes wrong while creating the seed lot
+     */
     public abstract SeedLot partialCross(Genotype g1, Genotype g2, Set<Genotype> desiredChildGenotypes) throws GenotypeException;
     
     /**
-     * Selfing: cross genotype with itself. 
+     * Selfing: cross the given genotype with itself. 
+     * 
+     * @param g genotype
+     * @return seed lot obtained by selfing the given genotype
+     * @throws GenotypeException if anything goes wrong while creating the seed lot
      */
     public SeedLot self(Genotype g) throws GenotypeException{
         return cross(g, g);
     }
+    
+    /**
+     * Partial selfing.
+     * 
+     * @param g genotype
+     * @param desiredChildGenotypes child genotypes to be included in the seed lot
+     * @return partial seed lot obtained by selfing the given genotype, confined to the predefined set of children
+     * @throws GenotypeException if anything goes wrong while creating the seed lot
+     */
     public SeedLot partialSelf(Genotype g, Set<Genotype> desiredChildGenotypes) throws GenotypeException{
         return partialCross(g, g, desiredChildGenotypes);
     }

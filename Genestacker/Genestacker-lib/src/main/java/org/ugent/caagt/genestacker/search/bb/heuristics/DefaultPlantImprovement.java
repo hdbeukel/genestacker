@@ -19,7 +19,7 @@ import org.ugent.caagt.genestacker.Plant;
 /**
  * Compare plants based on their genotype.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class DefaultPlantImprovement implements PlantImprovement {
     

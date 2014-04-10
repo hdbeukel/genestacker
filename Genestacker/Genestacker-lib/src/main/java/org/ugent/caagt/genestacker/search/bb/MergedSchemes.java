@@ -27,7 +27,7 @@ import org.ugent.caagt.genestacker.search.SeedLotNode;
  * Represents possible ways to merge two schemes with minimum
  * number of generations and optimal reuse of material.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class MergedSchemes{
 
@@ -38,9 +38,11 @@ public class MergedSchemes{
    }
 
    /**
-    * Register the scheme, discarded if better merges already found.
+    * Register the scheme resulting from merging two smaller scheme with a specific
+    * alignment of generations. The scheme is discarded if better merges have already
+    * been found.
     * 
-    * @param scheme 
+    * @param scheme crossing scheme resulting from a merge with a specific alignment of generations
     */
    public void registerMergedScheme(CrossingScheme scheme){
        pareto.register(scheme);
@@ -50,11 +52,27 @@ public class MergedSchemes{
        return pareto.getFrontier();
    }
 
-   public boolean boundScheme(CrossingScheme scheme, CrossingScheme scheme1, Collection<PlantNode> danglingPlantNodes1,
+   /**
+    * Check whether further construction of the current alignment of generations should be pruned, because any
+    * extension of this alignment is known to be dominated by an already completed other alignment. Takes into
+    * account which plant nodes and seed lot nodes have necessarily still to be inserted, and the corresponding
+    * minimum increase in LPA and population size. Also computes the minimum number of additional generations
+    * required to finish the alignment.
+    * 
+    * @param curAlignment current combined scheme containing already aligned generations of the smaller schemes
+    * @param scheme1 smaller scheme 1
+    * @param danglingPlantNodes1 dangling plant nodes in current combined scheme originating from scheme 1
+    * @param nextGen1 next generation of scheme 1 to be inserted into the combined scheme (bottom up)
+    * @param scheme2 smaller scheme 2
+    * @param danglingPlantNodes2 dangling plant nodes in current combined scheme originating from scheme 2
+    * @param nextGen2 next generation of scheme 2 to be inserted into the combined scheme (bottom up)
+    * @return <code>true</code> if further extension of this alignment should be aborted
+    */
+   public boolean pruneAlignment(CrossingScheme curAlignment, CrossingScheme scheme1, Collection<PlantNode> danglingPlantNodes1,
                                 int nextGen1, CrossingScheme scheme2, Collection<PlantNode> danglingPlantNodes2, int nextGen2){
 
        // get scheme descriptor
-       CrossingSchemeDescriptor desc = scheme.getDescriptor();
+       CrossingSchemeDescriptor desc = curAlignment.getDescriptor();
 
        // min increase in generations
 

@@ -20,7 +20,7 @@ import org.ugent.caagt.genestacker.Plant;
  * Dummy plant node used during scheme construction, before it is replaced with
  * a real plant node.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class DummyPlantNode extends PlantNode {
     
@@ -45,7 +45,7 @@ public class DummyPlantNode extends PlantNode {
     }
     
     @Override
-    public PlantNode createCopy(int gen, SeedLotNode parentCopy){
+    protected PlantNode createCopy(int gen, SeedLotNode parentCopy){
         return new DummyPlantNode(gen, parentCopy);
     }
     

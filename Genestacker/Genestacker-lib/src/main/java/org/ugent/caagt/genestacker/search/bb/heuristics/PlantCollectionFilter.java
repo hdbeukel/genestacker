@@ -19,12 +19,16 @@ import org.ugent.caagt.genestacker.Plant;
 
 /**
  *
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public interface PlantCollectionFilter {
 
     /**
-     * Directly removes filtered plants from the given collection. Returns the original collection object after being filtered.
+     * Filter a collection of plants. Directly removes filtered plants from the given collection and returns
+     * the original collection object after being filtered.
+     * 
+     * @param collection collection of plants to filter
+     * @return filtered collection (in place)
      */
     public Collection<Plant> filter(Collection<Plant> collection);
     

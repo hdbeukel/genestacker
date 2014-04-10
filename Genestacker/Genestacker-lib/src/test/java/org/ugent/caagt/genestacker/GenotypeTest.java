@@ -28,7 +28,7 @@ import org.ugent.caagt.genestacker.search.bb.SeedLotConstructor;
 
 /**
  *
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class GenotypeTest extends TestCase {
     
@@ -686,15 +686,15 @@ public class GenotypeTest extends TestCase {
         SeedLot offspring = seedLotConstructor.cross(g1, g4);
         // inspect offspring
         System.out.println("Offspring:");
-        for(ObservableGenotypeState state : offspring.getObservableGenotypeStates()){
+        for(GenotypeAllelicFrequencies state : offspring.getAllelicFrequencies()){
             System.out.println("p=" + offspring.getGenotypeGroup(state).getProbabilityOfGenotypeWithArbitraryLinkagePhase()+ ":");
             System.out.println(state);
         }
         assertEquals(4, offspring.nrOfGenotypes());
-        assertEquals(0.25, offspring.getGenotypeGroup(g1.getObservableState()).getProbabilityOfPhaseKnownGenotype(g1));
-        assertEquals(0.25, offspring.getGenotypeGroup(g2.getObservableState()).getProbabilityOfPhaseKnownGenotype(g2));
-        assertEquals(0.25, offspring.getGenotypeGroup(g3.getObservableState()).getProbabilityOfPhaseKnownGenotype(g3));
-        assertEquals(0.25, offspring.getGenotypeGroup(g4.getObservableState()).getProbabilityOfPhaseKnownGenotype(g4));
+        assertEquals(0.25, offspring.getGenotypeGroup(g1.getAllelicFrequencies()).getProbabilityOfPhaseKnownGenotype(g1));
+        assertEquals(0.25, offspring.getGenotypeGroup(g2.getAllelicFrequencies()).getProbabilityOfPhaseKnownGenotype(g2));
+        assertEquals(0.25, offspring.getGenotypeGroup(g3.getAllelicFrequencies()).getProbabilityOfPhaseKnownGenotype(g3));
+        assertEquals(0.25, offspring.getGenotypeGroup(g4.getAllelicFrequencies()).getProbabilityOfPhaseKnownGenotype(g4));
         
         //   g1     x    g1:
         // [0][0]      [0][0]
@@ -705,12 +705,12 @@ public class GenotypeTest extends TestCase {
         offspring = seedLotConstructor.self(g1);
         // inspect offspring
         System.out.println("Offspring:");
-        for(ObservableGenotypeState state : offspring.getObservableGenotypeStates()){
+        for(GenotypeAllelicFrequencies state : offspring.getAllelicFrequencies()){
             System.out.println("p=" + offspring.getGenotypeGroup(state).getProbabilityOfGenotypeWithArbitraryLinkagePhase()+ ":");
             System.out.println(state);
         }
         assertEquals(1, offspring.nrOfGenotypes());
-        assertEquals(1.0, offspring.getGenotypeGroup(g1.getObservableState()).getProbabilityOfPhaseKnownGenotype(g1));
+        assertEquals(1.0, offspring.getGenotypeGroup(g1.getAllelicFrequencies()).getProbabilityOfPhaseKnownGenotype(g1));
         
         //   g1     x    g7:
         // [0][0]      [1][1]
@@ -722,12 +722,12 @@ public class GenotypeTest extends TestCase {
         offspring = seedLotConstructor.cross(g1, g7);
         // inspect offspring
         System.out.println("Offspring:");
-        for(ObservableGenotypeState state : offspring.getObservableGenotypeStates()){
+        for(GenotypeAllelicFrequencies state : offspring.getAllelicFrequencies()){
             System.out.println("p=" + offspring.getGenotypeGroup(state).getProbabilityOfGenotypeWithArbitraryLinkagePhase()+ ":");
             System.out.println(state);
         }
         assertEquals(1, offspring.nrOfGenotypes());
-        assertEquals(1.0, offspring.getGenotypeGroup(g4.getObservableState()).getProbabilityOfPhaseKnownGenotype(g4));
+        assertEquals(1.0, offspring.getGenotypeGroup(g4.getAllelicFrequencies()).getProbabilityOfPhaseKnownGenotype(g4));
         
         //   g3     x    g3:
         // [0][0]      [0][0]
@@ -738,14 +738,14 @@ public class GenotypeTest extends TestCase {
         offspring = seedLotConstructor.self(g3);
         // inspect offspring
         System.out.println("Offspring:");
-        for(ObservableGenotypeState state : offspring.getObservableGenotypeStates()){
+        for(GenotypeAllelicFrequencies state : offspring.getAllelicFrequencies()){
             System.out.println("p=" + offspring.getGenotypeGroup(state).getProbabilityOfGenotypeWithArbitraryLinkagePhase()+ ":");
             System.out.println(state);
         }
         assertEquals(3, offspring.nrOfGenotypes());
-        assertEquals(0.25, offspring.getGenotypeGroup(g1.getObservableState()).getProbabilityOfPhaseKnownGenotype(g1));
-        assertEquals(0.5, offspring.getGenotypeGroup(g3.getObservableState()).getProbabilityOfPhaseKnownGenotype(g3));
-        assertEquals(0.25, offspring.getGenotypeGroup(g9.getObservableState()).getProbabilityOfPhaseKnownGenotype(g9));
+        assertEquals(0.25, offspring.getGenotypeGroup(g1.getAllelicFrequencies()).getProbabilityOfPhaseKnownGenotype(g1));
+        assertEquals(0.5, offspring.getGenotypeGroup(g3.getAllelicFrequencies()).getProbabilityOfPhaseKnownGenotype(g3));
+        assertEquals(0.25, offspring.getGenotypeGroup(g9.getAllelicFrequencies()).getProbabilityOfPhaseKnownGenotype(g9));
         
         /*********************************************************************/
         /* PERFORM COMPATIBLE CROSSINGS: MULTIPLE TARGETS ON SAME CHROMOSOME */
@@ -784,7 +784,7 @@ public class GenotypeTest extends TestCase {
         System.out.println("---");
         offspring = seedLotConstructor.cross(g1, g2);
         System.out.println("Offspring:");
-        for(ObservableGenotypeState state : offspring.getObservableGenotypeStates()){
+        for(GenotypeAllelicFrequencies state : offspring.getAllelicFrequencies()){
             System.out.println("p=" + offspring.getGenotypeGroup(state).getProbabilityOfGenotypeWithArbitraryLinkagePhase()+ ":");
             System.out.println(state);
         }
@@ -803,7 +803,7 @@ public class GenotypeTest extends TestCase {
         g1chroms = new ArrayList<>();
         g1chroms.add(chr1);
         g1 = new Genotype(g1chroms);
-        assertEquals(0.0144, offspring.getGenotypeGroup(g1.getObservableState()).getProbabilityOfPhaseKnownGenotype(g1), precision);
+        assertEquals(0.0144, offspring.getGenotypeGroup(g1.getAllelicFrequencies()).getProbabilityOfPhaseKnownGenotype(g1), precision);
         // child:
         // [0 0 0 0] 
         // [0 0 0 0]
@@ -813,7 +813,7 @@ public class GenotypeTest extends TestCase {
         g1chroms = new ArrayList<>();
         g1chroms.add(chr1);
         g1 = new Genotype(g1chroms);
-        assertEquals(0.0144, offspring.getGenotypeGroup(g1.getObservableState()).getProbabilityOfPhaseKnownGenotype(g1), precision);
+        assertEquals(0.0144, offspring.getGenotypeGroup(g1.getAllelicFrequencies()).getProbabilityOfPhaseKnownGenotype(g1), precision);
         // child:
         // [0 0 0 1] 
         // [0 1 1 0]
@@ -823,7 +823,7 @@ public class GenotypeTest extends TestCase {
         g1chroms = new ArrayList<>();
         g1chroms.add(chr1);
         g1 = new Genotype(g1chroms);
-        assertEquals(0.0268, offspring.getGenotypeGroup(g1.getObservableState()).getProbabilityOfPhaseKnownGenotype(g1), precision);
+        assertEquals(0.0268, offspring.getGenotypeGroup(g1.getAllelicFrequencies()).getProbabilityOfPhaseKnownGenotype(g1), precision);
         
         // 1 chromosome, 4 targets:
         //  - first 3 targets at distance 10000 cM
@@ -847,7 +847,7 @@ public class GenotypeTest extends TestCase {
         System.out.println("---");
         offspring = seedLotConstructor.self(g1);
         System.out.println("Offspring:");
-        for(ObservableGenotypeState state : offspring.getObservableGenotypeStates()){
+        for(GenotypeAllelicFrequencies state : offspring.getAllelicFrequencies()){
             System.out.println("p=" + offspring.getGenotypeGroup(state).getProbabilityOfGenotypeWithArbitraryLinkagePhase()+ ":");
             System.out.println(state);
         }
@@ -866,7 +866,7 @@ public class GenotypeTest extends TestCase {
         g1chroms = new ArrayList<>();
         g1chroms.add(chr1);
         g1 = new Genotype(g1chroms);
-        assertEquals(0.25, offspring.getGenotypeGroup(g1.getObservableState()).getProbabilityOfPhaseKnownGenotype(g1), precision);
+        assertEquals(0.25, offspring.getGenotypeGroup(g1.getAllelicFrequencies()).getProbabilityOfPhaseKnownGenotype(g1), precision);
         
         // child:
         // [1 1 1 0] 
@@ -877,7 +877,7 @@ public class GenotypeTest extends TestCase {
         g1chroms = new ArrayList<>();
         g1chroms.add(chr1);
         g1 = new Genotype(g1chroms);
-        assertEquals(0.5, offspring.getGenotypeGroup(g1.getObservableState()).getProbabilityOfPhaseKnownGenotype(g1), precision);
+        assertEquals(0.5, offspring.getGenotypeGroup(g1.getAllelicFrequencies()).getProbabilityOfPhaseKnownGenotype(g1), precision);
         
         // child:
         // [1 1 1 0] 
@@ -888,7 +888,7 @@ public class GenotypeTest extends TestCase {
         g1chroms = new ArrayList<>();
         g1chroms.add(chr1);
         g1 = new Genotype(g1chroms);
-        assertEquals(0.25, offspring.getGenotypeGroup(g1.getObservableState()).getProbabilityOfPhaseKnownGenotype(g1), precision);
+        assertEquals(0.25, offspring.getGenotypeGroup(g1.getAllelicFrequencies()).getProbabilityOfPhaseKnownGenotype(g1), precision);
         
         
         /******************************/
@@ -932,7 +932,7 @@ public class GenotypeTest extends TestCase {
         g3 = new Genotype(g3chroms);        
         
         offspring = seedLotConstructor.cross(g1, g2);
-        assertEquals(1.0/64, offspring.getGenotypeGroup(g3.getObservableState()).getProbabilityOfPhaseKnownGenotype(g3), 0.00000001);
+        assertEquals(1.0/64, offspring.getGenotypeGroup(g3.getAllelicFrequencies()).getProbabilityOfPhaseKnownGenotype(g3), 0.00000001);
         
         
     }
@@ -964,7 +964,7 @@ public class GenotypeTest extends TestCase {
         SeedLotConstructor seedLotConstructor = new DefaultSeedLotConstructor(genRandomGeneticMap(g1));
         SeedLot offspring = seedLotConstructor.self(g1);
         double sum = 0.0;
-        for(ObservableGenotypeState state : offspring.getObservableGenotypeStates()){
+        for(GenotypeAllelicFrequencies state : offspring.getAllelicFrequencies()){
             System.out.println("---\np=" + offspring.getGenotypeGroup(state).getProbabilityOfGenotypeWithArbitraryLinkagePhase()
                                          + " (" + offspring.nrOfGenotypes(state)  + " genotypes):");
             System.out.println(state);

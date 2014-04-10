@@ -38,15 +38,15 @@ import org.ugent.caagt.genestacker.search.SeedLotNode;
  * First merges the history of the parent schemes and then attaches
  * each of the possible new plants to the merged history.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class MergeFirstSchemeMerger extends SchemeMerger {
 
     public MergeFirstSchemeMerger(CrossingSchemeAlternatives scheme1, CrossingSchemeAlternatives scheme2, GeneticMap map,
                                                     BranchAndBoundSolutionManager solManager, SeedLot seedLot,
-                                                    Set<PlantDescriptor> ancestors, boolean[][] boundCross,
-                                                    Set<Genotype> boundedGenotypes){
-        super(scheme1, scheme2, map, solManager, seedLot, ancestors, boundCross, boundedGenotypes);
+                                                    Set<PlantDescriptor> ancestors, boolean[][] pruneCross,
+                                                    Set<Genotype> prunedGenotypes){
+        super(scheme1, scheme2, map, solManager, seedLot, ancestors, pruneCross, prunedGenotypes);
     }
     
     @Override
@@ -55,25 +55,25 @@ public class MergeFirstSchemeMerger extends SchemeMerger {
         List<CrossingSchemeAlternatives> newSchemes = new ArrayList<>(); 
         
         // try avoiding construction of alignment(s) if we can predict that they will all
-        // be bounded after attaching any of the plants grown from the new seed lot
+        // be pruned after attaching any of the plants grown from the new seed lot
         
         boolean skip = true;
         Iterator<Genotype> it = seedLot.getGenotypes().iterator();
         while(cont && skip && it.hasNext()){
             Genotype g = it.next();
-            if(!boundedGenotypes.contains(g)){
+            if(!prunedGenotypes.contains(g)){
                 Plant p = new Plant(g);
                 PlantDescriptor pdesc = new PlantDescriptor(
                     p,
-                    seedLot.getGenotypeGroup(g.getObservableState()).getProbabilityOfPhaseKnownGenotype(g),
-                    seedLot.getGenotypeGroup(g.getObservableState()).getLinkagePhaseAmbiguity(g),
+                    seedLot.getGenotypeGroup(g.getAllelicFrequencies()).getProbabilityOfPhaseKnownGenotype(g),
+                    seedLot.getGenotypeGroup(g.getAllelicFrequencies()).getLinkagePhaseAmbiguity(g),
                     seedLot.isUniform()
                 );
                 for(int alt1i=0; alt1i<scheme1.nrOfAlternatives(); alt1i++){
                     CrossingScheme alt1 = scheme1.getAlternatives().get(alt1i);
                     for(int alt2i=0; alt2i<scheme2.nrOfAlternatives(); alt2i++){
                         CrossingScheme alt2 = scheme2.getAlternatives().get(alt2i);
-                        skip = boundCross[alt1i][alt2i] || solManager.boundCrossCurrentSchemeWithSpecificOtherWithSelectedTarget(alt1, alt2, pdesc);
+                        skip = pruneCross[alt1i][alt2i] || solManager.pruneCrossCurrentSchemeWithSpecificOtherWithSelectedTarget(alt1, alt2, pdesc);
                     }
                 }
             }
@@ -91,8 +91,8 @@ public class MergeFirstSchemeMerger extends SchemeMerger {
                 for(int alt2i=0; alt2i<scheme2.nrOfAlternatives(); alt2i++){
                     CrossingScheme alt2 = scheme2.getAlternatives().get(alt2i);
                     
-                    // check bounding
-                    if(!boundCross[alt1i][alt2i]){
+                    // check pruning
+                    if(!pruneCross[alt1i][alt2i]){
                         
                         /****************/
                         /* CROSS PLANTS */
@@ -124,7 +124,7 @@ public class MergeFirstSchemeMerger extends SchemeMerger {
                         /* MERGE HISTORY */
                         /*****************/
 
-                        mergeHistory(merged, curScheme, alt1, danglingPlantNodes1, alt1.getNumGenerations(),
+                        merge(merged, curScheme, alt1, danglingPlantNodes1, alt1.getNumGenerations(),
                                                     alt2, danglingPlantNodes2, alt2.getNumGenerations(), solManager);
                     
                     }
@@ -135,7 +135,7 @@ public class MergeFirstSchemeMerger extends SchemeMerger {
             /* SET SEED LOT IDS */
             /********************/
 
-            // set unique ID for all seedlots resulting from  different history merges
+            // set unique ID for all seed lots resulting from  different history merges
             
             for(CrossingScheme scheme : merged.getMergedSchemes()){
                 scheme.getFinalPlantNode().getParent().assignNextID();
@@ -151,7 +151,7 @@ public class MergeFirstSchemeMerger extends SchemeMerger {
             it = seedLot.getGenotypes().iterator();
             while(cont && it.hasNext()){
                 Genotype g = it.next();
-                if(!boundedGenotypes.contains(g)){
+                if(!prunedGenotypes.contains(g)){
                     
                     Plant p = new Plant(g);
 
@@ -161,8 +161,8 @@ public class MergeFirstSchemeMerger extends SchemeMerger {
                     Iterator<CrossingScheme> schemeIt = merged.getMergedSchemes().iterator();
                     while(cont && schemeIt.hasNext()){
                         CrossingScheme scheme = schemeIt.next();
-                        // check bounding
-                        if(!solManager.boundGrowPlantInGeneration(p, scheme.getNumGenerations())){
+                        // check pruning
+                        if(!solManager.pruneGrowPlantInGeneration(p, scheme.getNumGenerations())){
                             // create deep upwards copy, and final plant node and its parent
                             PlantNode finalPn = scheme.getFinalPlantNode().deepUpwardsCopy();
                             SeedLotNode finalSln = finalPn.getParent();
@@ -173,10 +173,10 @@ public class MergeFirstSchemeMerger extends SchemeMerger {
                             // create final scheme with new final plant
                             CrossingScheme finalScheme = new CrossingScheme(scheme.getPopulationSizeTools(), newFinalPlantNode);
                             // register scheme if:
-                            //   - not bounded
+                            //   - not pruned
                             //   - depleted seedlots successfully resolved, in case final
                             //     seedlot became depleted after replacing the dummy
-                            if(!solManager.boundCurrentScheme(finalScheme)
+                            if(!solManager.pruneCurrentScheme(finalScheme)
                                     && finalScheme.resolveDepletedSeedLots(solManager)){
                                 newAlts.add(finalScheme);
                             }

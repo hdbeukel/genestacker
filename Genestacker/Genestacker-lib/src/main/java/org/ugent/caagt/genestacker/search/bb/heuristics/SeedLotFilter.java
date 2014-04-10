@@ -18,13 +18,15 @@ import org.ugent.caagt.genestacker.SeedLot;
 
 /**
  *
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public interface SeedLotFilter {
 
     /**
-     * Filter given seed lot. Directly modifies and returns the original seed
-     * lot object.
+     * Filter the given seed lot. Directly modifies and returns the original seed lot object, after filtering.
+     * 
+     * @param seedLot seed lot to be filtered
+     * @return filtered seed lot (in place)
      */
     public SeedLot filterSeedLot(SeedLot seedLot);
     

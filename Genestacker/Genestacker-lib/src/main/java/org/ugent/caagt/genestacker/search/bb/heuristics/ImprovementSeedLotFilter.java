@@ -22,7 +22,7 @@ import org.ugent.caagt.genestacker.search.GenericParetoFrontierWithoutDescriptor
 
 /**
  *
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class ImprovementSeedLotFilter implements SeedLotFilter {
 
@@ -49,10 +49,10 @@ public class ImprovementSeedLotFilter implements SeedLotFilter {
                         // dominates if strict improvement and prob/LPA at least as high/low
                         boolean g1ImprovesOng2 = impr.improvesOnOtherGenotype(g1, g2);
                         boolean g2ImprovesOng1 = impr.improvesOnOtherGenotype(g2, g1);
-                        double probg1 = seedLot.getGenotypeGroup(g1.getObservableState()).getProbabilityOfPhaseKnownGenotype(g1);
-                        double probg2 = seedLot.getGenotypeGroup(g2.getObservableState()).getProbabilityOfPhaseKnownGenotype(g2);
-                        double lpag1 = seedLot.getGenotypeGroup(g1.getObservableState()).getLinkagePhaseAmbiguity(g1);
-                        double lpag2 = seedLot.getGenotypeGroup(g2.getObservableState()).getLinkagePhaseAmbiguity(g2);
+                        double probg1 = seedLot.getGenotypeGroup(g1.getAllelicFrequencies()).getProbabilityOfPhaseKnownGenotype(g1);
+                        double probg2 = seedLot.getGenotypeGroup(g2.getAllelicFrequencies()).getProbabilityOfPhaseKnownGenotype(g2);
+                        double lpag1 = seedLot.getGenotypeGroup(g1.getAllelicFrequencies()).getLinkagePhaseAmbiguity(g1);
+                        double lpag2 = seedLot.getGenotypeGroup(g2.getAllelicFrequencies()).getLinkagePhaseAmbiguity(g2);
                         return g1ImprovesOng2 && !g2ImprovesOng1    // strict improvement
                                 && probg1 >= probg2                 // equal or higher probability
                                 && lpag1 <= lpag2;                  // equal or lower LPA

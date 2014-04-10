@@ -20,12 +20,13 @@ import java.util.Iterator;
 import java.util.Set;
 
 /**
- * Represents a generic, abstract Pareto frontier.
+ * Represents a generic, abstract Pareto frontier. Objects are compared based on
+ * special descriptor objects that are inferred from these objects.
  * 
- * @param <T> Type of objects to be stored in the Pareto frontier
- * @param <D> Type of inferred descriptor objects to be used for comparison
+ * @param <T> type of objects to be stored in the Pareto frontier
+ * @param <D> type of inferred descriptor objects to be used for comparison
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public abstract class GenericParetoFrontier<T,D> {
 
@@ -38,7 +39,7 @@ public abstract class GenericParetoFrontier<T,D> {
     /**
      * Create a new Pareto frontier with given dominates relation.
      * 
-     * @param dominatesRelation 
+     * @param dominatesRelation given dominates relation
      */
     public GenericParetoFrontier(DominatesRelation<D> dominatesRelation){
         this.dominatesRelation = dominatesRelation;
@@ -47,6 +48,8 @@ public abstract class GenericParetoFrontier<T,D> {
     
     /**
      * Return the current objects contained in the Pareto frontier.
+     * 
+     * @return set of objects in the current Pareto frontier
      */
     public Set<T> getFrontier(){
         return frontier;
@@ -54,25 +57,38 @@ public abstract class GenericParetoFrontier<T,D> {
     
     /**
      * Get the current size of the Pareto frontier.
+     * 
+     * @return current Pareto frontier size
      */
     public int getNumSchemes(){
         return frontier.size();
     }
     
+    /**
+     * Verify whether the given object is contained in the current Pareto frontier.
+     * 
+     * @param obj given object
+     * @return <code>true</code> if the given object is currently contained in the Pareto frontier
+     */
     public boolean contains(T obj){
         return frontier.contains(obj);
     }
     
     /**
-     * Register a new object in the Pareto frontier. Returns true if the newly presented
-     * object is now part of the updated Pareto frontier, else false (i.e. if the object
-     * is already dominated by another object or is already contained in the frontier).
-     * Any other object that is now dominated by the new object is removed from the frontier.
+     * <p>
+     * Register a new object in the Pareto frontier. Returns <code>true</code> if the newly
+     * presented object is included in the updated Pareto frontier, else <code>false</code>
+     * (i.e. if the object is dominated by another object or is already contained in the frontier).
+     * Any other object that is dominated by the newly inserted object is removed from the frontier.
+     * </p>
+     * <p>
+     * Note: it is not possible that the new object is both dominated by an already registered object
+     * and yet also dominates other registered objects!
+     * </p>
      * 
-     * Note: it is not possible that the new object is both dominated by an already
-     * registered object and also dominates other registered objects itself!
-     * 
-     * @param newObject  
+     * @param newObject object to include in the Pareto frontier, if not already included and not dominated
+     *                  by any other object from the Pareto frontier
+     * @return <code>true</code> if the newly presented object is included in the Pareto frontier
      */
     public synchronized boolean register(T newObject){
         D newDescriptor = inferDescriptor(newObject);
@@ -96,25 +112,36 @@ public abstract class GenericParetoFrontier<T,D> {
     }
     
     /**
-     * Register all objects in the given collection. Returns false as soon as one
-     * of the contained objects could not be registered, but all objects that can
-     * be registered will be.
+     * Register all objects in the given collection. Returns <code>true</code> if the Pareto frontier
+     * has changed after presented each of the given objects.
      * 
-     * @param newObjects
+     * @param newObjects new objects to register in the Pareto frontier
+     * @return <code>true</code> if the Pareto frontier has changed after this operation
      */
-    public boolean registerAll(Collection<T> newObjects){
-        boolean ok=true;
+    public synchronized boolean registerAll(Collection<T> newObjects){
+        boolean changed = false;
         for(T obj : newObjects){
-            ok = register(obj) && ok;
+            changed = register(obj) || changed;
         }
-        return ok;
+        return changed;
     }
     
+    /**
+     * Get the descriptor corresponding to the given object, to be used for comparison with
+     * the dominates relation used for this Pareto frontier.
+     * 
+     * @param object object for which a descriptor is to be inferred
+     * @return inferred descriptor
+     */
     public abstract D inferDescriptor(T object);
     
     /**
      * Check whether a given object is already dominated by a registered object, based
      * on its inferred descriptor.
+     * 
+     * @param desc descriptor of object
+     * @return <code>true</code> if the object with the given descriptor is dominated by
+     *         another object currently contained in the Pareto frontier
      */
     public synchronized boolean dominatedByRegisteredObject(D desc){
         boolean dominated = false;

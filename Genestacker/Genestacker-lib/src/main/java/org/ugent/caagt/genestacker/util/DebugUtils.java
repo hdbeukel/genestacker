@@ -19,7 +19,7 @@ import java.util.Scanner;
 /**
  * Utilities for debugging.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class DebugUtils {
 
@@ -34,6 +34,8 @@ public class DebugUtils {
     /**
      * Calling this method waits until the user presses enter (scans standard input for next line), writing
      * a given message to standard output.
+     * 
+     * @param message message to write to standard output before waiting for enter
      */
     public static void waitForEnter(String message){
         Scanner in = new Scanner(System.in);

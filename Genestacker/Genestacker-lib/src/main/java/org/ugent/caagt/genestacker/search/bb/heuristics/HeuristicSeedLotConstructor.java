@@ -22,7 +22,7 @@ import org.ugent.caagt.genestacker.DiploidChromosome;
 import org.ugent.caagt.genestacker.GeneticMap;
 import org.ugent.caagt.genestacker.Genotype;
 import org.ugent.caagt.genestacker.Haplotype;
-import org.ugent.caagt.genestacker.ObservableGenotypeState;
+import org.ugent.caagt.genestacker.GenotypeAllelicFrequencies;
 import org.ugent.caagt.genestacker.SeedLot;
 import org.ugent.caagt.genestacker.exceptions.GenotypeException;
 import org.ugent.caagt.genestacker.search.bb.DefaultSeedLotConstructor;
@@ -30,13 +30,16 @@ import org.ugent.caagt.genestacker.search.bb.SeedLotConstructor;
 import org.ugent.caagt.genestacker.util.GenestackerConstants;
 
 /** 
- * Heuristic seed lot constructor that bounds construction of a gamete as soon as
- * a stretch has been created between two partialCross-overs which does not improve on the
- * alternative stretch at any contained locus, w.r.t one of both target haplotypes.
- * Furthermore, it is enforced that all stretches between two consecutive crossovers
- * are consistent improvements w.r.t the same target stretch (in case of two different targets).
+ * Heuristic seed lot constructor that prunes construction of a gamete/haplotype when two consecutive crossovers
+ * have been performed, but the allele stretch produced between these two crossovers contains no improvement over
+ * the alternative stretch produced without these crossovers (a stretch improves over an other stretch if it contains
+ * at least one target allele which does not occur at the respective locus in the other stretch, for one of both
+ * target haplotypes contained in the ideotype at the respective chromosome). Furthermore, it may be enforced that
+ * all improvements obtained between consecutive crossovers are consistent improvements w.r.t the same target haplotype
+ * (in case of a heterozygous ideotype), and/or that no more than a given maximum number of crossovers are performed
+ * per chromosome.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class HeuristicSeedLotConstructor extends DefaultSeedLotConstructor {
     
@@ -65,7 +68,7 @@ public class HeuristicSeedLotConstructor extends DefaultSeedLotConstructor {
     }
     
     @Override
-    protected void genChromosomeGametes(Genotype parent, Genotype otherParent, ObservableGenotypeState desiredObservation,
+    protected void genChromosomeGametes(Genotype parent, Genotype otherParent, GenotypeAllelicFrequencies desiredObservation,
                                         int chromIndex, Map<Haplotype, Double> gametes, LinkedList<Boolean> curTargets,
                                         double curP, int locus, int previousHeterozygousLocus, int previousHaplotypePicked)
                                             throws GenotypeException{
@@ -74,16 +77,38 @@ public class HeuristicSeedLotConstructor extends DefaultSeedLotConstructor {
                 locus, previousHeterozygousLocus, previousHaplotypePicked, true, true, true, true, 0);
     }
     /**
-     * Construct heuristic set of 'interesting' gametes that can be obtained from a given chromosome.
+     * Recursively construct heuristic set of gametes (haplotypes) that can be obtained from the given chromosome,
+     * according to the general description of this heuristic.
      * 
-     * @param curImprovementWrtUpperTarget Indicates whether the current stretch is already an improvement w.r.t the upper target
-     * @param consistentImprovementWrtUpperTarget Indicates whether the previous completed stretches were consistent improvements w.r.t the upper target
-     * @param curImprovementWrtLowerTarget Indicates whether the current stretch is already an improvement w.r.t the lower target
-     * @param consistentImprovementWrtLowerTarget Indicates whether the previous completed stretches were consistent improvements w.r.t the lower target
-     * @throws GenotypeException 
+     * @param parent parental genotype
+     * @param chromIndex index of considered chromosome
+     * @param haplotypes currently constructed haplotypes, filled during recursion
+     * @param curHaplotype current haplotype under construction, extended during recursion
+     * @param curP current probability of obtaining the haplotype under construction, updated during recursion
+     * @param locus currently considered locus where an allele is to be fixed for the constructed haplotype
+     * @param previousHeterozygousLocus index of last heterozygous locus before the current locus, -1 if none
+     * @param previousHaplotypePicked index of haplotype (0/1) of the considered chromosome that passed on its
+     *                                allele to the constructed gamete at the last heterozygous locus before the
+     *                                current locus, -1 if none
+     * @param curImprovementWrtUpperTarget Indicates whether the current stretch is already an improvement
+     *                                     w.r.t the upper target
+     * @param consistentImprovementWrtUpperTarget Indicates whether the previous completed stretches were
+     *                                            consistent improvements w.r.t the upper target
+     * @param curImprovementWrtLowerTarget Indicates whether the current stretch is already an improvement
+     *                                     w.r.t the lower target
+     * @param consistentImprovementWrtLowerTarget Indicates whether the previous completed stretches were
+     *                                            consistent improvements w.r.t the lower target
+     * @param curNumCrossovers number of currently performed crossovers to obtain the already constructed part
+     *                         of the current haplotype
+     * @param desiredAllelicFreqs optional: if desired allelic frequencies are specified, only haplotypes that may
+     *                            yield these frequencies in combination with a haplotype produced by
+     *                            <code>otherParent</code> are considered
+     * @param otherParent optional: should only be provided when <code>desiredAllelicFreqs</code> is specified;
+     *                    indicating the other genotype with which <code>parent</code> will be crossed
+     * @throws GenotypeException if anything goes wrong while creating the generated haplotypes
      */
-    protected void genChromosomeGametes(Genotype parent, Genotype otherParent, ObservableGenotypeState desiredObservation, int chromIndex,
-                                        Map<Haplotype, Double> gametes, LinkedList<Boolean> curTargets, double curP, int locus,
+    protected void genChromosomeGametes(Genotype parent, Genotype otherParent, GenotypeAllelicFrequencies desiredAllelicFreqs, int chromIndex,
+                                        Map<Haplotype, Double> haplotypes, LinkedList<Boolean> curHaplotype, double curP, int locus,
                                         int previousHeterozygousLocus, int previousHaplotypePicked, boolean curImprovementWrtUpperTarget,
                                         boolean consistentImprovementWrtUpperTarget, boolean curImprovementWrtLowerTarget,
                                         boolean consistentImprovementWrtLowerTarget, int curNumCrossovers) throws GenotypeException{
@@ -107,8 +132,8 @@ public class HeuristicSeedLotConstructor extends DefaultSeedLotConstructor {
             }
             if(store){
                 // store completed gamete (copy target list !!)
-                List<Boolean> targetsCopy = new ArrayList<>(curTargets);
-                gametes.put(new Haplotype(targetsCopy), curP);
+                List<Boolean> targetsCopy = new ArrayList<>(curHaplotype);
+                haplotypes.put(new Haplotype(targetsCopy), curP);
             }
             return;
         }
@@ -120,29 +145,35 @@ public class HeuristicSeedLotConstructor extends DefaultSeedLotConstructor {
             // homozygous target is immune for recombination!
 
             // extend current targets with the only possible option
-            curTargets.add(chrom.getHaplotypes()[0].targetPresent(locus));
+            curHaplotype.add(chrom.getHaplotypes()[0].targetPresent(locus));
             // recursion (probability & usefulness of current/previous crossovers do not change)
-            genChromosomeGametes(parent, otherParent, desiredObservation, chromIndex, gametes, curTargets, curP, locus+1,
+            genChromosomeGametes(parent, otherParent, desiredAllelicFreqs, chromIndex, haplotypes, curHaplotype, curP, locus+1,
                                     previousHeterozygousLocus, previousHaplotypePicked, curImprovementWrtUpperTarget,
                                     consistentImprovementWrtUpperTarget, curImprovementWrtLowerTarget,
                                     consistentImprovementWrtLowerTarget, curNumCrossovers);
             // backtracking: remove target
-            curTargets.removeLast();
+            curHaplotype.removeLast();
         } else {
                         
             // heterozygous target: create both possible extended gametes, but in case of a crossover
             // we check if the stretch created between this crossover and the previous one is useful
             // compared to the alternative stretch obtained without this pair of crossovers -- if not
-            // useful, further construction is bounded
+            // useful, further construction is pruned
             
             for(int haplotypePicked=0; haplotypePicked <= 1; haplotypePicked++){
                 
-                // check if currently considered option can lead to the desired observation, if any
-                if(desiredObservation == null || canYieldDesiredObservation(desiredObservation, parent, otherParent,
-                                                    chromIndex, locus, haplotypePicked)){
+                // check if currently considered option can lead to the desired allelic frequencies, if any
+                if(desiredAllelicFreqs == null
+                        || canYieldDesiredObservation(
+                                desiredAllelicFreqs.getChromosomeAllelicFrequencies().get(chromIndex)
+                                                   .getAllelicFrequencies()[locus],
+                                otherParent.getAllelicFrequencies().getChromosomeAllelicFrequencies()
+                                           .get(chromIndex).getAllelicFrequencies()[locus],
+                                chrom.getHaplotypes()[haplotypePicked].targetPresent(locus)
+                        )){
                 
                     // extend current targets with the selected option
-                    curTargets.add(chrom.getHaplotypes()[haplotypePicked].targetPresent(locus));
+                    curHaplotype.add(chrom.getHaplotypes()[haplotypePicked].targetPresent(locus));
 
                     // update probability: depends on recombination factors
                     double r, newP;
@@ -156,20 +187,20 @@ public class HeuristicSeedLotConstructor extends DefaultSeedLotConstructor {
                         r = map.getRecombinationProbability(chromIndex, previousHeterozygousLocus, locus);
                     }
 
-                    boolean bound;
+                    boolean prune;
                     boolean newImprovementWrtUpperTarget, newImprovementWrtLowerTarget;
                     boolean newConsistentImprovementWrtUpperTarget, newConsistentImprovementWrtLowerTarget;
                     if(previousHaplotypePicked == haplotypePicked){
                         // previous haplotype same as current choice (no crossover in between)
                         newP = curP * (1-r);
-                        // never bound a non-crossover
-                        bound = false;
+                        // never prune a non-crossover
+                        prune = false;
                         // consistent improvements of previous stretches stay unchanged (current stretch is not yet complete)
                         newConsistentImprovementWrtUpperTarget = consistentImprovementWrtUpperTarget;
                         newConsistentImprovementWrtLowerTarget = consistentImprovementWrtLowerTarget;
                         // update usefulness of current, extended stretch
-                        newImprovementWrtUpperTarget = curImprovementWrtUpperTarget || improvementWrtUpperTarget(chrom, ichrom, locus, haplotypePicked);
-                        newImprovementWrtLowerTarget = curImprovementWrtLowerTarget || improvementWrtLowerTarget(chrom, ichrom, locus, haplotypePicked);
+                        newImprovementWrtUpperTarget = curImprovementWrtUpperTarget || improvementWrtUpperHaplotype(chrom, ichrom, locus, haplotypePicked);
+                        newImprovementWrtLowerTarget = curImprovementWrtLowerTarget || improvementWrtLowerHaplotype(chrom, ichrom, locus, haplotypePicked);
                     } else {
                         // other haplotype picked (cross-over)
                         newP = curP * r;
@@ -177,34 +208,34 @@ public class HeuristicSeedLotConstructor extends DefaultSeedLotConstructor {
                         // to include the currently completed stretch
                         newConsistentImprovementWrtUpperTarget = consistentImprovementWrtUpperTarget && curImprovementWrtUpperTarget;
                         newConsistentImprovementWrtLowerTarget = consistentImprovementWrtLowerTarget && curImprovementWrtLowerTarget;
-                        // bounding: first check if max number of crossovers exceeded
-                        bound = (maxNumCrossovers != GenestackerConstants.UNLIMITED_CROSSOVERS && newNumCrossovers > maxNumCrossovers);
-                        // if not exceeded: check bounding on improvement
-                        if(!bound){
+                        // pruning: first check if max number of crossovers exceeded
+                        prune = (maxNumCrossovers != GenestackerConstants.UNLIMITED_CROSSOVERS && newNumCrossovers > maxNumCrossovers);
+                        // if not exceeded: check pruning on improvement
+                        if(!prune){
                             if(consistent){
                                 // check for consistent improvement on all stretches towards one of both target haplotypes
-                                bound = !(newConsistentImprovementWrtUpperTarget || newConsistentImprovementWrtLowerTarget);
+                                prune = !(newConsistentImprovementWrtUpperTarget || newConsistentImprovementWrtLowerTarget);
                             } else {
                                 // check for improvement of current stretch towards one of the targets
-                                bound = !(curImprovementWrtUpperTarget || curImprovementWrtLowerTarget);
+                                prune = !(curImprovementWrtUpperTarget || curImprovementWrtLowerTarget);
                             }
                         }
                         // set initial usefulness of new stretch started at this locus
                         // (checks if improvement w.r.t same target as previous stretches,
                         // including the one which was just completed in this step)
-                        newImprovementWrtUpperTarget = improvementWrtUpperTarget(chrom, ichrom, locus, haplotypePicked);
-                        newImprovementWrtLowerTarget = improvementWrtLowerTarget(chrom, ichrom, locus, haplotypePicked);
+                        newImprovementWrtUpperTarget = improvementWrtUpperHaplotype(chrom, ichrom, locus, haplotypePicked);
+                        newImprovementWrtLowerTarget = improvementWrtLowerHaplotype(chrom, ichrom, locus, haplotypePicked);
                     }
 
-                    if(!bound){
+                    if(!prune){
                         // recursion
-                        genChromosomeGametes(parent, otherParent, desiredObservation, chromIndex, gametes, curTargets, newP, locus+1, locus, haplotypePicked,
+                        genChromosomeGametes(parent, otherParent, desiredAllelicFreqs, chromIndex, haplotypes, curHaplotype, newP, locus+1, locus, haplotypePicked,
                                 newImprovementWrtUpperTarget, newConsistentImprovementWrtUpperTarget, newImprovementWrtLowerTarget, newConsistentImprovementWrtLowerTarget,
                                 newNumCrossovers);
                     }
 
                     // backtracking: remove last target
-                    curTargets.removeLast();
+                    curHaplotype.removeLast();
                     
                 }
                 
@@ -215,29 +246,37 @@ public class HeuristicSeedLotConstructor extends DefaultSeedLotConstructor {
     }
     
     /**
-     * Returns true if and only if the picked haplotype of the current chromosome offers an improvement
-     * at the current locus w.r.t the upper target haplotype at this chromosome.
+     * Returns true if the picked haplotype (0/1; meaning top or bottom) of the current chromosome contains an
+     * improvement at the given locus over the other haplotype, w.r.t the <b>upper</b> haplotype of the respective
+     * chromosome of the ideotype.
      * 
      * @param chrom current chromosome
-     * @param ichrom respective chromosome of target genotype (ideotype)
+     * @param ichrom respective chromosome of the ideotype
      * @param locus current locus
      * @param haplotypePicked current picked haplotype (0/1)
+     * @return <code>true</code> if, at the considered locus, inheriting the allele from the selected haplotype
+     *         contains an improvement over the respective allele of the other haplotype, w.r.t the upper haplotype
+     *         of the respective chromosome of the ideotype
      */
-    private boolean improvementWrtUpperTarget(DiploidChromosome chrom, DiploidChromosome ichrom, int locus, int haplotypePicked){
+    private boolean improvementWrtUpperHaplotype(DiploidChromosome chrom, DiploidChromosome ichrom, int locus, int haplotypePicked){
         return (chrom.getHaplotypes()[haplotypePicked].targetPresent(locus) == ichrom.getHaplotypes()[0].targetPresent(locus)
                  && chrom.getHaplotypes()[1-haplotypePicked].targetPresent(locus) != ichrom.getHaplotypes()[0].targetPresent(locus));
     }
     
     /**
-     * Returns true if and only if the picked haplotype of the current chromosome offers an improvement
-     * at the current locus w.r.t the lower target haplotype at this chromosome.
+     * Returns true if the picked haplotype (0/1; meaning top or bottom) of the current chromosome contains an
+     * improvement at the given locus over the other haplotype, w.r.t the <b>lower</b> haplotype of the respective
+     * chromosome of the ideotype.
      * 
      * @param chrom current chromosome
-     * @param ichrom respective chromosome of target genotype (ideotype)
+     * @param ichrom respective chromosome of the ideotype
      * @param locus current locus
      * @param haplotypePicked current picked haplotype (0/1)
+     * @return <code>true</code> if, at the considered locus, inheriting the allele from the selected haplotype
+     *         contains an improvement over the respective allele of the other haplotype, w.r.t the lower haplotype
+     *         of the respective chromosome of the ideotype
      */
-    private boolean improvementWrtLowerTarget(DiploidChromosome chrom, DiploidChromosome ichrom, int locus, int haplotypePicked){
+    private boolean improvementWrtLowerHaplotype(DiploidChromosome chrom, DiploidChromosome ichrom, int locus, int haplotypePicked){
         return (chrom.getHaplotypes()[haplotypePicked].targetPresent(locus) == ichrom.getHaplotypes()[1].targetPresent(locus)
                  && chrom.getHaplotypes()[1-haplotypePicked].targetPresent(locus) != ichrom.getHaplotypes()[1].targetPresent(locus));
     }

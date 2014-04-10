@@ -21,7 +21,7 @@ import org.ugent.caagt.genestacker.exceptions.IncompatibleHaplotypesException;
 
 /**
  *
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class ChromosomeTest extends TestCase {
     
@@ -243,44 +243,44 @@ public class ChromosomeTest extends TestCase {
         
         System.out.println("---");
         System.out.println("Chromosome 1:\n" + chr1);
-        System.out.println("Observable state: " + chr1.getObservableState());
+        System.out.println("Observable state: " + chr1.getAllelicFrequencies());
         System.out.println("---");
         System.out.println("---");
         System.out.println("Chromosome 2:\n" + chr2);
-        System.out.println("Observable state: " + chr2.getObservableState());
+        System.out.println("Observable state: " + chr2.getAllelicFrequencies());
         System.out.println("---");
         
         // check observable state
         
-        ObservableDiploidTargetState[] targetStates = new ObservableDiploidTargetState[] {
-            ObservableDiploidTargetState.NONE,
-            ObservableDiploidTargetState.ONCE,
-            ObservableDiploidTargetState.ONCE
+        AllelicFrequency[] targetStates = new AllelicFrequency[] {
+            AllelicFrequency.NONE,
+            AllelicFrequency.ONCE,
+            AllelicFrequency.ONCE
         };
-        ObservableDiploidChromosomeState state = new ObservableDiploidChromosomeState(targetStates);
-        assertEquals(state, chr1.getObservableState());
+        ChromosomeAllelicFrequencies state = new ChromosomeAllelicFrequencies(targetStates);
+        assertEquals(state, chr1.getAllelicFrequencies());
         
-        assertEquals(chr1.getObservableState(), chr2.getObservableState());
+        assertEquals(chr1.getAllelicFrequencies(), chr2.getAllelicFrequencies());
         
         // create some more chromosomes
         DiploidChromosome chr3 = new DiploidChromosome(hom2, hom4);
         
         System.out.println("---");
         System.out.println("Chromosome 3:\n" + chr3);
-        System.out.println("Observable state: " + chr3.getObservableState());
+        System.out.println("Observable state: " + chr3.getAllelicFrequencies());
         System.out.println("---");
         
         // check state
         
-        targetStates = new ObservableDiploidTargetState[] {
-            ObservableDiploidTargetState.NONE,
-            ObservableDiploidTargetState.ONCE,
-            ObservableDiploidTargetState.TWICE
+        targetStates = new AllelicFrequency[] {
+            AllelicFrequency.NONE,
+            AllelicFrequency.ONCE,
+            AllelicFrequency.TWICE
         };
-        state = new ObservableDiploidChromosomeState(targetStates);
-        assertEquals(state, chr3.getObservableState());
+        state = new ChromosomeAllelicFrequencies(targetStates);
+        assertEquals(state, chr3.getAllelicFrequencies());
         
-        assertFalse(chr3.getObservableState().equals(chr1.getObservableState()));
+        assertFalse(chr3.getAllelicFrequencies().equals(chr1.getAllelicFrequencies()));
     }
     
 }

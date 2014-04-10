@@ -24,7 +24,7 @@ import org.ugent.caagt.genestacker.SeedLot;
  * Only retain genotypes of which each chromosome contains haplotypes from a given set,
  * filter all others.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class RestrictedHaplotypesSeedLotFilter implements SeedLotFilter {
 

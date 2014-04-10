@@ -24,10 +24,10 @@ import org.ugent.caagt.genestacker.search.ParetoFrontier;
 
 /**
  * This heuristic keeps track of a Pareto frontier for each intermediary genotype
- * and bounds partial schemes which are dominated by previous partial schemes
+ * and prunes partial schemes which are dominated by previous partial schemes
  * resulting in the same intermediary genotype.
  *
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class OptimalSubschemeHeuristic extends Heuristic {
 
@@ -43,7 +43,7 @@ public class OptimalSubschemeHeuristic extends Heuristic {
     }
     
     @Override
-    public boolean boundQueueScheme(CrossingScheme scheme){
+    public boolean pruneQueueScheme(CrossingScheme scheme){
         // get genotype of final plant of the scheme
         Genotype g = scheme.getFinalPlantNode().getPlant().getGenotype();
         // check if pareto frontier already present
@@ -54,12 +54,12 @@ public class OptimalSubschemeHeuristic extends Heuristic {
         // get the Pareto frontier for this plant
         ParetoFrontier f = frontiers.get(g);
         // try to register scheme in frontier, if not successful the scheme
-        // should not be queued so true (=bound) is returned
+        // should not be queued so true (=prune) is returned
         return !f.register(scheme);
     }
     
     @Override
-    public boolean boundDequeueScheme(CrossingScheme scheme){
+    public boolean pruneDequeueScheme(CrossingScheme scheme){
         // check if scheme is still contained in the respective Pareto frontier
         // when it has been dequeued
         
@@ -67,7 +67,7 @@ public class OptimalSubschemeHeuristic extends Heuristic {
         Genotype g = scheme.getFinalPlantNode().getPlant().getGenotype();
         // get corresponding Pareto frontier
         ParetoFrontier f = frontiers.get(g);
-        // bound if scheme no longer contained in frontier
+        // prune if scheme no longer contained in frontier
         return !f.contains(scheme);
         
     }

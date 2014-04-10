@@ -98,7 +98,7 @@ public class Main
     /**
      * Run Gene Stacker software from command line.
      * 
-     * @param args
+     * @param args arguments to be parsed using Apache commons CLI
      */
     public static void main( String[] args ){
         Main cli = new Main();

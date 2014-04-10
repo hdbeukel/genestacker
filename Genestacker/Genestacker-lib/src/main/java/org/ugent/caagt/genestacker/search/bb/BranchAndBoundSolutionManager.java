@@ -22,8 +22,8 @@ import java.util.Set;
 import org.ugent.caagt.genestacker.DiploidChromosome;
 import org.ugent.caagt.genestacker.Genotype;
 import org.ugent.caagt.genestacker.Haplotype;
-import org.ugent.caagt.genestacker.ObservableDiploidTargetState;
-import org.ugent.caagt.genestacker.ObservableGenotypeState;
+import org.ugent.caagt.genestacker.AllelicFrequency;
+import org.ugent.caagt.genestacker.GenotypeAllelicFrequencies;
 import org.ugent.caagt.genestacker.Plant;
 import org.ugent.caagt.genestacker.SeedLot;
 import org.ugent.caagt.genestacker.exceptions.DuplicateConstraintException;
@@ -48,11 +48,11 @@ import org.ugent.caagt.genestacker.search.constraints.NumberOfSeedsPerCrossing;
 
 /**
  * Responsible for managing solutions during branch and bound search: Pareto frontier,
- * bounding criteria, etc.
+ * pruning criteria, etc.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
-public class BranchAndBoundSolutionManager implements SearchBounder {
+public class BranchAndBoundSolutionManager implements PruningCriterion {
     
     // desired ideotype
     private Genotype ideotype;
@@ -92,16 +92,18 @@ public class BranchAndBoundSolutionManager implements SearchBounder {
     private ParetoFrontier frontier;
     
     /**
-     * Create a B&B solution manager the default dominates relation.
-     */
-    public BranchAndBoundSolutionManager(Genotype ideotype, PopulationSizeTools popSizeTools, NumberOfSeedsPerCrossing numSeedsPerCrossing,
-                                            List<Constraint> constraints, Heuristics heuristics, List<SeedLotFilter> seedLotFilters)
-                                                            throws  DuplicateConstraintException{
-        this(new DefaultDominatesRelation(), ideotype, popSizeTools, numSeedsPerCrossing, constraints, heuristics, seedLotFilters, false);
-    }
-    
-    /**
-     * Create a B&B solution manager with given dominates relation.
+     * Create a branch and bound solution manager.
+     * 
+     * @param dominatesRelation given dominates relation
+     * @param ideotype targeted ideotype
+     * @param popSizeTools population size tools used to compute population sizes and related bounds
+     * @param numSeedsPerCrossing number of seeds obtained from a single crossing
+     * @param constraints list of constraints
+     * @param heuristics list of applied heuristics
+     * @param seedLotFilters list of applied seed lot filters
+     * @param homozygousIdeotypeParents if <code>true</code>, it is required that the parents of the
+     *                                  ideotype are both homozygous at all considered loci
+     * @throws DuplicateConstraintException if multiple instances of the same constraint are included
      */
     public BranchAndBoundSolutionManager(DominatesRelation<CrossingSchemeDescriptor> dominatesRelation, Genotype ideotype, PopulationSizeTools popSizeTools,
                                             NumberOfSeedsPerCrossing numSeedsPerCrossing, List<Constraint> constraints,
@@ -121,7 +123,7 @@ public class BranchAndBoundSolutionManager implements SearchBounder {
         // create Pareto frontier
         frontier = new ParetoFrontier(dominatesRelation);
         
-        // set empty heuristics if null (to simplify pruning and bounding in case no heuristics are included)
+        // set empty heuristics if null
         if(this.heuristics == null){
             List<Heuristic> emptyHeur = Collections.emptyList();
             this.heuristics = new Heuristics(emptyHeur);
@@ -174,10 +176,12 @@ public class BranchAndBoundSolutionManager implements SearchBounder {
     }
     
     /**
-     * Check whether a given scheme is a solution to our problem, i.e. whether
+     * Check whether a given scheme is a solution to the problem, i.e whether
      * the desired ideotype is reached in the final generation.
      * 
-     * @param scheme
+     * @param scheme crossing scheme
+     * @return <code>true</code> if the ideotype is obtained in the final generation
+     *         of the given crossing scheme
      */
     public boolean isSolution(CrossingScheme scheme){
         return scheme.getFinalPlantNode().getPlant().getGenotype().equals(ideotype);
@@ -186,7 +190,8 @@ public class BranchAndBoundSolutionManager implements SearchBounder {
     /**
      * Check whether all constraints are satisfied for a given scheme.
      * 
-     * @param scheme
+     * @param scheme crossing scheme for which the constraints are to be checked
+     * @return <code>true</code> if all constraints are satisfied
      */
     private boolean areConstraintsSatisfied(CrossingSchemeDescriptor scheme){
         boolean satisfied = true;
@@ -202,26 +207,31 @@ public class BranchAndBoundSolutionManager implements SearchBounder {
     }
     
     /**
-     * Checks whether the parents of the ideotype are homozygous. Assumes that
+     * Checks whether both parents of the ideotype are homozygous. Assumes that
      * the given scheme has been completed, i.e that the ideotype is indeed obtained
      * in the final generation.
+     * 
+     * @param scheme a crossing scheme that obtains the ideotype in the final generation
+     * @return <code>true</code> if both parents of the ideotype are homozygous at all considered loci
      */
     private boolean checkHomozygousIdeotypeParents(CrossingScheme scheme){
         // go through the plants of the penultimate generation
         boolean allHom = true;
         Iterator<PlantNode> it = scheme.getPlantNodesFromGeneration(scheme.getNumGenerations()-1).iterator();
         while(allHom && it.hasNext()){
-            allHom = it.next().getPlant().getGenotype().isHomozygousAtAllTargetLoci();
+            allHom = it.next().getPlant().getGenotype().isHomozygousAtAllContainedLoci();
         }
         return allHom;
     }
     
     /**
-     * Returns a list of depleted seed lots, i.e. seed lots from which more seeds
-     * are taken than the total number of available seeds in this lot. Returns
-     * an empty list if no constraint on number of seeds per crossing.
+     * Returns a list of depleted seed lots, i.e seed lots from which more seeds
+     * are taken than the total number of available seeds. Returns an empty list
+     * if the number of seeds produced per crossing has not been specified or if
+     * no seed lots are depleted.
      * 
-     * @param scheme 
+     * @param scheme crossing scheme in which depleted seed lots are to be found
+     * @return list of depleted seed lots in the given scheme
      */
     public List<SeedLotNode> getDepletedSeedLots(CrossingScheme scheme){
         if(numSeedsPerCrossing != null){
@@ -237,12 +247,15 @@ public class BranchAndBoundSolutionManager implements SearchBounder {
      * Returns a plant node with the required ID, from the required generation,
      * which can still be reused as parent in an additional crossing. In case of a
      * selfing, the plant can only be reused if it can still be used at least two
-     * times as parent.
+     * times as parent (both father and mother).
      * 
-     * @param plantNodeID
-     * @param generation
-     * @param scheme
-     * @param selfing
+     * @param plantNodeID ID of the required plant
+     * @param generation generation in which the required plant has to be grown
+     * @param scheme crossing scheme in which to search for the required plant
+     * @param selfing <code>true</code> if a selfing is to be performed
+     * @return a plant node with the required ID, grown in the required generation inside the given scheme,
+     *         which can still be reused for an additional crossing (or selfing, if <code>selfing</code> is
+     *         <code>true</code>)
      */
     public PlantNode getReusablePlantNode(long plantNodeID, int generation, CrossingScheme scheme, boolean selfing){
         if(maxCrossingsWithPlant != null){
@@ -260,17 +273,23 @@ public class BranchAndBoundSolutionManager implements SearchBounder {
     }
     
     /**
+     * <p>
      * Filter the given seed lot. First, some basic filters are applied based on the constraints
-     * on maximum linkage phase ambiguity and maximum population size per generation to remove all genotypes
-     * that are certain to violate these constraints. Then, if any, all heuristic filters from the seedLotFilters
-     * list are applied, in the order in which they occur in this list.
-     * <br /><br />
+     * on maximum linkage phase ambiguity and maximum population size per generation to remove all
+     * genotypes that will certain cause these constraints to be violated. Then, all heuristic filters,
+     * if any, are applied in the order in which they occur in the seed lot filter list.
+     * </p>
+     * <p>
      * Note: this modifies and returns the original seed lot object.
+     * </p>
+     * 
+     * @param seedlot seed lot to be filtered
+     * @return original seed lot object after applying all filters
      */
     public SeedLot filterSeedLot(SeedLot seedlot){
         // apply basic filters (non-heuristic)
         for(Genotype g : seedlot.getGenotypes()){
-            ObservableGenotypeState state = g.getObservableState();
+            GenotypeAllelicFrequencies state = g.getAllelicFrequencies();
             if(maxLinkagePhaseAmbiguity != null
                     && seedlot.getGenotypeGroup(state).getLinkagePhaseAmbiguity(g)
                             > maxLinkagePhaseAmbiguity.getMaxLinkagePhaseAmbiguity()){
@@ -294,11 +313,14 @@ public class BranchAndBoundSolutionManager implements SearchBounder {
     }
     
     /**
-     * Register a new solution in the Pareto frontier. Returns true if the presented
-     * solution is now part of the new Pareto frontier, else false (i.e. if the solution
-     * does not satisfy all constraints or if it is strictly dominated by another solution
-     * that is already contained in the frontier). Any other solution that is now dominated
-     * by this new solution is removed from the frontier.
+     * Register a new solution in the Pareto frontier. Returns <code>true</code> if the presented
+     * solution has been added to the Pareto frontier, else <code>false</code> (i.e. if the solution
+     * does not satisfy all constraints or if it is dominated by another solution that is already
+     * contained in the frontier). If the solution is added to the Pareto frontier, any other solution
+     * that is now dominated by this new solution is removed from the frontier.
+     * 
+     * @param newScheme new solution to be registered in the Pareto frontier
+     * @return <code>true</code> if the solution has been added to the frontier
      */
     public boolean registerSolution(CrossingScheme newScheme){
         // check constraints (if enabled, also check for homozygous ideotype parents)
@@ -311,8 +333,8 @@ public class BranchAndBoundSolutionManager implements SearchBounder {
     }
     
     @Override
-    public boolean boundCrossCurrentScheme(CrossingScheme scheme){
-        if(heuristics.boundCrossCurrentScheme(scheme)){
+    public boolean pruneCrossCurrentScheme(CrossingScheme scheme){
+        if(heuristics.pruneCrossCurrentScheme(scheme)){
             return true;
         } else {
             // create descriptor of abstract 'best' case result when continuing 
@@ -321,7 +343,7 @@ public class BranchAndBoundSolutionManager implements SearchBounder {
             desc.setNumGenerations(desc.getNumGenerations()+1); // at least 1 extra generation
             desc.setNumCrossings(desc.getNumCrossings()+1); // at least 1 extra crossing
             
-            // apply any heuristic bound extensions
+            // apply any heuristic bound extensions (e.g. heuristic H6)
             desc = heuristics.extendBoundsUponCrossing(desc, scheme);
             
             // check constraints for abstract 'best' extended scheme
@@ -335,12 +357,12 @@ public class BranchAndBoundSolutionManager implements SearchBounder {
     }
 
     @Override
-    public boolean boundCrossCurrentSchemeWithSpecificOther(CrossingScheme scheme, CrossingScheme other){
+    public boolean pruneCrossCurrentSchemeWithSpecificOther(CrossingScheme scheme, CrossingScheme other){
         if(penultimateGenerationReached(Math.max(scheme.getNumGenerations(), other.getNumGenerations()))
                 && !ideotypeObtainableInNextGeneration(scheme.getFinalPlantNode().getPlant().getGenotype(), other.getFinalPlantNode().getPlant().getGenotype())){
-            // only one generation left but desired ideotype cannot be obtained by crossing the given schemes, so bound!
+            // only one generation left but desired ideotype cannot be obtained by crossing the given schemes; prune!
             return true;
-        } else if(heuristics.boundCrossCurrentSchemeWithSpecificOther(scheme, other)){
+        } else if(heuristics.pruneCrossCurrentSchemeWithSpecificOther(scheme, other)){
             return true;
         } else {
             // create descriptor of abstract 'best' case result when continuing 
@@ -380,11 +402,11 @@ public class BranchAndBoundSolutionManager implements SearchBounder {
     }
     
     @Override
-    public boolean boundCrossCurrentSchemeWithSpecificOtherWithSelectedTarget(CrossingScheme scheme, CrossingScheme other, PlantDescriptor target){
-        if(boundGrowPlantInGeneration(target.getPlant(), Math.max(scheme.getNumGenerations(), other.getNumGenerations())+1)){
+    public boolean pruneCrossCurrentSchemeWithSpecificOtherWithSelectedTarget(CrossingScheme scheme, CrossingScheme other, PlantDescriptor target){
+        if(pruneGrowPlantInGeneration(target.getPlant(), Math.max(scheme.getNumGenerations(), other.getNumGenerations())+1)){
             // selected target should not be grown in the newly attached generation
             return true;
-        } else if(heuristics.boundCrossCurrentSchemeWithSpecificOtherWithSelectedTarget(scheme, other, target)){
+        } else if(heuristics.pruneCrossCurrentSchemeWithSpecificOtherWithSelectedTarget(scheme, other, target)){
             return true;
         } else {
             // create descriptor of abstract 'best' case result when continuing 
@@ -437,6 +459,18 @@ public class BranchAndBoundSolutionManager implements SearchBounder {
         }
     }
     
+    /**
+     * Compute a lower bound for the linkage phase ambiguity and number of targets grown from nonuniform seed lots,
+     * when combining the inner plant nodes of two crossing schemes upon performing a new crossing of their final
+     * plants. The bounds are based on the fact that only plant nodes with the same ID will every be reused.
+     * Non-reused plant nodes will always retain their contribution to the LPA and number of targets grown
+     * from nonuniform seed lots.
+     * 
+     * @param scheme1 partial scheme 1
+     * @param scheme2 partial scheme 2
+     * @return lower bound for LPA and number of targets grown from nonuniform seed lots in combined scheme,
+     *         in which a new crossing with the final plants of both schemes is performed
+     */
     private MergedPlantNodesLowerBounds computeLowerBoundsAfterMergingPlantNodes(CrossingScheme scheme1, CrossingScheme scheme2){        
         // 1) full scheme 1 + non reused plant nodes of scheme 2
         MergedPlantNodesLowerBounds bounds1 = computeLowerBoundsAfterMergingPlantNodesOneWay(scheme1, scheme2);
@@ -449,7 +483,15 @@ public class BranchAndBoundSolutionManager implements SearchBounder {
     }
     
     /**
-     * Account for entire scheme 'full' + final plant node of other scheme (never reused) + remaining non overlapping plant nodes of other scheme.
+     * Compute "one way" lower bounds for LPA and number of targets grown from nonuniform seed lots after combining
+     * the given schemes through an additional crossing. "One way" means that one scheme is fully contained in the
+     * combined scheme, whereas nodes from this full scheme may have been reused for the other scheme. Accounts for
+     * the entire scheme <code>full</code>, the final plant node of other scheme (never reused), and remaining non
+     * overlapping plant nodes from the other scheme.
+     * 
+     * @param full fully contained crossing scheme
+     * @param other other scheme, may partially reuse elements from full scheme
+     * @return lower bounds for LPA and number of targets grown from nonuniform seed lots
      */
     private MergedPlantNodesLowerBounds computeLowerBoundsAfterMergingPlantNodesOneWay(CrossingScheme full, CrossingScheme other){
         // full scheme + final plant node of other scheme
@@ -462,7 +504,7 @@ public class BranchAndBoundSolutionManager implements SearchBounder {
         for(PlantNode pn : other.getPlantNodes()){
             if(!pn.equals(other.getFinalPlantNode())                // final plant node already accounted for
                 && !full.containsPlantNodesWithID(pn.getID())){     // no plant nodes with same ID present in scheme 'full'
-                    // node can impossibly be reused/merged
+                    // node can impossibly be reused
                     // --> account for LPA
                     lpa = 1.0 - (1.0-lpa)*(1.0-pn.getLinkagePhaseAmbiguity());
                     // --> account for num targets grown from non uniform seed lots
@@ -474,6 +516,17 @@ public class BranchAndBoundSolutionManager implements SearchBounder {
         return new MergedPlantNodesLowerBounds(lpa, numNonUniform);
     }
     
+    /**
+     * Compute a lower bound for the total population size, when combining the inner seed lot nodes of two crossing
+     * schemes upon performing a new crossing of their final plants. The bounds are based on the fact that only seed
+     * lot nodes with the same ID will every be reused. Non-reused seed lot nodes will always retain their complete
+     * contribution to the total population size.
+     * 
+     * @param scheme1 partial scheme 1
+     * @param scheme2 partial scheme 2
+     * @return lower bound for total population size in combined scheme, in which a new crossing with the final
+     *         plants of both schemes is performed
+     */
     private MergedSeedLotNodesLowerBounds computeLowerBoundsAfterMergingSeedLotNodes(CrossingScheme scheme1, CrossingScheme scheme2){
         // 1) full scheme 1 + non reused seed lot nodes of scheme 2
         MergedSeedLotNodesLowerBounds bounds1 = computeLowerBoundsAfterMergingSeedLotNodesOneWay(scheme1, scheme2);
@@ -485,7 +538,14 @@ public class BranchAndBoundSolutionManager implements SearchBounder {
     }
     
     /**
-     * Account for entire scheme 'full' + non overlapping seed lot nodes of other scheme.
+     * Compute "one way" lower bound for the total population size after combining the given schemes through an
+     * additional crossing. "One way" means that one scheme is fully contained in the combined scheme, whereas
+     * nodes from this full scheme may have been reused for the other scheme. Accounts for the entire scheme
+     * <code>full</code> and remaining non overlapping seed lot nodes from the other scheme.
+     * 
+     * @param full fully contained crossing scheme
+     * @param other other scheme, may partially reuse elements from full scheme
+     * @return lower bound for total population size
      */
     private MergedSeedLotNodesLowerBounds computeLowerBoundsAfterMergingSeedLotNodesOneWay(CrossingScheme full, CrossingScheme other){
         // full scheme
@@ -501,7 +561,7 @@ public class BranchAndBoundSolutionManager implements SearchBounder {
     }
     
     @Override
-    public boolean boundSelfCurrentScheme(CrossingScheme scheme){
+    public boolean pruneSelfCurrentScheme(CrossingScheme scheme){
         if(scheme.getNumGenerations() == 0 && scheme.getFinalPlantNode().getPlant().isHomozygousAtAllTargetLoci()){
             // no point in selfing homozygous initial plants, because these are supposed never to be depleted
             return true;
@@ -509,7 +569,7 @@ public class BranchAndBoundSolutionManager implements SearchBounder {
                     && !ideotypeObtainableInNextGeneration(scheme.getFinalPlantNode().getPlant().getGenotype(), scheme.getFinalPlantNode().getPlant().getGenotype())){
             // only one generation left but desired ideotype cannot be obtained by selfing the given parent scheme, so bound!
             return true;
-        } else if(heuristics.boundSelfCurrentScheme(scheme)){
+        } else if(heuristics.pruneSelfCurrentScheme(scheme)){
             return true;
         } else {
             // create descriptor of abstract 'best' case result when 
@@ -532,14 +592,14 @@ public class BranchAndBoundSolutionManager implements SearchBounder {
     }
     
     @Override
-    public boolean boundSelfCurrentSchemeWithSelectedTarget(CrossingScheme scheme, PlantDescriptor target) {
+    public boolean pruneSelfCurrentSchemeWithSelectedTarget(CrossingScheme scheme, PlantDescriptor target) {
         if(scheme.getNumGenerations() == 0 && scheme.getFinalPlantNode().getPlant().isHomozygousAtAllTargetLoci()){
             // no point in selfing homozygous initial plants, because these are supposed never to be depleted
             return true;
-        } else if(boundGrowPlantInGeneration(target.getPlant(), scheme.getNumGenerations()+1)){
+        } else if(pruneGrowPlantInGeneration(target.getPlant(), scheme.getNumGenerations()+1)){
             // selected target should not be grown in newly attached generation
             return true;
-        } else if(heuristics.boundSelfCurrentSchemeWithSelectedTarget(scheme, target)){
+        } else if(heuristics.pruneSelfCurrentSchemeWithSelectedTarget(scheme, target)){
             return true;
         } else {
             // create descriptor of abstract 'best' case result when 
@@ -582,8 +642,8 @@ public class BranchAndBoundSolutionManager implements SearchBounder {
     }
     
     @Override
-    public boolean boundCurrentScheme(CrossingScheme scheme){
-        if(heuristics.boundCurrentScheme(scheme)){
+    public boolean pruneCurrentScheme(CrossingScheme scheme){
+        if(heuristics.pruneCurrentScheme(scheme)){
             return true;
         } else {
             
@@ -604,31 +664,31 @@ public class BranchAndBoundSolutionManager implements SearchBounder {
     }
     
     @Override
-    public boolean boundQueueScheme(CrossingScheme scheme){
-        return heuristics.boundQueueScheme(scheme);
+    public boolean pruneQueueScheme(CrossingScheme scheme){
+        return heuristics.pruneQueueScheme(scheme);
     }
     
     @Override
-    public boolean boundDequeueScheme(CrossingScheme scheme){
-        return heuristics.boundDequeueScheme(scheme);
+    public boolean pruneDequeueScheme(CrossingScheme scheme){
+        return heuristics.pruneDequeueScheme(scheme);
     }
     
     @Override
-    public boolean boundGrowPlantFromAncestors(Set<PlantDescriptor> ancestors, PlantDescriptor p){
-        return heuristics.boundGrowPlantFromAncestors(ancestors, p);
+    public boolean pruneGrowPlantFromAncestors(Set<PlantDescriptor> ancestors, PlantDescriptor p){
+        return heuristics.pruneGrowPlantFromAncestors(ancestors, p);
     }
     
     @Override
-    public boolean boundGrowPlantInGeneration(Plant p, int generation){
-        // never bound dummy plants
+    public boolean pruneGrowPlantInGeneration(Plant p, int generation){
+        // never prune dummy plants
         if(p.isDummyPlant()){
             return false;
         }
         // check heuristics
-        if(heuristics.boundGrowPlantInGeneration(p, generation)){
+        if(heuristics.pruneGrowPlantInGeneration(p, generation)){
             return true;
         } else {
-            // bound if one of the following conditions holds:
+            // prune if one of the following conditions holds:
             //  - plant grown in final generation and g is not the ideotype
             //  - plant grown in penultimate generation and genotype can impossibly
             //    be created from this genotype
@@ -637,16 +697,18 @@ public class BranchAndBoundSolutionManager implements SearchBounder {
             return finalGenerationReached(generation) && !p.getGenotype().equals(ideotype)
                ||  penultimateGenerationReached(generation) && !ideotypeObtainableInNextGeneration(p.getGenotype())
                ||  homozygousIdeotypeParents && penultimateGenerationReached(generation)
-                   && !p.getGenotype().equals(ideotype) && !p.getGenotype().isHomozygousAtAllTargetLoci();
+                   && !p.getGenotype().equals(ideotype) && !p.getGenotype().isHomozygousAtAllContainedLoci();
         }
     }
     
     /**
      * Check whether it is possible to obtain the ideotype in the next generation,
-     * by crossing given parent with any other plant. It is checked whether for every
-     * chromosome the parent can yield either the upper or lower target haplotype.
+     * by crossing the given parent with any other plant. It is checked whether for
+     * every chromosome the parent can yield either the upper or lower target haplotype.
      * 
-     * @param parent
+     * @param parent parental genotype
+     * @return <code>true</code> if the given genotype could produce the ideotype in the next
+     *         generation, when being crossed with an appropriate other genotype
      */
     private boolean ideotypeObtainableInNextGeneration(Genotype parent){
         boolean obtainable = true;
@@ -663,11 +725,12 @@ public class BranchAndBoundSolutionManager implements SearchBounder {
     /**
      * Check whether it is possible to obtain the ideotype in the next generation,
      * by crossing the given parents. It is checked whether for each chromosome,
-     * parent 1 may yield the upper haplotype and parent 2 may yield the lower haplotype,
-     * or vice versa.
+     * parent 1 may yield the upper haplotype and parent 2 may yield the lower
+     * haplotype, or vice versa.
      * 
-     * @param parent1
-     * @param parent2
+     * @param parent1 parental genotype 1
+     * @param parent2 parental genotype 2
+     * @return <code>true</code> if crossing the given genotypes may produce the ideotype
      */
     private boolean ideotypeObtainableInNextGeneration(Genotype parent1, Genotype parent2){
         boolean obtainable = true;
@@ -687,18 +750,21 @@ public class BranchAndBoundSolutionManager implements SearchBounder {
         boolean obtainable = true;
         int l = 0;
         // go through loci in chromosome
-        ObservableDiploidTargetState[] targetStates = chrom.getObservableState().getTargetStates();
+        AllelicFrequency[] targetStates = chrom.getAllelicFrequencies().getAllelicFrequencies();
         while(obtainable && l < chrom.nrOfLoci()){
             // check locus l
-            obtainable = (hap.targetPresent(l) && (targetStates[l] == ObservableDiploidTargetState.ONCE || targetStates[l] == ObservableDiploidTargetState.TWICE))
-                      || (!hap.targetPresent(l) && (targetStates[l] == ObservableDiploidTargetState.NONE || targetStates[l] == ObservableDiploidTargetState.ONCE));
+            obtainable = (hap.targetPresent(l) && (targetStates[l] == AllelicFrequency.ONCE || targetStates[l] == AllelicFrequency.TWICE))
+                      || (!hap.targetPresent(l) && (targetStates[l] == AllelicFrequency.NONE || targetStates[l] == AllelicFrequency.ONCE));
             l++;
         }
         return obtainable;
     }
     
     /**
-     * Check whether we have reached the maximum generation when going to generation 'gen'.
+     * Check whether we have reached or exceeded the maximum number of generations.
+     * 
+     * @param gen current generation
+     * @return <code>true</code> if <code>gen</code> is greater than or equal to the maximum number of generations
      */
     public boolean finalGenerationReached(int gen){
         if(maxNumGen == null){
@@ -709,7 +775,11 @@ public class BranchAndBoundSolutionManager implements SearchBounder {
     }
     
     /**
-     * Check whether we have reached the penultimate generation when going to generation 'gen'.
+     * Check whether we have reached or exceeded the penultimate generation.
+     *
+     * @param gen current generation
+     * @return <code>true</code> if <code>gen</code> is greater than or equal to
+     *         the maximum number of generations minus 1
      */
     public boolean penultimateGenerationReached(int gen){
         if(maxNumGen == null){
@@ -722,8 +792,6 @@ public class BranchAndBoundSolutionManager implements SearchBounder {
     public Genotype getIdeotype(){
         return ideotype;
     }
-    
-    
     
     /*********************************************************/
     /* SOME PRIVATE UTILITY CLASSES WRAPPING MULTIPLE SCORES */

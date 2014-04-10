@@ -19,7 +19,7 @@ import org.ugent.caagt.genestacker.exceptions.EmptyHaplotypeException;
 /**
  * Haploid chromosome (single haplotype).
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class HaploidChromosome extends Chromosome {
 
@@ -29,10 +29,10 @@ public class HaploidChromosome extends Chromosome {
     }
     
     /**
-     * Deep copy constructor
+     * Deep copy constructor.
      * 
-     * @param chrom
-     * @throws EmptyHaplotypeException  
+     * @param chrom other haploid chromosome to copy (deep copy)
+     * @throws EmptyHaplotypeException when the given haploid chromosome does not contain any loci
      */
     public HaploidChromosome(HaploidChromosome chrom) throws EmptyHaplotypeException{
         this(new Haplotype(chrom.getHaplotype()));

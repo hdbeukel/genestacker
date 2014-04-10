@@ -17,7 +17,7 @@ package org.ugent.caagt.genestacker.search;
 /**
  * Descriptor used to describe important properties of a crossing scheme.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class CrossingSchemeDescriptor {
     

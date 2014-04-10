@@ -33,10 +33,10 @@ import org.ugent.caagt.genestacker.search.PlantNode;
 import org.ugent.caagt.genestacker.search.SeedLotNode;
 
 /**
- * Responsible of creating graphical representations for crossing schemes and writing these
- * to image files (e.g. png, jpeg, pdf, etc.) using the DOT command line tool (graphviz software)
+ * Responsible for creating graphical representations of crossing schemes and writing these
+ * to image files (PNG, JPEG, PDF ...) using the DOT command line tool (Graphviz software).
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class CrossingSchemeGraphWriter {
     
@@ -55,7 +55,9 @@ public class CrossingSchemeGraphWriter {
     /**
      * Create a new CrossingSchemeGraphWriter with the desired output file format.
      * 
-     * @param fileFormat 
+     * @param fileFormat desired file format
+     * @throws GenestackerException if there is something wrong with the Gene Stacker config file
+     *         containing the path to the external DOT executable
      */
     public CrossingSchemeGraphWriter(GraphFileFormat fileFormat) throws GenestackerException{
         this.fileFormat = fileFormat;
@@ -75,9 +77,15 @@ public class CrossingSchemeGraphWriter {
     
     /**
      * Write a graphical representation of the crossing scheme to the given output file
-     * using the external graphviz software. Returns a reference to the temporary
-     * file containing the scheme's structure in the graphviz definition language.
-     * This file will be automatically deleted upon exit.
+     * using the external Graphviz software. Returns a reference to the temporary
+     * file containing the scheme's structure in the Graphviz definition language.
+     * This file will be automatically deleted upon exit, so it should be copied
+     * if it is desired to be retained.
+     * 
+     * @param scheme crossing scheme for which a visualisation is created
+     * @param outputFile output file path
+     * @return file pointer to the temporary Graphviz source file
+     * @throws IOException if the Graphviz source file can not be written
      */
     public File write(CrossingScheme scheme, File outputFile) throws IOException {
         

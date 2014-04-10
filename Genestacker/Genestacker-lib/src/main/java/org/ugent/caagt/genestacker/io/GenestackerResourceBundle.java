@@ -23,9 +23,10 @@ import java.util.Properties;
 import org.ugent.caagt.genestacker.exceptions.GenestackerException;
 
 /**
- * Initializes the default config file in the user's home directory if not yet present.
+ * Interface to access config entries from the Gene Stacker config file. Initialises the
+ * default config file in the user's home directory if not yet present.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class GenestackerResourceBundle {
 
@@ -56,7 +57,7 @@ public class GenestackerResourceBundle {
             }
             return value;
         } catch (IOException ex){
-            throw new GenestackerException("Problem reading genestacker config file.");
+            throw new GenestackerException("Problem reading genestacker config file.", ex);
         }
     }
 

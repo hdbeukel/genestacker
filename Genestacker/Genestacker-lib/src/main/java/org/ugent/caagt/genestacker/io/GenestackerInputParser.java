@@ -43,7 +43,7 @@ import org.xml.sax.SAXException;
 /**
  * Responsible of parsing XML files containing the input for Gene Stacker.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class GenestackerInputParser {
 
@@ -53,6 +53,15 @@ public class GenestackerInputParser {
     
     /**
      * Parse the given XML file and return an instance of GenestackerInput.
+     * 
+     * @param xmlFile XML file containing the input
+     * @param useKosambiMap indicates whether to use the Kosambi mapping function
+     *                      instead of the default Haldane map to convert distances
+     *                      to crossover rates
+     * @return parsed Gene Stacker input
+     * 
+     * @throws IOException if any IO errors occur
+     * @throws XMLFormatException if the input file is not formatted correctly
      */
     public GenestackerInput parse(File xmlFile, boolean useKosambiMap) throws IOException, XMLFormatException {
         

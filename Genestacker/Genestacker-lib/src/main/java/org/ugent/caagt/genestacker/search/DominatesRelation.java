@@ -17,7 +17,7 @@ package org.ugent.caagt.genestacker.search;
 /**
  * Represents a generic dominates relation.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public abstract class DominatesRelation<E> {
     
@@ -36,8 +36,9 @@ public abstract class DominatesRelation<E> {
     /**
      * Check whether object o1 dominates object o2.
      * 
-     * @param o1
-     * @param o2 
+     * @param o1 object 1
+     * @param o2 object 2
+     * @return <code>true</code> if object 1 dominates object 2
      */
     public abstract boolean dominates(E o1, E o2);
         

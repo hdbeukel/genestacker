@@ -24,14 +24,12 @@ import org.ugent.caagt.genestacker.SeedLot;
 import org.ugent.caagt.genestacker.exceptions.CrossingSchemeException;
 
 /**
- * Represents a plant node in a crossing scheme.
+ * Represents a plant node in a crossing scheme. Each plant has one parent (seed lot node) denoting
+ * the seed lot from which it was grown. Furthermore each plant node (except the final plant node)
+ * has a number of children, representing the crossings of this plant with other plants from the
+ * same generation (or itself, in case of a selfing).
  * 
- * Each plant has one parent (seedlot node) denoting the seedlot from which
- * it was grown. Furthermore each plant node (except the final node) has a number of children,
- * representing the crossings of this plant with other plants (or itself, in case of selfing)
- * from the same generation. Crossings are grouped in selfings and crossings with other plants.
- * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class PlantNode {
 
@@ -43,42 +41,52 @@ public class PlantNode {
     
     // ID
     private long ID;
-    
-    // duplication number
-    private int duplication;
+    // sub ID used when regrowing the same plant (same ID) in a different generation
+    private int subID;
     
     // plant
     private Plant plant;
     
-    // parent seedlot
+    // parent seed lot
     private SeedLotNode parent;
     
-    // crossings with other plants (single children)
+    // crossings with other plants
     private List<CrossingNode> crossings;
-    // selfings (double children)
+    // selfings
     private List<SelfingNode> selfings;
     
     // generation in which this plant was grown
     private int generation;
     
     /**
-     * Create new plant node. A new plant node ID is automatically generated.
-     * The plant node is automatically registered with its parent seed lot node.
+     * Create new plant node. A new plant node ID is automatically generated,
+     * and the sub ID is set to 0. The plant node is automatically registered
+     * with its parent seed lot node.
+     * 
+     * @param plant plant corresponding to this plant node
+     * @param generation generation in which the plant is grown
+     * @param parent parental seed lot node
      */
     public PlantNode(Plant plant, int generation, SeedLotNode parent){
         this(plant, generation, parent, genNextID(), 0);
     }
     
     /**
-     * Create a new plant node with given ID. This plant node is automatically
+     * Create a new plant node with given ID and sub ID. This plant node is automatically
      * registered with its parent seed lot node.
+     * 
+     * @param plant plant corresponding to this plant node
+     * @param generation generation in which the plant is grown
+     * @param parent parental seed lot node
+     * @param ID given ID
+     * @param subID given subID
      */
-    public PlantNode(Plant plant, int generation, SeedLotNode parent, long ID, int duplication){
+    public PlantNode(Plant plant, int generation, SeedLotNode parent, long ID, int subID){
         this.plant = plant;
         this.generation = generation;
         this.parent = parent;
         this.ID = ID;
-        this.duplication = duplication;
+        this.subID = subID;
         crossings = new ArrayList<>();
         selfings = new ArrayList<>();
         // register with parent seed lot node (if no dangling plant node)
@@ -99,15 +107,21 @@ public class PlantNode {
         return scheme;
     }
     
+    /**
+     * Link the crossing scheme in which this plant node occurs.
+     * 
+     * @param scheme crossing scheme in which this plant node occurs
+     */
     public void setScheme(CrossingScheme scheme){
         this.scheme = scheme;
     }
     
     /**
-     * Use this method only for crossings of distinct plants (for selfings,
-     * see method addSelfing)
+     * Adds a crossing using the plant represented by this plant node.
+     * This method should <b>only</b> be used for crossings with <b>distinct</b>
+     * plants (for selfings, use {@link #addSelfing(SelfingNode)}).
      * 
-     * @param crossing 
+     * @param crossing crossing with this plant
      */
     public void addCrossing(CrossingNode crossing){
         crossings.add(crossing);
@@ -117,6 +131,11 @@ public class PlantNode {
         return crossings;
     }
     
+    /**
+     * Adds a selfing, i.e a crossing of the represented plant with itself.
+     * 
+     * @param selfing selfing of this plant
+     */
     public void addSelfing(SelfingNode selfing){
         selfings.add(selfing);
     }
@@ -127,37 +146,45 @@ public class PlantNode {
     
     /**
      * Returns the number of times that this plant is used for crossings.
-     * Selfings are counted twice because here the plant is used as both
-     * mother and father in the crossing.
+     * Selfings are counted twice because then the plant acts both as mother and father.
      * 
+     * @return number of crossings with this plant
      */
     public int getNumberOfTimesCrossed(){
         return 2 * selfings.size() + crossings.size();
     }
     
     /**
-     * Get the probability of observing the desired phase-known genotype.
+     * Get the probability with which the phase-known genotype of the represented plant is produced
+     * when growing offspring using seeds from the parental seed lot.
+     * 
+     * @return probability of obtaining the desired phase-known genotype
      */
     public double getProbabilityOfPhaseKnownGenotype(){
         SeedLot sl = parent.getSeedLot();
         Genotype g = plant.getGenotype();
-        return sl.getGenotypeGroup(g.getObservableState()).getProbabilityOfPhaseKnownGenotype(g);
+        return sl.getGenotypeGroup(g.getAllelicFrequencies()).getProbabilityOfPhaseKnownGenotype(g);
     }
 
     /**
-     * Get the linkage phase ambiguity of this plant.
+     * Get the linkage phase ambiguity of the represented plant.
+     * 
+     * @return linkage phase ambiguity
      */
     public double getLinkagePhaseAmbiguity(){
         SeedLot sl = parent.getSeedLot();
         Genotype g = plant.getGenotype();
-        return sl.getGenotypeGroup(g.getObservableState()).getLinkagePhaseAmbiguity(g);
+        return sl.getGenotypeGroup(g.getAllelicFrequencies()).getLinkagePhaseAmbiguity(g);
     }
     
     /**
-     * Get the number of targets grown from non-uniform seed lot nodes in the crossing scheme in which this plant node occurs.
+     * Get the number of targets grown from nonuniform seed lot nodes in the crossing scheme in which this plant node occurs.
+     * Note that this method should only be called if the plant node has been linked with its crossing schedule using
+     * {@link #setScheme(CrossingScheme)}, else, a NullPointerException will be thrown.
+     * 
+     * @return number of targets grown from nonuniform seed lot nodes in the crossing scheme in which this plant node occurs
      */
     public int getNumTargetsFromNonUniformSeedLotsInScheme(){
-        // number of plants grown from non uniform seed lots
         return scheme.getNumTargetsFromNonUniformSeedLots();
     }
     
@@ -193,8 +220,17 @@ public class PlantNode {
         return ID;
     }
     
+    public int getSubID(){
+        return subID;
+    }
+    
+    /**
+     * Returns a unique ID, consisting of both the main ID and sub ID.
+     * 
+     * @return unique ID
+     */
     public String getUniqueID(){
-        return "p" + ID + "x" + duplication;
+        return "p" + ID + "x" + subID;
     }
     
     public boolean grownFromUniformLot(){
@@ -227,6 +263,15 @@ public class PlantNode {
         return getUniqueID().hashCode();
     }
     
+    /**
+     * Creates a deep copy of this plant node and its ancestor structure.
+     * 
+     * @param shiftGen if <code>true</code>, all generations are increased by 1
+     * @param curCopiedSeedLots currently already copied seed lot nodes
+     * @param curCopiedPlants currently already copied plant nodes
+     * @return deep copy, possibly with shifted generations (+1)
+     * @throws CrossingSchemeException if anything goes wrong when copying this or related nodes
+     */
     public PlantNode deepUpwardsCopy(boolean shiftGen, Map<String, SeedLotNode> curCopiedSeedLots,
                                                 Map<String, PlantNode> curCopiedPlants)
                                                                 throws CrossingSchemeException{
@@ -251,31 +296,37 @@ public class PlantNode {
         return copy;
     }
     
+    protected PlantNode createCopy(int gen, SeedLotNode parentCopy){
+        return new PlantNode(plant, gen, parentCopy, ID, subID);
+    }
+    
     /**
-    * Create a deep copy of this plant node and its ancestor structure.
-    * 
-    * @throws CrossingSchemeException  
-    */
+     * Create a deep copy of this plant node and its ancestor structure.
+     * 
+     * @return deep copy
+     * @throws CrossingSchemeException if anything goes wrong when copying this or related nodes
+     */
     public PlantNode deepUpwardsCopy() throws CrossingSchemeException{
         return deepUpwardsCopy(false, new HashMap<String, SeedLotNode>(), new HashMap<String, PlantNode>());
     }
     
     /**
-    * Create a deep copy of this plant node and its ancestor structure, and shift the generation
-    * of each node (gen -> gen+1) to create an empty 0th generation.
-    * 
-    * @throws CrossingSchemeException  
-    */
+     * Create a deep copy of this plant node and its ancestor structure, and shift the generation
+     * of each node (+1) to create an empty 0th generation. This is used while merging
+     * schedules as it makes place for an additional generation to be inserted at the top level.
+     * 
+     * @return deep copy with shifted generations (+1)
+     * @throws CrossingSchemeException if anything goes wrong when copying this or related nodes
+     */
     public PlantNode deepShiftedUpwardsCopy() throws CrossingSchemeException{
         return deepUpwardsCopy(true, new HashMap<String, SeedLotNode>(), new HashMap<String, PlantNode>());
     }
     
-    public PlantNode createCopy(int gen, SeedLotNode parentCopy){
-        return new PlantNode(plant, gen, parentCopy, ID, duplication);
-    }
-    
     /**
-     * Check whether this is a dummy plant node. Returns false by default.
+     * Check whether this is a dummy plant node. Always returns <code>false</code> here, but may be overridden
+     * (for example, see {@link DummyPlantNode}).
+     * 
+     * @return <code>false</code>
      */
     public boolean isDummy(){
         return false;

@@ -29,7 +29,7 @@ import org.ugent.caagt.genestacker.search.bb.PlantDescriptor;
  * To prevent reuse, before crossing it is checked if each initial seed lot occurs
  * in exactly one branch of the scheme.
  *
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class TreeHeuristic extends Heuristic {
     
@@ -41,7 +41,7 @@ public class TreeHeuristic extends Heuristic {
     }
     
     @Override
-    public boolean boundCrossCurrentSchemeWithSpecificOther(CrossingScheme scheme, CrossingScheme other) {
+    public boolean pruneCrossCurrentSchemeWithSpecificOther(CrossingScheme scheme, CrossingScheme other) {
         // check for overlapping initial seed lots
         Set<Long> ids1 = scheme.getInitialSeedLotNodeIDs();
         Set<Long> ids2 = other.getInitialSeedLotNodeIDs();
@@ -50,19 +50,19 @@ public class TreeHeuristic extends Heuristic {
         while(!overlap && it.hasNext()){
             overlap = ids2.contains(it.next());
         }
-        // bound if overlap
+        // prune if overlap
         return overlap;
     }
     
     @Override
-    public boolean boundSelfCurrentSchemeWithSelectedTarget(CrossingScheme scheme, PlantDescriptor target) {
-        // bound any selfing which does not yield the ideotype
+    public boolean pruneSelfCurrentSchemeWithSelectedTarget(CrossingScheme scheme, PlantDescriptor target) {
+        // prune any selfing which does not yield the ideotype
         return !target.getPlant().getGenotype().equals(ideotype);
     }
     
     @Override
-    public boolean boundCurrentScheme(CrossingScheme scheme){
-        // bound in case of duplicated crossings
+    public boolean pruneCurrentScheme(CrossingScheme scheme){
+        // prune in case of duplicated crossings
         for(SeedLotNode sln : scheme.getSeedLotNodes()){
             if(sln.nrOfParentCrossings() > 1){
                 return true;
@@ -72,11 +72,11 @@ public class TreeHeuristic extends Heuristic {
     }
     
     @Override
-    public boolean boundQueueScheme(CrossingScheme scheme){
+    public boolean pruneQueueScheme(CrossingScheme scheme){
         // as only one final selfing is allowed, do not queue schemes which already contain a selfing
         // so that these will not be further extended
         if(scheme.getNumGenerations() == 0){
-            return false; // initial partial scheme, do not bound
+            return false; // initial partial scheme, do not prune
         }
         // only have to check final crossing(s)
         for(CrossingNode c : scheme.getCrossingNodesFromGeneration(scheme.getNumGenerations()-1)){

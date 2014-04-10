@@ -19,7 +19,7 @@ import java.util.Arrays;
 /**
  * Chromosome containing one or more target genes.
  *
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public abstract class Chromosome {
     

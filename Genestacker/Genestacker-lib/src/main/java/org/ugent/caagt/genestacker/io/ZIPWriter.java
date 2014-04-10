@@ -33,21 +33,25 @@ import org.ugent.caagt.genestacker.search.ParetoFrontier;
 /**
  * Creates ZIP packages containing output files generated for schedules contained in a given Pareto frontier.
  *
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class ZIPWriter {
 
     /**
      * Creates a ZIP package containing 3 files for every schedule in the given Pareto frontier:
      * <ul>
-     * <li>a graph visualization using the requested graph file format</li>
-     * <li>a dot source file used to generate the visualization</li>
-     * <li>an XML file describing the schedule</li>
+     *  <li>a graph visualisation using the requested graph file format</li>
+     *  <li>a dot source file used to generate the visualisation</li>
+     *  <li>an XML file describing the schedule</li>
      * </ul>
      *
      * @param pf Pareto frontier
      * @param format graph file format (e.g. PDF)
      * @param outputFile output file (extension ".zip" is appended if not already contained in the file name)
+     * 
+     * @throws IOException if any IO errors occur
+     * @throws ArchiveException if the ZIP file can not be created
+     * @throws GenestackerException if any problems occur with the Gene Stacker config file
      */
     public void createZIP(ParetoFrontier pf, GraphFileFormat format, String outputFile) throws IOException, ArchiveException, GenestackerException {
         // format outputFile string

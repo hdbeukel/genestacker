@@ -18,7 +18,7 @@ package org.ugent.caagt.genestacker.search;
  * Generic Pareto frontier that does not use descriptors for comparison of the registered
  * objects, but the objects themselves.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class GenericParetoFrontierWithoutDescriptor<T> extends GenericParetoFrontier<T, T> {
 

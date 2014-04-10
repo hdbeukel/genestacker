@@ -19,13 +19,16 @@ import org.ugent.caagt.genestacker.exceptions.CrossingSchemeException;
 import org.ugent.caagt.genestacker.exceptions.ImpossibleCrossingException;
 
 /**
+ * <p>
  * Represents a crossing of two plants in a crossing scheme.
- * 
+ * </p>
+ * <p>
  * Each crossing has two parents (plant nodes), possibly identical in case of
- * selfing. A crossing also has one single child, representing the seedlot
+ * selfing. A crossing also has one single child, representing the seed lot
  * that contains the seeds resulting from this crossing.
+ * </p>
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class CrossingNode {
     
@@ -51,12 +54,13 @@ public class CrossingNode {
     protected SeedLotNode child;
     
     /**
-     * Create a new crossing node with automatically generated ID. This crossing is automatically registered
-     * with its parent plant nodes.
+     * Create a new crossing node with automatically generated ID.
+     * This crossing is automatically registered with its parent plant nodes.
      * 
-     * @param parent1
-     * @param parent2
-     * @throws ImpossibleCrossingException  
+     * @param parent1 first parent plant
+     * @param parent2 second parent plant
+     * 
+     * @throws ImpossibleCrossingException if both plants are not from the same generation
      */
     public CrossingNode(PlantNode parent1, PlantNode parent2) throws ImpossibleCrossingException{
         this(genNextID(), parent1, parent2);
@@ -64,12 +68,13 @@ public class CrossingNode {
     
     /**
      * Create a new crossing node with given ID. This crossing is automatically registered
-     * with its parent plant nodes.
+     * with its parent plant nodes. 
      * 
-     * @param ID
-     * @param parent1
-     * @param parent2
-     * @throws ImpossibleCrossingException  
+     * @param ID given ID
+     * @param parent1 first parent plant
+     * @param parent2 second parent plant
+     * 
+     * @throws ImpossibleCrossingException if both plants are not from the same generation
      */
     public CrossingNode(long ID, PlantNode parent1, PlantNode parent2) throws ImpossibleCrossingException{
         // check if parents from same generation
@@ -152,11 +157,15 @@ public class CrossingNode {
     }
     
     /**
-     * Create a deep copy of this crossing node node and its ancestor structure.
+     * Create a deep copy of this crossing node and its ancestor structure.
      * 
-     * @param curCopiedSeedLots 
-     * @param curCopiedPlants 
-     * @throws CrossingSchemeException  
+     * @param shiftGen if set to <code>true</code>, all generation numbers are increased with one,
+     *                 to make place for insertion of an additional ancestor generation at the top level
+     *                 of the crossing schedule (used while merging two schedules, generation by generation)
+     * @param curCopiedSeedLots currently already copied parental seed lots
+     * @param curCopiedPlants currently already copied parental plants
+     * @return a deep copy of this crossing node and its ancestor structure
+     * @throws CrossingSchemeException if anything goes wrong when copying this or related nodes
      */
     public CrossingNode deepUpwardsCopy(boolean shiftGen, Map<String, SeedLotNode> curCopiedSeedLots,
                                                 Map<String, PlantNode> curCopiedPlants)

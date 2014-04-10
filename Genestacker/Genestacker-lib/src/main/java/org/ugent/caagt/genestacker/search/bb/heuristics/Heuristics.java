@@ -22,9 +22,9 @@ import org.ugent.caagt.genestacker.search.CrossingSchemeDescriptor;
 import org.ugent.caagt.genestacker.search.bb.PlantDescriptor;
 
 /**
- * Combines several heuristics and bounds the search as soon as any of them bounds.
+ * Combines several heuristics and prunes as soon as any of them prunes.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class Heuristics extends Heuristic {
 
@@ -43,113 +43,113 @@ public class Heuristics extends Heuristic {
     }
 
     @Override
-    public boolean boundCrossCurrentScheme(CrossingScheme scheme) {
-        boolean bound = false;
+    public boolean pruneCrossCurrentScheme(CrossingScheme scheme) {
+        boolean prune = false;
         int i=0;
-        while(!bound && i<heuristics.size()){
-            bound = heuristics.get(i).boundCrossCurrentScheme(scheme);
+        while(!prune && i<heuristics.size()){
+            prune = heuristics.get(i).pruneCrossCurrentScheme(scheme);
             i++;
         }
-        return bound;
+        return prune;
     }
 
     @Override
-    public boolean boundCrossCurrentSchemeWithSpecificOther(CrossingScheme scheme, CrossingScheme other) {
-        boolean bound = false;
+    public boolean pruneCrossCurrentSchemeWithSpecificOther(CrossingScheme scheme, CrossingScheme other) {
+        boolean prune = false;
         int i=0;
-        while(!bound && i<heuristics.size()){
-            bound = heuristics.get(i).boundCrossCurrentSchemeWithSpecificOther(scheme, other);
+        while(!prune && i<heuristics.size()){
+            prune = heuristics.get(i).pruneCrossCurrentSchemeWithSpecificOther(scheme, other);
             i++;
         }
-        return bound;
+        return prune;
     }
     
     @Override
-    public boolean boundCrossCurrentSchemeWithSpecificOtherWithSelectedTarget(CrossingScheme scheme, CrossingScheme other, PlantDescriptor target) {
-        boolean bound = false;
+    public boolean pruneCrossCurrentSchemeWithSpecificOtherWithSelectedTarget(CrossingScheme scheme, CrossingScheme other, PlantDescriptor target) {
+        boolean prune = false;
         int i=0;
-        while(!bound && i<heuristics.size()){
-            bound = heuristics.get(i).boundCrossCurrentSchemeWithSpecificOtherWithSelectedTarget(scheme, other, target);
+        while(!prune && i<heuristics.size()){
+            prune = heuristics.get(i).pruneCrossCurrentSchemeWithSpecificOtherWithSelectedTarget(scheme, other, target);
             i++;
         }
-        return bound;
+        return prune;
     }
 
     @Override
-    public boolean boundSelfCurrentScheme(CrossingScheme scheme) {
-        boolean bound = false;
+    public boolean pruneSelfCurrentScheme(CrossingScheme scheme) {
+        boolean prune = false;
         int i=0;
-        while(!bound && i<heuristics.size()){
-            bound = heuristics.get(i).boundSelfCurrentScheme(scheme);
+        while(!prune && i<heuristics.size()){
+            prune = heuristics.get(i).pruneSelfCurrentScheme(scheme);
             i++;
         }
-        return bound;
+        return prune;
     }
     
     @Override
-    public boolean boundSelfCurrentSchemeWithSelectedTarget(CrossingScheme scheme, PlantDescriptor target) {
-        boolean bound = false;
+    public boolean pruneSelfCurrentSchemeWithSelectedTarget(CrossingScheme scheme, PlantDescriptor target) {
+        boolean prune = false;
         int i=0;
-        while(!bound && i<heuristics.size()){
-            bound = heuristics.get(i).boundSelfCurrentSchemeWithSelectedTarget(scheme, target);
+        while(!prune && i<heuristics.size()){
+            prune = heuristics.get(i).pruneSelfCurrentSchemeWithSelectedTarget(scheme, target);
             i++;
         }
-        return bound;
+        return prune;
     }
     
     @Override
-    public boolean boundCurrentScheme(CrossingScheme scheme) {
-        boolean bound = false;
+    public boolean pruneCurrentScheme(CrossingScheme scheme) {
+        boolean prune = false;
         int i=0;
-        while(!bound && i<heuristics.size()){
-            bound = heuristics.get(i).boundCurrentScheme(scheme);
+        while(!prune && i<heuristics.size()){
+            prune = heuristics.get(i).pruneCurrentScheme(scheme);
             i++;
         }
-        return bound;
+        return prune;
     }
 
     @Override
-    public boolean boundGrowPlantFromAncestors(Set<PlantDescriptor> ancestors, PlantDescriptor p) {
-        boolean bound = false;
+    public boolean pruneGrowPlantFromAncestors(Set<PlantDescriptor> ancestors, PlantDescriptor p) {
+        boolean prune = false;
         int i=0;
-        while(!bound && i<heuristics.size()){
-            bound = heuristics.get(i).boundGrowPlantFromAncestors(ancestors, p);
+        while(!prune && i<heuristics.size()){
+            prune = heuristics.get(i).pruneGrowPlantFromAncestors(ancestors, p);
             i++;
         }
-        return bound;
+        return prune;
     }
     
     @Override
-    public boolean boundGrowPlantInGeneration(Plant p, int generation) {
-        boolean bound = false;
+    public boolean pruneGrowPlantInGeneration(Plant p, int generation) {
+        boolean prune = false;
         int i=0;
-        while(!bound && i<heuristics.size()){
-            bound = heuristics.get(i).boundGrowPlantInGeneration(p, generation);
+        while(!prune && i<heuristics.size()){
+            prune = heuristics.get(i).pruneGrowPlantInGeneration(p, generation);
             i++;
         }
-        return bound;
+        return prune;
     }
 
     @Override
-    public boolean boundQueueScheme(CrossingScheme s) {
-        boolean bound = false;
+    public boolean pruneQueueScheme(CrossingScheme s) {
+        boolean prune = false;
         int i=0;
-        while(!bound && i<heuristics.size()){
-            bound = heuristics.get(i).boundQueueScheme(s);
+        while(!prune && i<heuristics.size()){
+            prune = heuristics.get(i).pruneQueueScheme(s);
             i++;
         }
-        return bound;
+        return prune;
     }
     
     @Override
-    public boolean boundDequeueScheme(CrossingScheme s) {
-        boolean bound = false;
+    public boolean pruneDequeueScheme(CrossingScheme s) {
+        boolean prune = false;
         int i=0;
-        while(!bound && i<heuristics.size()){
-            bound = heuristics.get(i).boundDequeueScheme(s);
+        while(!prune && i<heuristics.size()){
+            prune = heuristics.get(i).pruneDequeueScheme(s);
             i++;
         }
-        return bound;
+        return prune;
     }
 
     @Override

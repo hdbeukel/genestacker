@@ -40,7 +40,7 @@ import org.ugent.caagt.genestacker.search.bb.heuristics.WeakGenotypeImprovement;
 
 /**
  *
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class ImprovementOverAncestorsTest extends TestCase {
 
@@ -68,7 +68,7 @@ public class ImprovementOverAncestorsTest extends TestCase {
     }
     
     @Test
-    public void testBoundGrowPlantFromAncestorsWeak() throws GenestackerException{
+    public void testPruneGrowPlantFromAncestorsWeak() throws GenestackerException{
 
         System.out.println("\n### TEST (WEAK) IMPROVEMENT OVER ANCESTORS ###\n");
         
@@ -155,43 +155,43 @@ public class ImprovementOverAncestorsTest extends TestCase {
         
         Set<PlantDescriptor> ancestors = new HashSet<>();
         ancestors.add(pd1);
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd1));
-        assertFalse(heur.boundGrowPlantFromAncestors(ancestors, pd2));
-        assertFalse(heur.boundGrowPlantFromAncestors(ancestors, pd3));
-        assertFalse(heur.boundGrowPlantFromAncestors(ancestors, pd4));
-        assertFalse(heur.boundGrowPlantFromAncestors(ancestors, pd5));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd1));
+        assertFalse(heur.pruneGrowPlantFromAncestors(ancestors, pd2));
+        assertFalse(heur.pruneGrowPlantFromAncestors(ancestors, pd3));
+        assertFalse(heur.pruneGrowPlantFromAncestors(ancestors, pd4));
+        assertFalse(heur.pruneGrowPlantFromAncestors(ancestors, pd5));
         
         ancestors.clear();
         ancestors.add(pd2);
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd1));
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd2));
-        assertFalse(heur.boundGrowPlantFromAncestors(ancestors, pd3));
-        assertFalse(heur.boundGrowPlantFromAncestors(ancestors, pd4));
-        assertFalse(heur.boundGrowPlantFromAncestors(ancestors, pd5));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd1));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd2));
+        assertFalse(heur.pruneGrowPlantFromAncestors(ancestors, pd3));
+        assertFalse(heur.pruneGrowPlantFromAncestors(ancestors, pd4));
+        assertFalse(heur.pruneGrowPlantFromAncestors(ancestors, pd5));
         
         ancestors.clear();
         ancestors.add(pd3);
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd1));
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd2));
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd3));
-        assertFalse(heur.boundGrowPlantFromAncestors(ancestors, pd4));
-        assertFalse(heur.boundGrowPlantFromAncestors(ancestors, pd5));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd1));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd2));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd3));
+        assertFalse(heur.pruneGrowPlantFromAncestors(ancestors, pd4));
+        assertFalse(heur.pruneGrowPlantFromAncestors(ancestors, pd5));
         
         ancestors.clear();
         ancestors.add(pd4);
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd1));
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd2));
-        assertFalse(heur.boundGrowPlantFromAncestors(ancestors, pd3));
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd4));
-        assertFalse(heur.boundGrowPlantFromAncestors(ancestors, pd5));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd1));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd2));
+        assertFalse(heur.pruneGrowPlantFromAncestors(ancestors, pd3));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd4));
+        assertFalse(heur.pruneGrowPlantFromAncestors(ancestors, pd5));
         
         ancestors.clear();
         ancestors.add(pd5);
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd1));
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd2));
-        assertFalse(heur.boundGrowPlantFromAncestors(ancestors, pd3));
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd4));
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd5));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd1));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd2));
+        assertFalse(heur.pruneGrowPlantFromAncestors(ancestors, pd3));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd4));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd5));
         
         /***************/
         /* TEST CASE 2 */
@@ -253,7 +253,7 @@ public class ImprovementOverAncestorsTest extends TestCase {
         ancestors = new HashSet<>();
         ancestors.add(pd1);
         ancestors.add(pd2);
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd3));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd3));
         
         /***************/
         /* TEST CASE 3 */
@@ -273,31 +273,31 @@ public class ImprovementOverAncestorsTest extends TestCase {
         
         ancestors = new HashSet<>();
         ancestors.add(pd1);
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd1));
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd2));
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd3));
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd4));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd1));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd2));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd3));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd4));
         
         ancestors = new HashSet<>();
         ancestors.add(pd2);
-        assertFalse(heur.boundGrowPlantFromAncestors(ancestors, pd1));
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd2));
-        assertFalse(heur.boundGrowPlantFromAncestors(ancestors, pd3));
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd4));
+        assertFalse(heur.pruneGrowPlantFromAncestors(ancestors, pd1));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd2));
+        assertFalse(heur.pruneGrowPlantFromAncestors(ancestors, pd3));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd4));
         
         ancestors = new HashSet<>();
         ancestors.add(pd3);
-        assertFalse(heur.boundGrowPlantFromAncestors(ancestors, pd1));
-        assertFalse(heur.boundGrowPlantFromAncestors(ancestors, pd2));
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd3));
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd4));
+        assertFalse(heur.pruneGrowPlantFromAncestors(ancestors, pd1));
+        assertFalse(heur.pruneGrowPlantFromAncestors(ancestors, pd2));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd3));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd4));
         
         ancestors = new HashSet<>();
         ancestors.add(pd4);
-        assertFalse(heur.boundGrowPlantFromAncestors(ancestors, pd1));
-        assertFalse(heur.boundGrowPlantFromAncestors(ancestors, pd2));
-        assertFalse(heur.boundGrowPlantFromAncestors(ancestors, pd3));
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd4));
+        assertFalse(heur.pruneGrowPlantFromAncestors(ancestors, pd1));
+        assertFalse(heur.pruneGrowPlantFromAncestors(ancestors, pd2));
+        assertFalse(heur.pruneGrowPlantFromAncestors(ancestors, pd3));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd4));
         
         /***************/
         /* TEST CASE 4 */
@@ -355,11 +355,11 @@ public class ImprovementOverAncestorsTest extends TestCase {
         
         ancestors = new HashSet<>();
         ancestors.add(pd1);
-        assertFalse(heur.boundGrowPlantFromAncestors(ancestors, pd2));
+        assertFalse(heur.pruneGrowPlantFromAncestors(ancestors, pd2));
         
         ancestors = new HashSet<>();
         ancestors.add(pd2);
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd1));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd1));
         
         /***************/
         /* TEST CASE 5 */
@@ -417,16 +417,16 @@ public class ImprovementOverAncestorsTest extends TestCase {
         
         ancestors = new HashSet<>();
         ancestors.add(pd1);
-        assertFalse(heur.boundGrowPlantFromAncestors(ancestors, pd2));
+        assertFalse(heur.pruneGrowPlantFromAncestors(ancestors, pd2));
         
         ancestors = new HashSet<>();
         ancestors.add(pd2);
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd1));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd1));
                 
     }
 
     @Test
-    public void testBoundGrowPlantFromAncestorsStrong() throws GenestackerException{
+    public void testPruneGrowPlantFromAncestorsStrong() throws GenestackerException{
 
         System.out.println("\n### TEST (STRONG) IMPROVEMENT OVER ANCESTORS ###\n");
         
@@ -519,43 +519,43 @@ public class ImprovementOverAncestorsTest extends TestCase {
         
         Set<PlantDescriptor> ancestors = new HashSet<>();
         ancestors.add(pd1);
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd1));
-        assertFalse(heur.boundGrowPlantFromAncestors(ancestors, pd2));
-        assertFalse(heur.boundGrowPlantFromAncestors(ancestors, pd3));
-        assertFalse(heur.boundGrowPlantFromAncestors(ancestors, pd4));
-        assertFalse(heur.boundGrowPlantFromAncestors(ancestors, pd5));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd1));
+        assertFalse(heur.pruneGrowPlantFromAncestors(ancestors, pd2));
+        assertFalse(heur.pruneGrowPlantFromAncestors(ancestors, pd3));
+        assertFalse(heur.pruneGrowPlantFromAncestors(ancestors, pd4));
+        assertFalse(heur.pruneGrowPlantFromAncestors(ancestors, pd5));
         
         ancestors.clear();
         ancestors.add(pd2);
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd1));
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd2));
-        assertFalse(heur.boundGrowPlantFromAncestors(ancestors, pd3));
-        assertFalse(heur.boundGrowPlantFromAncestors(ancestors, pd4));
-        assertFalse(heur.boundGrowPlantFromAncestors(ancestors, pd5));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd1));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd2));
+        assertFalse(heur.pruneGrowPlantFromAncestors(ancestors, pd3));
+        assertFalse(heur.pruneGrowPlantFromAncestors(ancestors, pd4));
+        assertFalse(heur.pruneGrowPlantFromAncestors(ancestors, pd5));
         
         ancestors.clear();
         ancestors.add(pd3);
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd1));
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd2));
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd3));
-        assertFalse(heur.boundGrowPlantFromAncestors(ancestors, pd4));
-        assertFalse(heur.boundGrowPlantFromAncestors(ancestors, pd5));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd1));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd2));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd3));
+        assertFalse(heur.pruneGrowPlantFromAncestors(ancestors, pd4));
+        assertFalse(heur.pruneGrowPlantFromAncestors(ancestors, pd5));
         
         ancestors.clear();
         ancestors.add(pd4);
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd1));
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd2));
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd3));
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd4));
-        assertFalse(heur.boundGrowPlantFromAncestors(ancestors, pd5));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd1));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd2));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd3));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd4));
+        assertFalse(heur.pruneGrowPlantFromAncestors(ancestors, pd5));
         
         ancestors.clear();
         ancestors.add(pd5);
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd1));
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd2));
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd3));
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd4));
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd5));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd1));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd2));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd3));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd4));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd5));
         
         /***************/
         /* TEST CASE 2 */
@@ -624,7 +624,7 @@ public class ImprovementOverAncestorsTest extends TestCase {
         ancestors = new HashSet<>();
         ancestors.add(pd1);
         ancestors.add(pd2);
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd3));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd3));
         
         /***************/
         /* TEST CASE 3 */
@@ -644,31 +644,31 @@ public class ImprovementOverAncestorsTest extends TestCase {
         
         ancestors = new HashSet<>();
         ancestors.add(pd1);
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd1));
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd2));
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd3));
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd4));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd1));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd2));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd3));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd4));
         
         ancestors = new HashSet<>();
         ancestors.add(pd2);
-        assertFalse(heur.boundGrowPlantFromAncestors(ancestors, pd1));
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd2));
-        assertFalse(heur.boundGrowPlantFromAncestors(ancestors, pd3));
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd4));
+        assertFalse(heur.pruneGrowPlantFromAncestors(ancestors, pd1));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd2));
+        assertFalse(heur.pruneGrowPlantFromAncestors(ancestors, pd3));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd4));
         
         ancestors = new HashSet<>();
         ancestors.add(pd3);
-        assertFalse(heur.boundGrowPlantFromAncestors(ancestors, pd1));
-        assertFalse(heur.boundGrowPlantFromAncestors(ancestors, pd2));
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd3));
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd4));
+        assertFalse(heur.pruneGrowPlantFromAncestors(ancestors, pd1));
+        assertFalse(heur.pruneGrowPlantFromAncestors(ancestors, pd2));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd3));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd4));
         
         ancestors = new HashSet<>();
         ancestors.add(pd4);
-        assertFalse(heur.boundGrowPlantFromAncestors(ancestors, pd1));
-        assertFalse(heur.boundGrowPlantFromAncestors(ancestors, pd2));
-        assertFalse(heur.boundGrowPlantFromAncestors(ancestors, pd3));
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd4));
+        assertFalse(heur.pruneGrowPlantFromAncestors(ancestors, pd1));
+        assertFalse(heur.pruneGrowPlantFromAncestors(ancestors, pd2));
+        assertFalse(heur.pruneGrowPlantFromAncestors(ancestors, pd3));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd4));
         
         /***************/
         /* TEST CASE 4 */
@@ -729,11 +729,11 @@ public class ImprovementOverAncestorsTest extends TestCase {
         
         ancestors = new HashSet<>();
         ancestors.add(pd1);
-        assertFalse(heur.boundGrowPlantFromAncestors(ancestors, pd2));
+        assertFalse(heur.pruneGrowPlantFromAncestors(ancestors, pd2));
         
         ancestors = new HashSet<>();
         ancestors.add(pd2);
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd1));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd1));
         
         /***************/
         /* TEST CASE 5 */
@@ -794,11 +794,11 @@ public class ImprovementOverAncestorsTest extends TestCase {
         
         ancestors = new HashSet<>();
         ancestors.add(pd1);
-        assertFalse(heur.boundGrowPlantFromAncestors(ancestors, pd2));
+        assertFalse(heur.pruneGrowPlantFromAncestors(ancestors, pd2));
         
         ancestors = new HashSet<>();
         ancestors.add(pd2);
-        assertTrue(heur.boundGrowPlantFromAncestors(ancestors, pd1));
+        assertTrue(heur.pruneGrowPlantFromAncestors(ancestors, pd1));
                 
     }
     

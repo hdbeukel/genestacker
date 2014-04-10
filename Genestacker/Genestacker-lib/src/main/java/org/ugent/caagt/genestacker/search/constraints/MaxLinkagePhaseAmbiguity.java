@@ -19,7 +19,7 @@ import org.ugent.caagt.genestacker.search.CrossingSchemeDescriptor;
 /**
  * Maximum linkage phase ambiguity of a scheme.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class MaxLinkagePhaseAmbiguity implements Constraint {
 

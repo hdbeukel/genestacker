@@ -24,7 +24,7 @@ import org.ugent.caagt.genestacker.search.bb.PlantDescriptor;
  * but the current plant has a higher observation probability or lower linkage phase ambiguity compared to
  * its ancestor, taking into account the precise seed lots from which each plant is grown.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class ImprovementOverAncestorsHeuristic extends Heuristic {
     
@@ -36,18 +36,18 @@ public class ImprovementOverAncestorsHeuristic extends Heuristic {
     }
     
     @Override
-    public boolean boundGrowPlantFromAncestors(Set<PlantDescriptor> ancestors, PlantDescriptor p) {
+    public boolean pruneGrowPlantFromAncestors(Set<PlantDescriptor> ancestors, PlantDescriptor p) {
         // p should improve on all ancestors
-        boolean bound = false;
+        boolean prune = false;
         Iterator<PlantDescriptor> it = ancestors.iterator();
-        while(!bound && it.hasNext()){
+        while(!prune && it.hasNext()){
             PlantDescriptor a = it.next();
             boolean allow = impr.improvesOnOtherPlant(p.getPlant(), a.getPlant())                                           // plant improves
                          || p.getPlant().getGenotype().equals(a.getPlant().getGenotype())
                             && (p.getProb() > a.getProb() || p.getLinkagePhaseAmbiguity() < a.getLinkagePhaseAmbiguity());  // equal genotypes, better prob or LPA
-            bound = !allow;
+            prune = !allow;
         }
-        return bound;
+        return prune;
     }
     
 }

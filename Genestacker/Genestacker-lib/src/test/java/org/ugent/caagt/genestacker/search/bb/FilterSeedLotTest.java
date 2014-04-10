@@ -28,8 +28,8 @@ import org.ugent.caagt.genestacker.DiploidChromosome;
 import org.ugent.caagt.genestacker.GeneticMap;
 import org.ugent.caagt.genestacker.Genotype;
 import org.ugent.caagt.genestacker.Haplotype;
-import org.ugent.caagt.genestacker.IndistinguishableGenotypeGroup;
-import org.ugent.caagt.genestacker.ObservableGenotypeState;
+import org.ugent.caagt.genestacker.GenotypeGroupWithSameAllelicFrequencies;
+import org.ugent.caagt.genestacker.GenotypeAllelicFrequencies;
 import org.ugent.caagt.genestacker.SeedLot;
 import org.ugent.caagt.genestacker.exceptions.GenestackerException;
 import org.ugent.caagt.genestacker.search.bb.heuristics.GenotypeImprovement;
@@ -38,7 +38,7 @@ import org.ugent.caagt.genestacker.search.bb.heuristics.WeakGenotypeImprovement;
 
 /**
  *
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class FilterSeedLotTest extends TestCase {
 
@@ -67,7 +67,7 @@ public class FilterSeedLotTest extends TestCase {
      * Test heuristic seed lot filtering.
      */
     @Test
-    public void testBoundGrowPlantFromAncestors() throws GenestackerException{
+    public void testPruneGrowPlantFromAncestors() throws GenestackerException{
 
         System.out.println("\n### TEST HEURISTIC SEED LOT FILTERING ###\n");
                 
@@ -120,9 +120,9 @@ public class FilterSeedLotTest extends TestCase {
         g1map.put(g1, 0.4);
         Map<Genotype, Double> g2map = new HashMap<>();
         g2map.put(g2, 0.2);
-        Map<ObservableGenotypeState, IndistinguishableGenotypeGroup> states = new HashMap<>();
-        states.put(g1.getObservableState(), new IndistinguishableGenotypeGroup(0.4, g1.getObservableState(), g1map));
-        states.put(g2.getObservableState(), new IndistinguishableGenotypeGroup(0.2, g2.getObservableState(), g2map));
+        Map<GenotypeAllelicFrequencies, GenotypeGroupWithSameAllelicFrequencies> states = new HashMap<>();
+        states.put(g1.getAllelicFrequencies(), new GenotypeGroupWithSameAllelicFrequencies(0.4, g1.getAllelicFrequencies(), g1map));
+        states.put(g2.getAllelicFrequencies(), new GenotypeGroupWithSameAllelicFrequencies(0.2, g2.getAllelicFrequencies(), g2map));
         SeedLot sl = new SeedLot(false, states);
 
         /*******************/
@@ -148,8 +148,8 @@ public class FilterSeedLotTest extends TestCase {
         g2map = new HashMap<>();
         g2map.put(g2, 0.4);
         states = new HashMap<>();
-        states.put(g1.getObservableState(), new IndistinguishableGenotypeGroup(0.4, g1.getObservableState(), g1map));
-        states.put(g2.getObservableState(), new IndistinguishableGenotypeGroup(0.4, g2.getObservableState(), g2map));
+        states.put(g1.getAllelicFrequencies(), new GenotypeGroupWithSameAllelicFrequencies(0.4, g1.getAllelicFrequencies(), g1map));
+        states.put(g2.getAllelicFrequencies(), new GenotypeGroupWithSameAllelicFrequencies(0.4, g2.getAllelicFrequencies(), g2map));
         sl = new SeedLot(false, states);
 
         /*******************/
@@ -175,8 +175,8 @@ public class FilterSeedLotTest extends TestCase {
         g2map = new HashMap<>();
         g2map.put(g2, 0.4);
         states = new HashMap<>();
-        states.put(g1.getObservableState(), new IndistinguishableGenotypeGroup(0.2, g1.getObservableState(), g1map));
-        states.put(g2.getObservableState(), new IndistinguishableGenotypeGroup(0.4, g2.getObservableState(), g2map));
+        states.put(g1.getAllelicFrequencies(), new GenotypeGroupWithSameAllelicFrequencies(0.2, g1.getAllelicFrequencies(), g1map));
+        states.put(g2.getAllelicFrequencies(), new GenotypeGroupWithSameAllelicFrequencies(0.4, g2.getAllelicFrequencies(), g2map));
         sl = new SeedLot(false, states);
 
         /*******************/
@@ -226,8 +226,8 @@ public class FilterSeedLotTest extends TestCase {
         g2map = new HashMap<>();
         g2map.put(g2, 0.2);
         states = new HashMap<>();
-        states.put(g1.getObservableState(), new IndistinguishableGenotypeGroup(0.4, g1.getObservableState(), g1map));
-        states.put(g2.getObservableState(), new IndistinguishableGenotypeGroup(0.2, g2.getObservableState(), g2map));
+        states.put(g1.getAllelicFrequencies(), new GenotypeGroupWithSameAllelicFrequencies(0.4, g1.getAllelicFrequencies(), g1map));
+        states.put(g2.getAllelicFrequencies(), new GenotypeGroupWithSameAllelicFrequencies(0.2, g2.getAllelicFrequencies(), g2map));
         sl = new SeedLot(false, states);
 
         /*******************/

@@ -17,7 +17,7 @@ package org.ugent.caagt.genestacker;
 /**
  * Represents a specific plant in a crossing scheme.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class Plant {
     
@@ -38,7 +38,7 @@ public class Plant {
     }
     
     public boolean isHomozygousAtAllTargetLoci(){
-        return genotype.isHomozygousAtAllTargetLoci();
+        return genotype.isHomozygousAtAllContainedLoci();
     }
     
     @Override

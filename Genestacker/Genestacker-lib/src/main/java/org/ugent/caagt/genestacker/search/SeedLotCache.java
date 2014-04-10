@@ -20,9 +20,9 @@ import org.ugent.caagt.genestacker.Genotype;
 import org.ugent.caagt.genestacker.SeedLot;
 
 /**
- * Used to cache seed lots created from two parents with given genotypes.
+ * Used to cache seed lots created by crossing two specific genotypes.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class SeedLotCache {
 
@@ -37,6 +37,11 @@ public class SeedLotCache {
      * Get the cached seed lot obtained from crossing genotype g1 with genotype g2
      * (possibly equal in case of a selfing). If this seed lot is not yet present
      * in the cache, null is returned.
+     * 
+     * @param g1 genotype 1
+     * @param g2 genotype 2
+     * @return cached seed lot obtained from crossing the given genotypes, <code>null</code>
+     *         if this seed lot is not yet present in the cache
      */
     public SeedLot getCachedSeedLot(Genotype g1, Genotype g2){
         SeedLot seedlot = null;
@@ -50,8 +55,11 @@ public class SeedLotCache {
     }
     
     /**
-     * Store the seed lot obtained from crossing genotype g1 with genotype g2 in
-     * the cache.
+     * Store the seed lot obtained from crossing genotype g1 with genotype g2 in the cache.
+     * 
+     * @param g1 genotype 1
+     * @param g2 genotype 2
+     * @param seedlot seed lot obtained by crossing the given genotypes
      */
     public void cache(Genotype g1, Genotype g2, SeedLot seedlot){
         if(!cache.containsKey(g1)){

@@ -32,7 +32,7 @@ import org.ugent.caagt.genestacker.search.SeedLotNode;
  * among all those which are available at the generation in question. Pareto optimality
  * of seed lots is defined in the Pareto frontiers created by the given factory class.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class OptimalSeedLotHeuristic extends Heuristic {
 
@@ -44,7 +44,7 @@ public class OptimalSeedLotHeuristic extends Heuristic {
     }
     
     @Override
-    public boolean boundQueueScheme(CrossingScheme scheme){        
+    public boolean pruneQueueScheme(CrossingScheme scheme){        
         boolean ok = true;
         // map containing pareto frontier for each occuring genotype, with seed lot nodes
         // that have been created up to the current generation
@@ -73,14 +73,15 @@ public class OptimalSeedLotHeuristic extends Heuristic {
             gen++;
         }
         
-        // bound if not ok
+        // prune if not ok
         return !ok;
     }
     
     /**
-     * Get a set containing all genotypes represented in the given collection of plant nodes.
+     * Get a set containing all genotypes contained in the given collection of plant nodes.
      * 
-     * @param pns
+     * @param pns collection of plant nodes
+     * @return set of genotypes contained in the given collection of plant nodes
      */
     private Set<Genotype> getGenotypes(Collection<PlantNode> pns){
         Set<Genotype> plants = new HashSet<>();

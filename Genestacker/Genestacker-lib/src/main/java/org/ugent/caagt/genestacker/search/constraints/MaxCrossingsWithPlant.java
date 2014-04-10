@@ -20,11 +20,11 @@ import org.ugent.caagt.genestacker.search.CrossingSchemeDescriptor;
 import org.ugent.caagt.genestacker.search.PlantNode;
 
 /**
- * Constraint on the maximum number of times that a plant can be crossed, during
- * the generation in which it lives. Selfings count twice because here the same
+ * Constraint on the maximum number of times that a plant can be crossed (in the
+ * generation in which it lives). Selfings count twice because here the same
  * plant is used both as father and mother.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class MaxCrossingsWithPlant implements Constraint {
 
@@ -36,6 +36,8 @@ public class MaxCrossingsWithPlant implements Constraint {
     
     /**
      * Create a constraint on the maximum number of crossings with any plant.
+     * 
+     * @param maxCrossingsWithPlant maximum number of crossings per plant
      */
     public MaxCrossingsWithPlant(int maxCrossingsWithPlant){
         this.maxCrossingsWithPlant = maxCrossingsWithPlant;
@@ -52,6 +54,7 @@ public class MaxCrossingsWithPlant implements Constraint {
     }
 
     /**
+     * <p>
      * Returns a plant node with the required ID, from the required generation,
      * which can still be reused as parent in an additional crossing. In case of a
      * selfing, the plant can only be reused if it can still be used at least two
@@ -59,13 +62,16 @@ public class MaxCrossingsWithPlant implements Constraint {
      * a plant node with an odd number of crossings, if any. This ensures that there
      * are never multiple plants with an odd number of crossings, to avoid trouble
      * with selfings, which require *two* usages of the same parent plant.
+     * </p>
+     * <p>
+     * Returns <code>null</code> if no appropriate reusable plant was found.
+     * </p>
      * 
-     * Returns null if no reusable plant was found.
-     * 
-     * @param plantNodeID
-     * @param generation
-     * @param scheme
-     * @param selfing
+     * @param plantNodeID required ID of the reusable plant
+     * @param generation generation in which the plant has to be found
+     * @param scheme crossing scheme in which to search for the desired reusable plant
+     * @param selfing indicates whether a parent for a selfing is required (counts as two usages)
+     * @return an appropriate reusable plant, if any, else <code>null</code>
      */
     public PlantNode getReusablePlantNode(long plantNodeID, int generation, CrossingScheme scheme, boolean selfing){
         if(selfing){

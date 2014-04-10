@@ -18,7 +18,7 @@ package org.ugent.caagt.genestacker.exceptions;
  * Exception indicating that duplicate constraints are given as input to the
  * search algorithm.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class DuplicateConstraintException extends SearchException {
 

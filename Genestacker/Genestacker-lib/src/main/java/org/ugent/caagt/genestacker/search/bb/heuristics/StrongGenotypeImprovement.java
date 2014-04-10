@@ -21,7 +21,7 @@ import org.ugent.caagt.genestacker.Haplotype;
 
 /**
  *
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class StrongGenotypeImprovement extends GenotypeImprovement {
     
@@ -70,7 +70,7 @@ public class StrongGenotypeImprovement extends GenotypeImprovement {
      * computation is interrupted as soon as a stretch is found with length > l, or with
      * length == l and prob > p. Then, the computed (l, p) pair of this chromosome is not
      * exact, but it is already guaranteed to be an improvement over the other (l, p) pair,
-     * so we do not need to compute the exact values. Computation is also bounded as soon as
+     * so we do not need to compute the exact values. Computation is also aborted as soon as
      * it is no longer possible to find a stretch with length >= l, because in this case we
      * already know that we can never have an improvement over the given (l, p) pair.
     */

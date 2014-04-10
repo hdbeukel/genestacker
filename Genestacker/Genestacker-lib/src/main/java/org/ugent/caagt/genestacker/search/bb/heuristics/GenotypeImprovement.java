@@ -20,9 +20,9 @@ import org.ugent.caagt.genestacker.Genotype;
 import org.ugent.caagt.genestacker.Haplotype;
 
 /**
- * Abstract concept of improvement of genotypes as compared to a given ideotype.
+ * Abstract concept of improvement of genotypes when aiming at a specific ideotype.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public abstract class GenotypeImprovement {
     
@@ -34,9 +34,13 @@ public abstract class GenotypeImprovement {
     }
     
     /**
-     * Check whether the current genotype g "improves" (heuristically) on a given other genotype.
-     * This is the case if there is an improvement in at least one chromosome, as compared to at least
-     * one of the target haplotypes of the respective chromosome of the ideotype.
+     * Check whether the current genotype g improves (heuristically) over a given other genotype.
+     * This is the case if there is an improvement in at least one chromosome, regarding at least
+     * one of the haplotypes of the respective chromosome of the ideotype.
+     * 
+     * @param g given genotype
+     * @param other other genotype
+     * @return <code>true</code> if <code>g</code> is an improvement over <code>other</code>
      */
     public boolean improvesOnOtherGenotype(Genotype g, Genotype other){
         // go through chromosomes
@@ -58,8 +62,15 @@ public abstract class GenotypeImprovement {
     }
     
     /**
-     * Check whether chromosome 'chrom' improves over 'otherChrom', as compared to a given haplotype from
-     * the corresponding chromosome in the ideotype.
+     * Check whether chromosome <code>chrom</code> improves over <code>otherChrom</code>, regarding a fixed haplotype
+     * from the corresponding chromosome of the ideotype.
+     * 
+     * @param chromIndex index of considered chromosome
+     * @param chrom considered chromosome of the genotype
+     * @param otherChrom considered chromosome of other genotype
+     * @param ideotypeHap fixed haplotype of the respective chromosome of the ideotype
+     * @return <code>true</code> if <code>chrom</code> is an improvement over <code>otherChrom</code> regarding
+     *         the desired haplotype <code>ideotypeHap</code>
      */
     protected abstract boolean improvementInChromosome(int chromIndex, DiploidChromosome chrom, DiploidChromosome otherChrom, Haplotype ideotypeHap);
     

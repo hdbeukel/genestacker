@@ -15,8 +15,9 @@
 package org.ugent.caagt.genestacker.io;
 
 /**
- *
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * Output file formats for generated graph visualisations using Graphviz.
+ * 
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public enum GraphFileFormat {
     

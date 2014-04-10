@@ -34,7 +34,7 @@ import org.ugent.caagt.genestacker.util.GenestackerConstants;
 /**
  * Common interface for search engines.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public abstract class SearchEngine{
     
@@ -76,9 +76,13 @@ public abstract class SearchEngine{
     
     /**
      * Run the search engine with a specific runtime limit and number of threads.
+     * 
+     * @param runtimeLimit time limit in milliseconds
+     * @param numThreads (maximum) number of thread to be created by this search 
+     * @return computed (or approximated) Pareto frontier
+     * @throws GenestackerException if anything goes wrong during search
      */
-    public ParetoFrontier search(long runtimeLimit, int numThreads)
-                                                    throws GenestackerException{
+    public ParetoFrontier search(long runtimeLimit, int numThreads) throws GenestackerException{
         this.runtimeLimit = runtimeLimit;
         startTime = System.currentTimeMillis();
         logger.info(new SearchStartedMessage());
@@ -97,11 +101,17 @@ public abstract class SearchEngine{
         return f;
     }
     
-    // Override this method in each search engine to define its behavior
-    protected abstract ParetoFrontier runSearch(long runtimeLimit, int numThreads)
-                                                               throws GenestackerException;
+    /**
+     * Override this method in each search engine to define its behaviour.
+     * 
+     * @param runtimeLimit time limit in milliseconds
+     * @param numThreads (maximum) number of thread to be created by this search 
+     * @return computed (or approximated) Pareto frontier
+     * @throws GenestackerException if anything goes wrong during search
+     */
+    protected abstract ParetoFrontier runSearch(long runtimeLimit, int numThreads) throws GenestackerException;
     
-    public boolean runtimeLimitExceeded(){
+    protected boolean runtimeLimitExceeded(){
         if(runtimeLimit != GenestackerConstants.NO_RUNTIME_LIMIT){
             return System.currentTimeMillis()-startTime > runtimeLimit;
         } else {
@@ -110,14 +120,18 @@ public abstract class SearchEngine{
     }
     
     /**
-     * Get the startTime time in milliseconds.
+     * Get the start time in milliseconds.
+     * 
+     * @return start time (milliseconds)
      */
     public long getStart(){
         return startTime;
     }
     
     /**
-     * Get the stopTime time in milliseconds.
+     * Get the stop time in milliseconds.
+     * 
+     * @return stop time (milliseconds)
      */
     public long getStop(){
         return stopTime;
@@ -135,7 +149,7 @@ public abstract class SearchEngine{
         }
     }
     
-    public void fireSearchMessage(String message){
+    protected void fireSearchMessage(String message){
         synchronized(searchListeners){
             Iterator<SearchListener> it = searchListeners.iterator();
             while(it.hasNext()){
@@ -144,7 +158,7 @@ public abstract class SearchEngine{
         }
     }
     
-    public void fireSearchStarted(){
+    protected void fireSearchStarted(){
         synchronized(searchListeners){
             Iterator<SearchListener> it = searchListeners.iterator();
             while(it.hasNext()){
@@ -153,7 +167,7 @@ public abstract class SearchEngine{
         }
     }
     
-    public void fireSearchStopped(){
+    protected void fireSearchStopped(){
         synchronized(searchListeners){
             Iterator<SearchListener> it = searchListeners.iterator();
             while(it.hasNext()){

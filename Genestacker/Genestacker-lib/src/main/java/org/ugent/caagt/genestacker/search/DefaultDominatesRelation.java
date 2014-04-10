@@ -23,7 +23,7 @@ package org.ugent.caagt.genestacker.search;
  * linkage phase ambiguity, as these are presented up to four significant digits
  * in the output.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class DefaultDominatesRelation extends DominatesRelation<CrossingSchemeDescriptor> {
 

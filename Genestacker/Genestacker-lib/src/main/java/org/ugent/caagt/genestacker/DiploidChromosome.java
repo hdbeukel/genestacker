@@ -19,20 +19,19 @@ import org.ugent.caagt.genestacker.exceptions.IncompatibleHaplotypesException;
 /**
  * Diploid chromosome (two haplotypes).
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class DiploidChromosome extends Chromosome {
 
     /**
      * Create a new diploid chromosome. Because ordering of haplotypes is arbitrary
-     * in nature, hom1 and hom2 are automatically reordered so that the first haplotype
+     * in nature, hap1 and hap2 are automatically reordered so that the first haplotype
      * is the smallest one according to the standard ordering of haplotypes.
      * 
-     * In case of equal haplotypes, ordering is arbitrary and does not matter.
-     * 
-     * @param hap1
-     * @param hap2
-     * @throws IncompatibleHaplotypesException  
+     * @param hap1 haplotype 1
+     * @param hap2 haplotype 2
+     * @throws IncompatibleHaplotypesException when trying to create a chromosome with two haplotypes
+     *         of different length
      */
     public DiploidChromosome(Haplotype hap1, Haplotype hap2) throws IncompatibleHaplotypesException{
         // check for incompatible haplotypes
@@ -55,7 +54,8 @@ public class DiploidChromosome extends Chromosome {
     /**
      * Check whether the chromosome is homozygous at a specific target locus.
      * 
-     * @param targetLocus
+     * @param targetLocus locus to check for homozygosity
+     * @return <code>true</code> if this chromosome is homozygous at the given locus
      */
     public boolean isHomozygousAtLocus(int targetLocus){
         return (haplotypes[0].targetPresent(targetLocus) == haplotypes[1].targetPresent(targetLocus));
@@ -64,8 +64,9 @@ public class DiploidChromosome extends Chromosome {
     /**
      * Check whether the chromosome is homozygous at each target locus.
      * 
+     * @return <code>true</code> if this chromosome is homozygous at all considered loci
      */
-    public boolean isHomozygousAtAllTargetLoci(){
+    public boolean isHomozygousAtAllContainedLoci(){
         boolean homozygous = true;
         int l=0;
         while(homozygous && l<nrOfLoci()){
@@ -78,32 +79,32 @@ public class DiploidChromosome extends Chromosome {
     /**
      * Check whether the chromosome is heterozygous at a specific target locus.
      * 
-     * @param targetLocus
+     * @param targetLocus locus to check for heterozygosity
+     * @return <code>true</code> if this chromosome is heterozygous at the given locus
      */
     public boolean isHeterozygousAtLocus(int targetLocus){
         return !isHomozygousAtLocus(targetLocus);
     }
     
     /**
-     * Compute the observable state of this diploid chromosome. In practice, the
-     * linkage phase cannot be discovered, i.e. for each locus it can be determined
-     * whether the target is present at one or both haplotypes, or not at all, but
-     * in case of being present in only one haplotype it is not known in which specific
-     * haplotype the target resides.
+     * Compute the allelic frequencies at all considered loci of this diploid chromosome.
+     * In practice, it is hard to reveal the linkage phase of a chromosome, so that usually
+     * only allelic frequencies are available.
      * 
+     * @return allelic frequencies of this chromosome, regardless of the linkage phase
      */
-    public ObservableDiploidChromosomeState getObservableState(){
-        ObservableDiploidTargetState[] state = new ObservableDiploidTargetState[nrOfLoci()];
+    public ChromosomeAllelicFrequencies getAllelicFrequencies(){
+        AllelicFrequency[] state = new AllelicFrequency[nrOfLoci()];
         for(int i=0; i<nrOfLoci(); i++){
             if(!haplotypes[0].targetPresent(i) && !haplotypes[1].targetPresent(i)){
-                state[i] = ObservableDiploidTargetState.NONE;
+                state[i] = AllelicFrequency.NONE;
             } else if(haplotypes[0].targetPresent(i) && haplotypes[1].targetPresent(i)){
-                state[i] = ObservableDiploidTargetState.TWICE;
+                state[i] = AllelicFrequency.TWICE;
             } else {
-                state[i] = ObservableDiploidTargetState.ONCE;
+                state[i] = AllelicFrequency.ONCE;
             }
         }
-        return new ObservableDiploidChromosomeState(state);
+        return new ChromosomeAllelicFrequencies(state);
     }
         
 }

@@ -21,19 +21,32 @@ import org.ugent.caagt.genestacker.exceptions.ImpossibleCrossingException;
 /**
  * Special extension of a crossing node to model selfings.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class SelfingNode extends CrossingNode {
 
     /**
-     * Creates a new selfing node with random ID, which is automatically registered with the parent plant node.
+     * Creates a new selfing node with automatically assigned ID.
+     * The selfing is automatically registered with its parent
+     * plant node.
+     * 
+     * @param parent parent of the selfing
+     * @throws ImpossibleCrossingException should not be thrown for
+     *         a selfing, parent is always compatible with itself
      */
     public SelfingNode(PlantNode parent) throws ImpossibleCrossingException{
         super(parent, parent);
     }
     
     /**
-     * Creates a new selfing node with given ID, which is automatically registered with the parent plant node.
+     * Creates a new selfing node with given ID.
+     * The selfing is automatically registered with its parent
+     * plant node.
+     * 
+     * @param ID given ID
+     * @param parent parent of the selfing
+     * @throws ImpossibleCrossingException should not be thrown for
+     *         a selfing, parent is always compatible with itself
      */
     public SelfingNode(long ID, PlantNode parent) throws ImpossibleCrossingException{
         super(ID, parent, parent);
@@ -56,15 +69,20 @@ public class SelfingNode extends CrossingNode {
         return parent1;
     }
     
+    /**
+     * Set the parent of this selfing.
+     * 
+     * @param parent parent plant node
+     */
     public void setParent(PlantNode parent){
         parent1 = parent;
         parent2 = parent;
     }
     
     /**
-     * Overrides method to ensure both parents are always the same plant.
+     * Overrides this method to ensure that both parents always refer to the same plant.
      * 
-     * @param parent 
+     * @param parent parent plant node
      */
     @Override
     public void setParent1(PlantNode parent){
@@ -72,9 +90,9 @@ public class SelfingNode extends CrossingNode {
     }
     
     /**
-     * Overrides method to ensure both parents are always the same plant.
+     * Overrides this method to ensure that both parents always refer to the same plant.
      * 
-     * @param parent 
+     * @param parent parent plant node
      */
     @Override
     public void setParent2(PlantNode parent){
@@ -82,8 +100,13 @@ public class SelfingNode extends CrossingNode {
     }
 
     /**
-     * Create a deep copy of this crossing node node and its ancestor structure.
+     * Create a deep copy of this selfing node node and its ancestor structure.
      * 
+     * @param shiftGen if <code>true</code> all generations are shifted (+1)
+     * @param curCopiedSeedLots currently already copied seed lot nodes
+     * @param curCopiedPlants currently already copied plant nodes
+     * @return deep copy of this selfing node and its ancestor structure, possibly with shifted generations (+1)
+     * @throws CrossingSchemeException if anything goes wrong while copying this or related nodes
      */
     @Override
     public CrossingNode deepUpwardsCopy(boolean shiftGen, Map<String, SeedLotNode> curCopiedSeedLots,

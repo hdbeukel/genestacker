@@ -19,21 +19,22 @@ import org.ugent.caagt.genestacker.search.CrossingSchemeDescriptor;
 /**
  * Interface for a constraint on the set of valid crossing schemes.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public interface Constraint {
     
     /**
      * Check whether the constraint is satisfied for a given scheme.
      * 
-     * @param scheme
+     * @param scheme given crossing scheme
+     * @return <code>true</code> if the constraint is satisfied for the given scheme
      */
     public boolean isSatisfied(CrossingSchemeDescriptor scheme);
     
     /**
-     * ID which is used to distinguish between different types of constraints
-     * and to ensure there are no duplicate constraints.
+     * Unique string ID used to identify the different types of constraints.
      * 
+     * @return unique string ID for this type of constraint
      */
     public String getID();
     

@@ -28,7 +28,7 @@ import org.ugent.caagt.genestacker.search.constraints.MaxCrossingsWithPlant;
 
 /**
  *
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class BranchAndBoundSolutionManagerTest extends TestCase {
 
@@ -46,7 +46,8 @@ public class BranchAndBoundSolutionManagerTest extends TestCase {
          Genotype ideotype = new Genotype(chroms);
          boolean thrown = false;
          try{
-             BranchAndBoundSolutionManager f = new BranchAndBoundSolutionManager(ideotype, null, null, constraints, null, null);
+             BranchAndBoundSolutionManager f = new BranchAndBoundSolutionManager(null, ideotype, null, null,
+                                                                                    constraints, null, null, false);
          } catch(DuplicateConstraintException ex){
              thrown = true;
          }

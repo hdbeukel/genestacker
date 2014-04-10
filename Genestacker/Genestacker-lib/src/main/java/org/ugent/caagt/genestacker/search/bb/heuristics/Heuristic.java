@@ -19,35 +19,44 @@ import org.ugent.caagt.genestacker.Plant;
 import org.ugent.caagt.genestacker.search.CrossingScheme;
 import org.ugent.caagt.genestacker.search.CrossingSchemeDescriptor;
 import org.ugent.caagt.genestacker.search.bb.PlantDescriptor;
-import org.ugent.caagt.genestacker.search.bb.SearchBounder;
+import org.ugent.caagt.genestacker.search.bb.PruningCriterion;
 
 /**
- * Dummy heuristic which never bounds. Extend this class to implement real heuristics,
- * overriding the appropriate methods.
+ * Dummy heuristic which never prunes anything. Extend this class
+ * to implement actual heuristics, overriding the appropriate methods.
  * 
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
-public class Heuristic implements SearchBounder {
+public class Heuristic implements PruningCriterion {
     
     @Override
-    public boolean boundCrossCurrentScheme(CrossingScheme scheme) {
+    public boolean pruneCrossCurrentScheme(CrossingScheme scheme) {
         return false;
     }
     
     /**
-     * Heuristically extend computed bounds when extending a crossing scheme by combining it with an arbitrary other scheme.
+     * Heuristically extend computed bounds when combining the given scheme with any arbitrary other scheme.
+     * 
+     * @param curBounds currently computed bounds
+     * @param scheme scheme to be extended by combining it with any other scheme
+     * @return heuristically extended bounds
      */
     public CrossingSchemeDescriptor extendBoundsUponCrossing(CrossingSchemeDescriptor curBounds, CrossingScheme scheme){
         return curBounds;
     }
 
     @Override
-    public boolean boundCrossCurrentSchemeWithSpecificOther(CrossingScheme scheme, CrossingScheme other) {
+    public boolean pruneCrossCurrentSchemeWithSpecificOther(CrossingScheme scheme, CrossingScheme other) {
         return false;
     }
     
     /**
-     * Heuristically extend computed bounds when extending a crossing scheme by combining it with a given other scheme.
+     * Heuristically extend computed bounds when combining the given scheme with a given other scheme.
+     * 
+     * @param curBounds currently computed bounds
+     * @param scheme scheme to be extended by combining it with the given other scheme
+     * @param other given other scheme
+     * @return heuristically extended bounds
      */
     public CrossingSchemeDescriptor extendBoundsUponCrossingWithSpecificOther(CrossingSchemeDescriptor curBounds,
                                                                                        CrossingScheme scheme,
@@ -56,13 +65,19 @@ public class Heuristic implements SearchBounder {
     }
     
     @Override
-    public boolean boundCrossCurrentSchemeWithSpecificOtherWithSelectedTarget(CrossingScheme scheme, CrossingScheme other, PlantDescriptor target) {
+    public boolean pruneCrossCurrentSchemeWithSpecificOtherWithSelectedTarget(CrossingScheme scheme, CrossingScheme other, PlantDescriptor target) {
         return false;
     }
     
     /**
-     * Heuristically extend computed bounds when extending a crossing scheme by combining it with a given other scheme, and growing
-     * a preselected next target from the resulting seed lot.
+     * Heuristically extend computed bounds when combining the given scheme with a given other scheme, with a
+     * preselected target to be aimed for among the offspring of the performed crossing.
+     * 
+     * @param curBounds currently computed bounds
+     * @param scheme scheme to be extended by combining it with the given other scheme
+     * @param other given other scheme
+     * @param target preselected target to be aimed for among the offspring
+     * @return heuristically extended bounds
      */
     public CrossingSchemeDescriptor extendBoundsUponCrossingWithSpecificOtherWithSelectedTarget(CrossingSchemeDescriptor curBounds,
                                                                                                          CrossingScheme scheme,
@@ -72,25 +87,34 @@ public class Heuristic implements SearchBounder {
     }
 
     @Override
-    public boolean boundSelfCurrentScheme(CrossingScheme scheme) {
+    public boolean pruneSelfCurrentScheme(CrossingScheme scheme) {
         return false;
     }
     
     /**
-     * Heuristically extend computed bounds when extending a crossing scheme through a selfing.
+     * Heuristically extend computed bounds when selfing the final plant of a given crossing scheme.
+     * 
+     * @param curBounds currently computed bounds
+     * @param scheme scheme to be extended through a selfing
+     * @return heuristically extended bounds
      */
     public CrossingSchemeDescriptor extendBoundsUponSelfing(CrossingSchemeDescriptor curBounds, CrossingScheme scheme){
         return curBounds;
     }
     
     @Override
-    public boolean boundSelfCurrentSchemeWithSelectedTarget(CrossingScheme scheme, PlantDescriptor target) {
+    public boolean pruneSelfCurrentSchemeWithSelectedTarget(CrossingScheme scheme, PlantDescriptor target) {
         return false;
     }
     
     /**
-     * Heuristically extend computed bounds when extending a crossing scheme through a selfing, growing a
-     * preselected next target from the resulting seed lot.
+     * Heuristically extend computed bounds when selfing the final plant of a given crossing scheme, with a
+     * preselected target to be aimed for among the offspring.
+     * 
+     * @param curBounds currently computed bounds
+     * @param scheme scheme to be extended through a selfing
+     * @param target preselected target to be aimed for among the offspring
+     * @return heuristically extended bounds
      */
     public CrossingSchemeDescriptor extendBoundsUponSelfingWithSelectedTarget(CrossingSchemeDescriptor curBounds,
                                                                                        CrossingScheme scheme,
@@ -99,34 +123,38 @@ public class Heuristic implements SearchBounder {
     }
     
     @Override
-    public boolean boundCurrentScheme(CrossingScheme scheme) {
+    public boolean pruneCurrentScheme(CrossingScheme scheme) {
         return false;
     }
     
     /**
      * Heuristically extend computed bounds for current scheme.
+     * 
+     * @param curBounds currently computed bounds
+     * @param scheme current scheme
+     * @return heuristically extended bounds
      */
     public CrossingSchemeDescriptor extendBoundsForCurrentScheme(CrossingSchemeDescriptor curBounds, CrossingScheme scheme){
         return curBounds;
     }
     
     @Override
-    public boolean boundGrowPlantFromAncestors(Set<PlantDescriptor> ancestors, PlantDescriptor p) {
+    public boolean pruneGrowPlantFromAncestors(Set<PlantDescriptor> ancestors, PlantDescriptor p) {
         return false;
     }
     
     @Override
-    public boolean boundGrowPlantInGeneration(Plant p, int generation){
+    public boolean pruneGrowPlantInGeneration(Plant p, int generation){
         return false;
     }
     
     @Override
-    public boolean boundQueueScheme(CrossingScheme s){
+    public boolean pruneQueueScheme(CrossingScheme s){
         return false;
     }
     
     @Override
-    public boolean boundDequeueScheme(CrossingScheme s){
+    public boolean pruneDequeueScheme(CrossingScheme s){
         return false;
     }
     

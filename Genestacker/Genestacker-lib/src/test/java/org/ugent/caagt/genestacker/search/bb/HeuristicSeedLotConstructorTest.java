@@ -29,7 +29,7 @@ import org.ugent.caagt.genestacker.util.GenestackerConstants;
 
 /**
  *
- * @author Herman De Beukelaer <herman.debeukelaer@ugent.be>
+ * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
  */
 public class HeuristicSeedLotConstructorTest extends TestCase {
     
@@ -83,21 +83,21 @@ public class HeuristicSeedLotConstructorTest extends TestCase {
         
         // verify obtained genotypes inside seed lot
         assertEquals(1, sl.nrOfGenotypes());
-        assertTrue(sl.canProduceGenotype(ideotype));
+        assertTrue(sl.contains(ideotype));
         
         // repeat with default constructor
         seedLotConstructor = new DefaultSeedLotConstructor(map);
         SeedLot sl2 = seedLotConstructor.self(g1);
         assertEquals((16*17)/2, sl2.nrOfGenotypes());
-        assertTrue(sl2.canProduceGenotype(ideotype));
+        assertTrue(sl2.contains(ideotype));
         
         // compare probabilities and linkage phase ambiguities for all heuristically generated genotypes
         for(Genotype g : sl.getGenotypes()){
-            assertEquals(sl.getGenotypeGroup(g.getObservableState()).getProbabilityOfPhaseKnownGenotype(g),
-                         sl2.getGenotypeGroup(g.getObservableState()).getProbabilityOfPhaseKnownGenotype(g),
+            assertEquals(sl.getGenotypeGroup(g.getAllelicFrequencies()).getProbabilityOfPhaseKnownGenotype(g),
+                         sl2.getGenotypeGroup(g.getAllelicFrequencies()).getProbabilityOfPhaseKnownGenotype(g),
                          1e-10);
-            assertEquals(sl.getGenotypeGroup(g.getObservableState()).getLinkagePhaseAmbiguity(g),
-                         sl2.getGenotypeGroup(g.getObservableState()).getLinkagePhaseAmbiguity(g),
+            assertEquals(sl.getGenotypeGroup(g.getAllelicFrequencies()).getLinkagePhaseAmbiguity(g),
+                         sl2.getGenotypeGroup(g.getAllelicFrequencies()).getLinkagePhaseAmbiguity(g),
                          1e-10);
         }
         
@@ -146,22 +146,22 @@ public class HeuristicSeedLotConstructorTest extends TestCase {
         
         // verify obtained genotypes inside seed lot
         assertEquals(6, sl.nrOfGenotypes());
-        assertTrue(sl.canProduceGenotype(ideotype));
+        assertTrue(sl.contains(ideotype));
         
         // repeat for default seed lot constructor
         seedLotConstructor = new DefaultSeedLotConstructor(map);
         sl2 = seedLotConstructor.self(g1);
         
         assertEquals(10, sl2.nrOfGenotypes());
-        assertTrue(sl2.canProduceGenotype(ideotype));
+        assertTrue(sl2.contains(ideotype));
         
         // compare probabilities and linkage phase ambiguities for all heuristically generated genotypes
         for(Genotype g : sl.getGenotypes()){
-            assertEquals(sl.getGenotypeGroup(g.getObservableState()).getProbabilityOfPhaseKnownGenotype(g),
-                         sl2.getGenotypeGroup(g.getObservableState()).getProbabilityOfPhaseKnownGenotype(g),
+            assertEquals(sl.getGenotypeGroup(g.getAllelicFrequencies()).getProbabilityOfPhaseKnownGenotype(g),
+                         sl2.getGenotypeGroup(g.getAllelicFrequencies()).getProbabilityOfPhaseKnownGenotype(g),
                          1e-10);
-            assertEquals(sl.getGenotypeGroup(g.getObservableState()).getLinkagePhaseAmbiguity(g),
-                         sl2.getGenotypeGroup(g.getObservableState()).getLinkagePhaseAmbiguity(g),
+            assertEquals(sl.getGenotypeGroup(g.getAllelicFrequencies()).getLinkagePhaseAmbiguity(g),
+                         sl2.getGenotypeGroup(g.getAllelicFrequencies()).getLinkagePhaseAmbiguity(g),
                          1e-10);
         }
         
@@ -202,28 +202,28 @@ public class HeuristicSeedLotConstructorTest extends TestCase {
         
         sl = seedLotConstructor.self(g1);
         /*for(Genotype g : sl.getGenotypes()){
-            System.out.println("p(O(g)) = " + sl.getGenotypeGroup(g.getObservableState()).getProbability());
+            System.out.println("p(O(g)) = " + sl.getGenotypeGroup(g.getAllelicFrequencies()).getProbability());
             System.out.println(g);
         }*/
         
         // verify obtained genotypes inside seed lot
         assertEquals(3, sl.nrOfGenotypes());
-        assertTrue(sl.canProduceGenotype(ideotype));
+        assertTrue(sl.contains(ideotype));
         
         // redo with default seed lot constructor
         seedLotConstructor = new DefaultSeedLotConstructor(map);
         sl2 = seedLotConstructor.self(g1);
         
         assertEquals(136, sl2.nrOfGenotypes());
-        assertTrue(sl2.canProduceGenotype(ideotype));
+        assertTrue(sl2.contains(ideotype));
         
         // compare probabilities and linkage phase ambiguities for all heuristically generated genotypes
         for(Genotype g : sl.getGenotypes()){
-            assertEquals(sl.getGenotypeGroup(g.getObservableState()).getProbabilityOfPhaseKnownGenotype(g),
-                         sl2.getGenotypeGroup(g.getObservableState()).getProbabilityOfPhaseKnownGenotype(g),
+            assertEquals(sl.getGenotypeGroup(g.getAllelicFrequencies()).getProbabilityOfPhaseKnownGenotype(g),
+                         sl2.getGenotypeGroup(g.getAllelicFrequencies()).getProbabilityOfPhaseKnownGenotype(g),
                          1e-10);
-            assertEquals(sl.getGenotypeGroup(g.getObservableState()).getLinkagePhaseAmbiguity(g),
-                         sl2.getGenotypeGroup(g.getObservableState()).getLinkagePhaseAmbiguity(g),
+            assertEquals(sl.getGenotypeGroup(g.getAllelicFrequencies()).getLinkagePhaseAmbiguity(g),
+                         sl2.getGenotypeGroup(g.getAllelicFrequencies()).getLinkagePhaseAmbiguity(g),
                          1e-10);
         }
                 
