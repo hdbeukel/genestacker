@@ -120,9 +120,7 @@ public class OptimalSeedLotHeuristicTest extends TestCase {
         // partialCross initial plants
         SeedLot s3 = seedLotConstructor.cross(p1.getGenotype(), p2.getGenotype());
         CrossingNode cr1 = new CrossingNode(pn1, pn2);
-        ArrayList<CrossingNode> crossings = new ArrayList<>();
-        crossings.add(cr1);
-        SeedLotNode sln3 = new SeedLotNode(s3, 1, crossings);
+        SeedLotNode sln3 = new SeedLotNode(s3, 1, cr1);
         
         // grow new plant in generation 1
         PlantNode pn3 = new PlantNode(p3, 1, sln3);
@@ -132,9 +130,7 @@ public class OptimalSeedLotHeuristicTest extends TestCase {
         // partialCross plants
         SeedLot s4 = seedLotConstructor.cross(p3.getGenotype(), p1.getGenotype());
         CrossingNode cr2 = new CrossingNode(pn3, pn4);
-        crossings = new ArrayList<>();
-        crossings.add(cr2);
-        SeedLotNode sln4 = new SeedLotNode(s4, 2, crossings);
+        SeedLotNode sln4 = new SeedLotNode(s4, 2, cr2);
         
         // grow final plant
         PlantNode pn5 = new PlantNode(p4, 2, sln4);

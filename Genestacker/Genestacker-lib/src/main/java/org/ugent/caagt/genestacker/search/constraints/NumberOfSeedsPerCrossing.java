@@ -50,14 +50,37 @@ public class NumberOfSeedsPerCrossing {
         // check for depleted lots
         List<SeedLotNode> depleted = new ArrayList<>();
         for(SeedLotNode seedLot : seedLots){
-            long numSeedsTaken = seedLot.getSeedsTakenFromSeedLot();
-            int numIncomingCrossings = seedLot.nrOfParentCrossings();
-            if(!seedLot.isInitialSeedLot() && numSeedsTaken > nrOfSeedsPerCrossing * numIncomingCrossings){
+            if(isDepeleted(seedLot)){
                 // depleted!
                 depleted.add(seedLot);
             }
         }
         return depleted;
+    }
+    
+    /**
+     * Verifies whether a given seed lot is depleted.
+     * 
+     * @param seedLotNode given seed lot node
+     * @return <code>true</code> if the given seed lot is depleted
+     */
+    public boolean isDepeleted(SeedLotNode seedLotNode){
+        long numSeedsTaken = seedLotNode.getSeedsTakenFromSeedLot();
+        int numCrossings = seedLotNode.numDuplicatesOfParentCrossing();
+        // note: initial seed lot nodes are assumed never to be depleted
+        return !seedLotNode.isInitialSeedLot() && numSeedsTaken > nrOfSeedsPerCrossing * numCrossings;
+    }
+    
+    /**
+     * Compute the required number of crossings to provide sufficient seeds for this seed lot,
+     * so that all target plants can be obtained.
+     * 
+     * @param seedLotNode given seed lot node
+     * @return number of crossings required to produce sufficient seeds to obtain all targets
+     *         grown from this seed lot
+     */
+    public int getRequiredCrossingsForSufficientSeeds(SeedLotNode seedLotNode){
+        return (int) Math.ceil(((double) seedLotNode.getSeedsTakenFromSeedLot()) / nrOfSeedsPerCrossing); 
     }
     
 }

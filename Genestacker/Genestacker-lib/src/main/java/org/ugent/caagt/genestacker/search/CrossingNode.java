@@ -39,10 +39,13 @@ public class CrossingNode {
     private static long lastID = 0;
     
     // ID
-    protected long ID;
+    private long ID;
+    
+    // number of duplicates of this crossing
+    private int numDuplicates;
     
     // generation
-    protected int gen;
+    private int gen;
     
     // parent 1 (plant)
     protected PlantNode parent1;
@@ -51,11 +54,12 @@ public class CrossingNode {
     protected PlantNode parent2;
     
     // child (seedlot)
-    protected SeedLotNode child;
+    private SeedLotNode child;
     
     /**
-     * Create a new crossing node with automatically generated ID.
-     * This crossing is automatically registered with its parent plant nodes.
+     * Create a new crossing node with automatically generated ID. The number of
+     * duplicates is set to 1 and the crossing is automatically registered with
+     * its parent plant nodes.
      * 
      * @param parent1 first parent plant
      * @param parent2 second parent plant
@@ -63,24 +67,26 @@ public class CrossingNode {
      * @throws ImpossibleCrossingException if both plants are not from the same generation
      */
     public CrossingNode(PlantNode parent1, PlantNode parent2) throws ImpossibleCrossingException{
-        this(genNextID(), parent1, parent2);
+        this(genNextID(), 1, parent1, parent2);
     }
     
     /**
-     * Create a new crossing node with given ID. This crossing is automatically registered
-     * with its parent plant nodes. 
+     * Create a new crossing node with given ID and number of duplicates.
+     * The crossing is automatically registered with its parent plant nodes. 
      * 
      * @param ID given ID
+     * @param numDuplicates number of performed duplicates of this crossing (to generate sufficient seeds)
      * @param parent1 first parent plant
      * @param parent2 second parent plant
      * 
      * @throws ImpossibleCrossingException if both plants are not from the same generation
      */
-    public CrossingNode(long ID, PlantNode parent1, PlantNode parent2) throws ImpossibleCrossingException{
-        // check if parents from same generation
+    public CrossingNode(long ID, int numDuplicates, PlantNode parent1, PlantNode parent2) throws ImpossibleCrossingException{
+        // check if parents are from same generation
         if(parent1.getGeneration() == parent2.getGeneration()){
             this.gen = parent1.getGeneration();
             this.ID = ID;
+            this.numDuplicates = numDuplicates;
             this.parent1 = parent1;
             this.parent2 = parent2;
             child = null;
@@ -114,6 +120,10 @@ public class CrossingNode {
     
     public void setScheme(CrossingScheme scheme){
         this.scheme = scheme;
+    }
+    
+    public long getID(){
+        return ID;
     }
     
     public String getUniqueID(){
@@ -157,6 +167,31 @@ public class CrossingNode {
     }
     
     /**
+     * Get the number of performed duplicates of this crossing (to generate sufficient seeds).
+     * 
+     * @return number of duplicates of this crossing
+     */
+    public int getNumDuplicates(){
+        return numDuplicates;
+    }
+    
+    /**
+     * Increase the number of performed duplicates of this crossing.
+     */
+    public void incNumDuplicates(){
+        numDuplicates++;
+    }
+    
+    /**
+     * Set the number of performed duplicates of this crossing (to generate sufficient seeds).
+     * 
+     * @param dup number of duplicates
+     */
+    public void setNumDuplicates(int dup){
+        numDuplicates = dup;
+    }
+    
+    /**
      * Create a deep copy of this crossing node and its ancestor structure.
      * 
      * @param shiftGen if set to <code>true</code>, all generation numbers are increased with one,
@@ -191,7 +226,7 @@ public class CrossingNode {
             curCopiedPlants.put(parent2.getUniqueID(), parent2Copy);
         }
         // copy crossing node
-        CrossingNode copy = new CrossingNode(ID, parent1Copy, parent2Copy);
+        CrossingNode copy = new CrossingNode(ID, numDuplicates, parent1Copy, parent2Copy);
         return copy;
     }
     

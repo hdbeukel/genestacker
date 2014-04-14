@@ -142,17 +142,13 @@ public class CrossingSchemeTest extends TestCase {
         
         CrossingNode c0 = new CrossingNode(A0, B0);
         
-        List<CrossingNode> crossings = new ArrayList<>();
-        crossings.add(c0);
         SeedLot sf3 = seedLotConstructor.cross(c0.getParent1().getPlant().getGenotype(), c0.getParent2().getPlant().getGenotype());
-        SeedLotNode s3 = new SeedLotNode(sf3, 1, crossings);
+        SeedLotNode s3 = new SeedLotNode(sf3, 1, c0);
         
         CrossingNode c1 = new CrossingNode(C0, B0);
-        
-        crossings = new ArrayList<>();
-        crossings.add(c1);
+
         SeedLot sf4 = seedLotConstructor.cross(c1.getParent1().getPlant().getGenotype(), c1.getParent2().getPlant().getGenotype());
-        SeedLotNode s4 = new SeedLotNode(sf4, 1, crossings);
+        SeedLotNode s4 = new SeedLotNode(sf4, 1, c1);
         
         // grow D0 from s3
         
@@ -177,13 +173,10 @@ public class CrossingSchemeTest extends TestCase {
         // partialCross E0 x D0 => c2 => s5 twice (many seeds required)
         
         CrossingNode c2 = new CrossingNode(E0, D0);
-        CrossingNode c2_2 = new CrossingNode(E0, D0);
-        
-        crossings = new ArrayList<>();
-        crossings.add(c2);
-        crossings.add(c2_2);
+        c2.incNumDuplicates();
+
         SeedLot sf5 = seedLotConstructor.cross(c2.getParent1().getPlant().getGenotype(), c2.getParent2().getPlant().getGenotype());
-        SeedLotNode s5 = new SeedLotNode(sf5, 2, crossings);
+        SeedLotNode s5 = new SeedLotNode(sf5, 2, c2);
         
         // grow F0 from s5
 
@@ -201,11 +194,9 @@ public class CrossingSchemeTest extends TestCase {
         // self F0 => c3 => s6
         
         SelfingNode c3 = new SelfingNode(F0);
-        
-        crossings = new ArrayList<>();
-        crossings.add(c3);
+
         SeedLot sf6 = seedLotConstructor.self(c3.getParent1().getPlant().getGenotype());
-        SeedLotNode s6 = new SeedLotNode(sf6, 3, crossings);
+        SeedLotNode s6 = new SeedLotNode(sf6, 3, c3);
         
         // grow G0 from s6
         
@@ -223,7 +214,7 @@ public class CrossingSchemeTest extends TestCase {
         scheme.print();
         
         // check nr of nodes
-        assertEquals(19, scheme.getNumNodes());
+        assertEquals(18, scheme.getNumNodes());
         
         System.out.println("\n!Copied scheme:");
         
@@ -501,17 +492,17 @@ public class CrossingSchemeTest extends TestCase {
         // create seed lot node
         SeedLotNode sln = new SeedLotNode(seedlot, 0);
         
-        // add two plant nodes
+        // add plant node
         Plant p = new Plant(genotype);
-        PlantNode pn1 = new PlantNode(p, 0, sln);
-        PlantNode pn2 = new PlantNode(p, 0, sln);
+        PlantNode pn = new PlantNode(p, 0, sln);
+        // grow twice
+        pn.incNumDuplicates();
         
-        // partialCross plant nodes
-        CrossingNode cr = new CrossingNode(pn1, pn2);
+        // self plant node
+        CrossingNode cr = new SelfingNode(pn);
         
         // create new seeds from crossing
-        SeedLotNode newSln = new SeedLotNode(seedLotConstructor.cross(p.getGenotype(), p.getGenotype()), 1);
-        newSln.addParentCrossing(cr);
+        SeedLotNode newSln = new SeedLotNode(seedLotConstructor.cross(p.getGenotype(), p.getGenotype()), 1, cr, 1, 0);
         
         // grow ideotype from new seed lot
         PlantNode ideotype = new PlantNode(p, 1, newSln);
@@ -568,16 +559,15 @@ public class CrossingSchemeTest extends TestCase {
         // grow both plants
         Plant p1 = new Plant(g1);
         Plant p2 = new Plant(g2);
-        pn1 = new PlantNode(p1, 0, sln);
-        pn2 = new PlantNode(p2, 0, sln);
+        pn = new PlantNode(p1, 0, sln);
+        PlantNode pn2 = new PlantNode(p2, 0, sln);
         
         // partialCross plants
-        cr = new CrossingNode(pn1, pn2);
+        cr = new CrossingNode(pn, pn2);
         
         // create new seeds from crossing
         SeedLot newSl = seedLotConstructor.cross(p1.getGenotype(), p2.getGenotype());
-        newSln = new SeedLotNode(newSl, 1);
-        newSln.addParentCrossing(cr);
+        newSln = new SeedLotNode(newSl, 1, cr, 1, 0);
         
         // grow ideotype from new sln:
         // [1 0]
@@ -597,7 +587,7 @@ public class CrossingSchemeTest extends TestCase {
         s.print();
         
         // check num seeds required for both plants individually (in generation 0)
-        assertEquals(2, popSizeTools.computeRequiredSeedsForTargetPlant(pn1));
+        assertEquals(2, popSizeTools.computeRequiredSeedsForTargetPlant(pn));
         assertEquals(2, popSizeTools.computeRequiredSeedsForTargetPlant(pn2));
         // check num seeds in 0th generation (not 2 but 3 !!)
         assertEquals(3, sln.getSeedsTakenFromSeedLot());

@@ -27,8 +27,8 @@ public class SelfingNode extends CrossingNode {
 
     /**
      * Creates a new selfing node with automatically assigned ID.
-     * The selfing is automatically registered with its parent
-     * plant node.
+     * The number of performed duplicates is set to 1 and the selfing
+     * is automatically registered with its parent plant node.
      * 
      * @param parent parent of the selfing
      * @throws ImpossibleCrossingException should not be thrown for
@@ -39,17 +39,17 @@ public class SelfingNode extends CrossingNode {
     }
     
     /**
-     * Creates a new selfing node with given ID.
-     * The selfing is automatically registered with its parent
-     * plant node.
+     * Creates a new selfing node with given ID and number of performed duplicates.
+     * The selfing is automatically registered with its parent plant node.
      * 
      * @param ID given ID
+     * @param numDuplicates number of performed duplicates (to generate sufficient seeds)
      * @param parent parent of the selfing
      * @throws ImpossibleCrossingException should not be thrown for
      *         a selfing, parent is always compatible with itself
      */
-    public SelfingNode(long ID, PlantNode parent) throws ImpossibleCrossingException{
-        super(ID, parent, parent);
+    public SelfingNode(long ID, int numDuplicates, PlantNode parent) throws ImpossibleCrossingException{
+        super(ID, numDuplicates, parent, parent);
     }
     
     /**
@@ -115,16 +115,16 @@ public class SelfingNode extends CrossingNode {
         // copy parent
         PlantNode parentCopy;
         // check if parent plant was already copied (in case of multiple crossings with same plant)
-        if(curCopiedPlants.containsKey(parent1.getUniqueID())){
+        if(curCopiedPlants.containsKey(getParent().getUniqueID())){
             // take present copy
-            parentCopy = curCopiedPlants.get(parent1.getUniqueID());
+            parentCopy = curCopiedPlants.get(getParent().getUniqueID());
         } else {
             // create new copy
-            parentCopy = parent1.deepUpwardsCopy(shiftGen, curCopiedSeedLots, curCopiedPlants);
-            curCopiedPlants.put(parent1.getUniqueID(), parentCopy);
+            parentCopy = getParent().deepUpwardsCopy(shiftGen, curCopiedSeedLots, curCopiedPlants);
+            curCopiedPlants.put(getParent().getUniqueID(), parentCopy);
         }
         // copy crossing node
-        SelfingNode copy = new SelfingNode(ID, parentCopy);
+        SelfingNode copy = new SelfingNode(getID(), getNumDuplicates(), parentCopy);
         return copy;
     }
 }

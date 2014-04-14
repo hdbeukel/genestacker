@@ -4,4 +4,4 @@
 /Genestacker/bin/
 /Genestacker/dist/*.zip
 .Rapp.history
-
+/Genestacker/target/

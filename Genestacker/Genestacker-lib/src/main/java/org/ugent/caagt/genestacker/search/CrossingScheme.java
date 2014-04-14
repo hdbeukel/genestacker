@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.ugent.caagt.genestacker.Plant;
-import org.ugent.caagt.genestacker.exceptions.CrossingSchemeException;
 import org.ugent.caagt.genestacker.search.bb.BranchAndBoundSolutionManager;
 
 /**
@@ -148,7 +147,7 @@ public class CrossingScheme {
                 if(!plant.isDanglingPlantNode()){
                     // update nr of non uniform plant nodes
                     if(!plant.grownFromUniformLot()){
-                        numTargetsFromNonUniformSeedLots++;
+                        numTargetsFromNonUniformSeedLots += plant.getNumDuplicates();
                     }
                     // update LPA
                     linkagePhaseAmbiguity = 1 - ((1-linkagePhaseAmbiguity)*(1-plant.getLinkagePhaseAmbiguity()));
@@ -178,27 +177,24 @@ public class CrossingScheme {
             Set<String> consideredPlantNodes = new HashSet<>();
             while(!seedLotQueues.get(gen).isEmpty()){
                 SeedLotNode sln = seedLotQueues.get(gen).poll();
-                // for each crossing, add parent plants to queue of previous generation
-                List<CrossingNode> crossings = sln.getParentCrossings();
-                for(int i=0; i<crossings.size(); i++){
-                    CrossingNode c = crossings.get(i);
-                    // index crossing node
-                    indexCrossingNode(c);
-                    // process parent plants
-                    PlantNode parent1 = c.getParent1();
-                    PlantNode parent2 = c.getParent2();
-                    // index parents and add to queue if not already added
-                    if(!consideredPlantNodes.contains(parent1.getUniqueID())){
-                        plantQueues.get(gen-1).addLast(parent1);
-                        indexPlantNode(parent1);
-                        consideredPlantNodes.add(parent1.getUniqueID());
-                    }
-                    if(!consideredPlantNodes.contains(parent2.getUniqueID())){
-                        plantQueues.get(gen-1).addLast(parent2);
-                        indexPlantNode(parent2);
-                        consideredPlantNodes.add(parent2.getUniqueID());
-                    }                    
+                // handle parental crossing of seed lot node
+                CrossingNode c = sln.getParentCrossing();
+                // index crossing node
+                indexCrossingNode(c);
+                // process parent plants
+                PlantNode parent1 = c.getParent1();
+                PlantNode parent2 = c.getParent2();
+                // index parents and add to queue if not already added
+                if(!consideredPlantNodes.contains(parent1.getUniqueID())){
+                    plantQueues.get(gen-1).addLast(parent1);
+                    indexPlantNode(parent1);
+                    consideredPlantNodes.add(parent1.getUniqueID());
                 }
+                if(!consideredPlantNodes.contains(parent2.getUniqueID())){
+                    plantQueues.get(gen-1).addLast(parent2);
+                    indexPlantNode(parent2);
+                    consideredPlantNodes.add(parent2.getUniqueID());
+                }                    
             }
         }
         
@@ -301,7 +297,8 @@ public class CrossingScheme {
     }
     
     /**
-     * Get the maximum number of times that any plant is used for crossings.
+     * Get the maximum number of times that any plant is used for crossings. Takes into
+     * account the number of obtained duplicates of each target plant.
      * 
      * @return maximum number of crossings with any plant in this scheme
      */
@@ -309,9 +306,9 @@ public class CrossingScheme {
         int max = 0;
         for(String id : plantIndex.keySet()){
             PlantNode pn = plantIndex.get(id);
-            int numTimesCrossed = pn.getNumberOfTimesCrossed();
-            if(numTimesCrossed > max){
-                max = numTimesCrossed;
+            int maxTimesCrossedPerDuplicate = (int) Math.ceil(((double) pn.getNumberOfTimesCrossed()) / pn.getNumDuplicates());
+            if(maxTimesCrossedPerDuplicate > max){
+                max = maxTimesCrossedPerDuplicate;
             }
         }
         return max;
@@ -368,7 +365,7 @@ public class CrossingScheme {
      * 
      * @param generation generation in which to look up the seed lot node
      * @param ID ID of the desired seed lot node
-     * @return seed lot node with given ID in given generation, if it exists, else <code>null</code>
+     * @return unique seed lot node with given ID in given generation, if it exists, else <code>null</code>
      */
     public SeedLotNode getSeedLotNodeFromGenerationWithID(int generation, long ID){
         List<SeedLotNode> seedLots = seedLotsPerGeneration.get(generation);
@@ -396,14 +393,6 @@ public class CrossingScheme {
             return getSeedLotNodesWithID(ID).size();
         }
     }
-
-    public PlantNode getPlantNodeWithUniqueID(String ID){
-        return plantIndex.get(ID);
-    }
-    
-    public Collection<PlantNode> getPlantNodes(){
-        return plantIndex.values();
-    }
     
     /**
      * Get the set IDs of all initial seed lots that are used in this scheme.
@@ -417,6 +406,14 @@ public class CrossingScheme {
         }
         return ids;
     }
+
+    public PlantNode getPlantNodeWithUniqueID(String ID){
+        return plantIndex.get(ID);
+    }
+    
+    public Collection<PlantNode> getPlantNodes(){
+        return plantIndex.values();
+    }
     
     public List<PlantNode> getPlantNodesFromGeneration(int generation){
         return plantsPerGeneration.get(generation);
@@ -426,14 +423,27 @@ public class CrossingScheme {
         return plantsPerID.get(ID);
     }
     
-    public List<PlantNode> getPlantNodesFromGenerationWithID(int generation, long ID){
-        List<PlantNode> plants = new ArrayList<>();
-        for(PlantNode p : plantsPerGeneration.get(generation)){
-            if(p.getID() == ID){
-                plants.add(p);
-            }
+    /**
+     * Get the UNIQUE plant node with given ID in a given generation, or null
+     * in case no such plant node is present.
+     * 
+     * @param generation generation in which to look up the plant node
+     * @param ID ID of the desired plant node
+     * @return unique plant node with given ID in given generation, if it exists, else <code>null</code>
+     */
+    public PlantNode getPlantNodeFromGenerationWithID(int generation, long ID){
+        List<PlantNode> plantNodes = plantsPerGeneration.get(generation);
+        boolean found = false;
+        int i=0;
+        while(!found && plantNodes != null && i<plantNodes.size()){
+            found = (plantNodes.get(i).getID() == ID);
+            i++;
         }
-        return plants;
+        if(plantNodes != null && found){
+            return plantNodes.get(i-1);
+        } else {
+            return null;
+        }
     }
     
     public boolean containsPlantNodesWithID(long ID){
@@ -469,81 +479,47 @@ public class CrossingScheme {
     }
     
     /**
-     * Checks for any depleted seed lots in this scheme and, if any, resolves
-     * them by creating new parent crossings for the depleted lots. Returns true
-     * if all depleted seed lots have been refilled and the extended scheme still
-     * satisfies all constraints and is not yet dominated by an existing solution.
-     * If seed lots can not be refilled without violating constraints or if the
-     * extended scheme is dominated by an existing solution, false is returned.
+     * Checks for any depleted seed lots in this scheme and resolves them by adding duplicates
+     * of their parental crossings. Returns <code>true</code> if all depleted seed lots have been
+     * resolved and the extended scheme still satisfies all constraints and is not yet dominated
+     * by an existing solution. If depleted seed lots can not be resolved without violating some
+     * constraints or if the extended scheme is dominated by an existing solution, <code>false</code>
+     * is returned.
      * 
      * @param solManager solution manager
      * @return <code>false</code> if the schedule should be discarded after
      *         resolving depleted seed lots, e.g. because it no longer satisfies
      *         all constraints or is dominated by an existing solution
-     * 
-     * @throws CrossingSchemeException if anything goes wrong while duplicating crossings and plants
      */
-    public boolean resolveDepletedSeedLots(BranchAndBoundSolutionManager solManager) throws CrossingSchemeException{
-        // get list of depleted seed lots, depending on the constraints that
-        // are given in the Pareto Frontier
+    public boolean resolveDepletedSeedLots(BranchAndBoundSolutionManager solManager){
+        // get list of depleted seed lots
         List<SeedLotNode> depleted = solManager.getDepletedSeedLots(this);
         boolean pruned = false;
         while(!pruned && depleted != null && !depleted.isEmpty()){
             // iteratively fix all depleted seed lots
-            int i=0;
-            while(!pruned && i < depleted.size()){
-                SeedLotNode depletedLot = depleted.get(i);
-                // get one of the parent crossings of the seed lot (arbitrary,
-                // as they are all duplicates of the same crossing anyway)
-                CrossingNode crossing = depletedLot.getParentCrossings().get(0);
-                if(crossing.isSelfing()){
-                    // selfing
-                    SelfingNode selfing = (SelfingNode) crossing;
-                    PlantNode parentPlant = selfing.getParent();
-                    // get a plant with required ID from the corresponding generation
-                    // which is still reusable for an additional selfing
-                    PlantNode newParentPlant = solManager.getReusablePlantNode(parentPlant.getID(), parentPlant.getGeneration(), this, true);
-                    if(newParentPlant == null){
-                        // no reusable parent found: grow new parent from corresponding seed lot
-                        long ID = parentPlant.getID();
-                        int duplication = getNumPlantNodesWithID(ID);
-                        newParentPlant = new PlantNode(parentPlant.getPlant(), parentPlant.getGeneration(), parentPlant.getParent(), ID, duplication);
-                    }
-                    // create new selfing, using new parent
-                    SelfingNode newSelfing = new SelfingNode(newParentPlant);
-                    // add the new selfing as incoming crossing for the depleted seed lot
-                    depletedLot.addParentCrossing(newSelfing);
-                    newSelfing.setChild(depletedLot);
-                } else {
-                    // crossing is not a selfing
-                    PlantNode parentPlant1 = crossing.getParent1();
-                    PlantNode parentPlant2 = crossing.getParent2();
-                    // get reusable plants, if any
-                    PlantNode newParentPlant1 = solManager.getReusablePlantNode(parentPlant1.getID(), parentPlant1.getGeneration(), this, false);
-                    PlantNode newParentPlant2 = solManager.getReusablePlantNode(parentPlant2.getID(), parentPlant2.getGeneration(), this, false);
-                    // create new plant(s) if not reusable
-                    if(newParentPlant1 == null){
-                        long ID = parentPlant1.getID();
-                        int duplication = getNumPlantNodesWithID(ID);
-                        newParentPlant1 = new PlantNode(parentPlant1.getPlant(), parentPlant1.getGeneration(), parentPlant1.getParent(), ID, duplication);
-                    }
-                    if(newParentPlant2 == null){
-                        long ID = parentPlant2.getID();
-                        int duplication = getNumPlantNodesWithID(ID);
-                        newParentPlant2 = new PlantNode(parentPlant2.getPlant(), parentPlant2.getGeneration(), parentPlant2.getParent(), ID, duplication);
-                    }
-                    // create new crossing, using new parents
-                    CrossingNode newCrossing = new CrossingNode(newParentPlant1, newParentPlant2);
-                    // add the new crossing as a new incoming parent of the depleted seed lot
-                    depletedLot.addParentCrossing(newCrossing);
-                    newCrossing.setChild(depletedLot);
-                }               
-                // reinit scheme (to recompute population sizes etc. with the updated scheme structure)
-                reinitScheme();
-                // check pruning
-                pruned = solManager.pruneCurrentScheme(this);
-                i++;
+            for(SeedLotNode depletedLot : depleted){
+                // get the parental crossing of the seed lot
+                CrossingNode crossing = depletedLot.getParentCrossing();
+                // increase number of duplicates of parental
+                // crossing until seed lot is no longer depleted
+                if(solManager.isDepleted(depletedLot)){
+                    crossing.setNumDuplicates(solManager.getRequiredCrossingsForSufficientSeeds(depletedLot));
+                }
+                // increase duplicates of parent plants if necessary to perform all crossings
+                PlantNode parent1 = crossing.getParent1();
+                PlantNode parent2 = crossing.getParent2();
+                if(solManager.maxCrossingsWithPlantExceeded(parent1)){
+                    parent1.setNumDuplicates(solManager.getRequiredPlantDuplicatesForCrossings(parent1));
+                }
+                if(solManager.maxCrossingsWithPlantExceeded(parent2)){
+                    parent2.setNumDuplicates(solManager.getRequiredPlantDuplicatesForCrossings(parent2));
+                }
             }
+            // reinit scheme (to recompute population sizes etc. for the updated scheme, as resolving
+            // depleted seed lots might introduced other depleted seed lots in previous generations)
+            reinitScheme();
+            // check pruning
+            pruned = solManager.pruneCurrentScheme(this);
             // check for any new depleted seed lots, resulting from extending the scheme
             depleted = solManager.getDepletedSeedLots(this);
         }
@@ -575,14 +551,9 @@ public class CrossingScheme {
                 List<SeedLotNode> seedlots = seedLotsPerGeneration.get(gen+1);
                 for(int i=0; i<seedlots.size(); i++){
                     SeedLotNode seedlot = seedlots.get(i);
-                    List<CrossingNode> crossings = seedlot.getParentCrossings();
-                    for(int j=0; j<crossings.size(); j++){
-                        CrossingNode crossing = crossings.get(j);
-                        System.out.print(crossing.getParent1() + " x " + crossing.getParent2() + " => " + seedlot);
-                        if(j<crossings.size()-1){
-                            System.out.print(", ");
-                        }
-                    }
+                    CrossingNode crossing = seedlot.getParentCrossing();
+                    System.out.print(crossing.getParent1() + " x " + crossing.getParent2()
+                                        + " =>(x" + crossing.getNumDuplicates() + ") " + seedlot);
                     if(i<seedlots.size()-1){
                         System.out.print(", ");
                     }
@@ -662,8 +633,8 @@ public class CrossingScheme {
                         SeedLotNode mySln = myGenIt.next();
                         Plant myParent1 = null, myParent2 = null;
                         if(!mySln.isInitialSeedLot()){
-                            myParent1 = mySln.getParentCrossings().get(0).getParent1().getPlant();
-                            myParent2 = mySln.getParentCrossings().get(0).getParent2().getPlant();
+                            myParent1 = mySln.getParentCrossing().getParent1().getPlant();
+                            myParent2 = mySln.getParentCrossing().getParent2().getPlant();
                         }
                         Map<Integer, Map<Plant, Integer>> myChildren = getChildPlants(mySln);
                         // look for matching seed lot node in other scheme
@@ -675,8 +646,8 @@ public class CrossingScheme {
                                 // not yet matched before
                                 Plant otherParent1 = null, otherParent2 = null;
                                 if(!otherSln.isInitialSeedLot()){
-                                    otherParent1 = otherSln.getParentCrossings().get(0).getParent1().getPlant();
-                                    otherParent2 = otherSln.getParentCrossings().get(0).getParent2().getPlant();
+                                    otherParent1 = otherSln.getParentCrossing().getParent1().getPlant();
+                                    otherParent2 = otherSln.getParentCrossing().getParent2().getPlant();
                                 }
                                 Map<Integer, Map<Plant, Integer>> otherChildren = getChildPlants(otherSln);
                                 // check parents and children
@@ -706,8 +677,8 @@ public class CrossingScheme {
         int hash = 7;
         for(SeedLotNode sln : getSeedLotNodes()){
             if(!sln.isInitialSeedLot()){
-                Plant parent1 = sln.getParentCrossings().get(0).getParent1().getPlant();
-                Plant parent2 = sln.getParentCrossings().get(0).getParent2().getPlant();
+                Plant parent1 = sln.getParentCrossing().getParent1().getPlant();
+                Plant parent2 = sln.getParentCrossing().getParent2().getPlant();
                 hash += parent1.hashCode(); 
                 hash += parent2.hashCode();
             }
@@ -731,12 +702,7 @@ public class CrossingScheme {
         for(int gen : sln.getChildren().keySet()){
             Map<Plant, Integer> genMap = new HashMap<>();
             for(PlantNode pn : sln.getChildren().get(gen)){
-                Plant p = pn.getPlant();
-                if(genMap.containsKey(p)){
-                    genMap.put(p, genMap.get(p)+1);
-                } else {
-                    genMap.put(p, 1);
-                }
+                genMap.put(pn.getPlant(), pn.getNumDuplicates());
             }
             plants.put(gen, genMap);
         }

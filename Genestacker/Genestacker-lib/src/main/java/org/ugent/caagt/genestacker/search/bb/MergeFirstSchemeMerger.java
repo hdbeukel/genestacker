@@ -104,16 +104,18 @@ public class MergeFirstSchemeMerger extends SchemeMerger {
                         Map<String, PlantNode> danglingPlantNodes2 = new HashMap<>();
 
                         // create dangling copy of final plant nodes of both schemes
-                        PlantNode finalPlant1 = new PlantNode(alt1.getFinalPlantNode().getPlant(), 0, null, alt1.getFinalPlantNode().getID(), 0);
+                        PlantNode finalPlant1 = new PlantNode(alt1.getFinalPlantNode().getPlant(), 0,
+                                                            null, alt1.getFinalPlantNode().getID(), 0,
+                                                            alt1.getFinalPlantNode().getNumDuplicates());
                         danglingPlantNodes1.put(finalPlant1.getUniqueID(), alt1.getFinalPlantNode());
-                        PlantNode finalPlant2 = new PlantNode(alt2.getFinalPlantNode().getPlant(), 0, null, alt2.getFinalPlantNode().getID(), 0);
+                        PlantNode finalPlant2 = new PlantNode(alt2.getFinalPlantNode().getPlant(), 0,
+                                                            null, alt2.getFinalPlantNode().getID(), 0,
+                                                            alt2.getFinalPlantNode().getNumDuplicates());
                         danglingPlantNodes2.put(finalPlant2.getUniqueID(), alt2.getFinalPlantNode());
                         // cross plant nodes
                         CrossingNode crossing = new CrossingNode(finalPlant1, finalPlant2);
                         // create new seedlot node resulting from crossing
-                        List<CrossingNode> crossings = new ArrayList<>();
-                        crossings.add(crossing);
-                        SeedLotNode sln = new SeedLotNode(seedLot, 1, crossings, -1, 0); // note: real ID will be set when merging is complete
+                        SeedLotNode sln = new SeedLotNode(seedLot, 1, crossing, -1, 0); // note: real ID will be set when merging is complete
                         // grow dummy plant node from new seedlot, to be replaced with the possible
                         // real new plant nodes after the Pareto optimal alignments have been computed
                         PlantNode dummy = new DummyPlantNode(sln.getGeneration(), sln);

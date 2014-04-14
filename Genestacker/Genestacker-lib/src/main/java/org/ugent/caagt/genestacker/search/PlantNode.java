@@ -44,6 +44,9 @@ public class PlantNode {
     // sub ID used when regrowing the same plant (same ID) in a different generation
     private int subID;
     
+    // number of duplicates
+    private int numDuplicates;
+    
     // plant
     private Plant plant;
     
@@ -60,33 +63,36 @@ public class PlantNode {
     
     /**
      * Create new plant node. A new plant node ID is automatically generated,
-     * and the sub ID is set to 0. The plant node is automatically registered
-     * with its parent seed lot node.
+     * and the sub ID is set to 0. The number of duplicates is set to 1, and
+     * the plant node is automatically registered with its parent seed lot node.
      * 
      * @param plant plant corresponding to this plant node
      * @param generation generation in which the plant is grown
      * @param parent parental seed lot node
      */
     public PlantNode(Plant plant, int generation, SeedLotNode parent){
-        this(plant, generation, parent, genNextID(), 0);
+        this(plant, generation, parent, genNextID(), 0, 1);
     }
     
     /**
-     * Create a new plant node with given ID and sub ID. This plant node is automatically
-     * registered with its parent seed lot node.
+     * Create a new plant node with given ID, sub ID and number of duplicates.
+     * This plant node is automatically registered with its parent seed lot node.
      * 
      * @param plant plant corresponding to this plant node
      * @param generation generation in which the plant is grown
      * @param parent parental seed lot node
      * @param ID given ID
      * @param subID given subID
+     * @param numDuplicates number of required duplicates of this plant
      */
-    public PlantNode(Plant plant, int generation, SeedLotNode parent, long ID, int subID){
+    @SuppressWarnings("LeakingThisInConstructor")
+    public PlantNode(Plant plant, int generation, SeedLotNode parent, long ID, int subID, int numDuplicates){
         this.plant = plant;
         this.generation = generation;
         this.parent = parent;
         this.ID = ID;
         this.subID = subID;
+        this.numDuplicates = numDuplicates;
         crossings = new ArrayList<>();
         selfings = new ArrayList<>();
         // register with parent seed lot node (if no dangling plant node)
@@ -145,13 +151,23 @@ public class PlantNode {
     }
     
     /**
-     * Returns the number of times that this plant is used for crossings.
-     * Selfings are counted twice because then the plant acts both as mother and father.
+     * Returns the number of times that this plant is used for crossings, taking into account
+     * the number of times that each crossing is performed. Selfings are counted double because
+     * then the plant acts both as mother and father.
      * 
      * @return number of crossings with this plant
      */
     public int getNumberOfTimesCrossed(){
-        return 2 * selfings.size() + crossings.size();
+        int totalCrossings = 0;
+        // account for crossings
+        for(CrossingNode c : crossings){
+            totalCrossings += c.getNumDuplicates();
+        }
+        // account for selfings
+        for(SelfingNode s : selfings){
+            totalCrossings += 2*s.getNumDuplicates();
+        }
+        return totalCrossings;
     }
     
     /**
@@ -225,12 +241,37 @@ public class PlantNode {
     }
     
     /**
+     * Get the number of required duplicates of this plant (to be able to perform all desired crossings).
+     * 
+     * @return number of duplicates
+     */
+    public int getNumDuplicates(){
+        return numDuplicates;
+    }
+    
+    /**
+     * Increase the number of duplicates of this plant.
+     */
+    public void incNumDuplicates(){
+        numDuplicates++;
+    }
+    
+    /**
+     * Set the number of required duplicates of this plant (to be able to perform all desired crossings).
+     * 
+     * @param dup number of duplicates
+     */
+    public void setNumDuplicates(int dup){
+        numDuplicates = dup;
+    }
+    
+    /**
      * Returns a unique ID, consisting of both the main ID and sub ID.
      * 
      * @return unique ID
      */
     public String getUniqueID(){
-        return "p" + ID + "x" + subID;
+        return "p" + ID + "n" + subID;
     }
     
     public boolean grownFromUniformLot(){
@@ -245,7 +286,11 @@ public class PlantNode {
     
     @Override
     public String toString(){
-        return getUniqueID();
+        String s = getUniqueID();
+        if(numDuplicates > 1){
+            s += "(x" + numDuplicates + ")";
+        }
+        return s;
     }
     
     @Override
@@ -297,7 +342,7 @@ public class PlantNode {
     }
     
     protected PlantNode createCopy(int gen, SeedLotNode parentCopy){
-        return new PlantNode(plant, gen, parentCopy, ID, subID);
+        return new PlantNode(plant, gen, parentCopy, ID, subID, numDuplicates);
     }
     
     /**

@@ -529,9 +529,7 @@ public class BranchAndBound extends SearchEngine {
                             // create new selfing node and connect with parent plant
                             SelfingNode selfing = new SelfingNode(selfed);
                             // create new seedlot node and connect it with the selfing node
-                            List<CrossingNode> newCrossings = new ArrayList<>();
-                            newCrossings.add(selfing);
-                            SeedLotNode sln = new SeedLotNode(sl, alt.getNumGenerations()+1, newCrossings, seedLotNodeIDs[i], 0);
+                            SeedLotNode sln = new SeedLotNode(sl, alt.getNumGenerations()+1, selfing, seedLotNodeIDs[i], 0);
                             // create new plant, connect it with parent seedlot
                             PlantNode newFinalPlantNode = new PlantNode(p, alt.getNumGenerations()+1, sln);
                             // create new crossing scheme and resolve possible depleted seed lots

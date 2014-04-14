@@ -64,7 +64,7 @@ public class TreeHeuristic extends Heuristic {
     public boolean pruneCurrentScheme(CrossingScheme scheme){
         // prune in case of duplicated crossings
         for(SeedLotNode sln : scheme.getSeedLotNodes()){
-            if(sln.nrOfParentCrossings() > 1){
+            if(sln.numDuplicatesOfParentCrossing() > 1){
                 return true;
             }
         }

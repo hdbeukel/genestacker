@@ -276,76 +276,94 @@ public abstract class SchemeMerger implements Callable<List<CrossingSchemeAltern
             SeedLotNode origParentLot = origPlant.getParent();
             // check merged generation
             if(origParentLot.getGeneration() == mergedGen){
-                // remove dangling plant ID from map
+                // remove dangling plant node from map
                 it.remove();
                 
                 // attach dangling plant in current scheme
                 
-                // check for seed lot with required ID in newly added generation
-                SeedLotNode newParentLot = curScheme.getSeedLotNodeFromGenerationWithID(1, origParentLot.getID());
-                if(newParentLot == null){
-                    // no seed lot with required ID present in generation:
-                    // reconstruct history and create new seed lot node
-                    CrossingNode origCrossing = origParentLot.getParentCrossings().get(0);
+                // check for presence of seed lot with required ID (in generation 1)
+                SeedLotNode newParentSeedLot = curScheme.getSeedLotNodeFromGenerationWithID(1, origParentLot.getID());
+                if(newParentSeedLot == null){
+                    // no seed lot with required ID present in generation 1:
+                    // add parental crossing in generation 0 and create new seed lot node
+                    CrossingNode origCrossing = origParentLot.getParentCrossing();
                     CrossingNode newCrossing;
                     if(origCrossing.isSelfing()){
                         // selfing
                         SelfingNode origSelfing = (SelfingNode) origCrossing;
                         PlantNode origParentPlant = origSelfing.getParent();
-                        // get a plant with required ID from the corresponding generation
-                        // which is still reusable for an additional selfing
-                        PlantNode newParentPlant = solManager.getReusablePlantNode(origParentPlant.getID(), 0, curScheme, true);
+                        // look for a plant with the required ID in the current 0th generation
+                        PlantNode newParentPlant = curScheme.getPlantNodeFromGenerationWithID(0, origParentPlant.getID());
                         if(newParentPlant == null){
-                            // no reusable parent found: grow new dangling parent
+                            // no reusable parent found: grow new dangling parent plant
                             long ID = origParentPlant.getID();
-                            int duplication = curScheme.getNumPlantNodesWithID(ID);
-                            newParentPlant = new PlantNode(origParentPlant.getPlant(), 0, null, ID, duplication);
+                            int subID = curScheme.getNumPlantNodesWithID(ID);
+                            newParentPlant = new PlantNode(origParentPlant.getPlant(), 0, null,
+                                                            ID, subID, origParentPlant.getNumDuplicates());
                             newDanglingPlantNodes.put(newParentPlant.getUniqueID(), origParentPlant);
                         }
                         // create new selfing, using new parent
                         newCrossing = new SelfingNode(newParentPlant);
+                        // increase parent plant duplicates if necessary to perform all attached crossings
+                        increasePlantDuplicatesIfNecessary(newParentPlant, solManager);
                     } else {
-                        // non-selfing
+                        // normal crossing (no selfing)
                         PlantNode origParentPlant1 = origCrossing.getParent1();
                         PlantNode origParentPlant2 = origCrossing.getParent2();
-                        // search for reusable parents or create new ones
-                        PlantNode newParentPlant1 = solManager.getReusablePlantNode(origParentPlant1.getID(), 0, curScheme, false);
+                        // look for a plant with the required ID in the current 0th generation
+                        PlantNode newParentPlant1 = curScheme.getPlantNodeFromGenerationWithID(0, origParentPlant1.getID());
                         if(newParentPlant1 == null){
-                            // no reusable parent found: grow new dangling parent
+                            // no reusable parent found: grow new dangling parent plant
                             long ID = origParentPlant1.getID();
-                            int duplication = curScheme.getNumPlantNodesWithID(ID);
-                            newParentPlant1 = new PlantNode(origParentPlant1.getPlant(), 0, null, ID, duplication);
+                            int subID = curScheme.getNumPlantNodesWithID(ID);
+                            newParentPlant1 = new PlantNode(origParentPlant1.getPlant(), 0, null,
+                                                                ID, subID, origParentPlant1.getNumDuplicates());
                             newDanglingPlantNodes.put(newParentPlant1.getUniqueID(), origParentPlant1);
                         }
-                        PlantNode newParentPlant2 = solManager.getReusablePlantNode(origParentPlant2.getID(), 0, curScheme, false);
+                        // repeat for other parent plant
+                        PlantNode newParentPlant2 = curScheme.getPlantNodeFromGenerationWithID(0, origParentPlant2.getID());
                         if(newParentPlant2 == null){
                             // no reusable parent found: grow new dangling parent
                             long ID = origParentPlant2.getID();
-                            int duplication = curScheme.getNumPlantNodesWithID(ID);
-                            newParentPlant2 = new PlantNode(origParentPlant2.getPlant(), 0, null, ID, duplication);
+                            int subID = curScheme.getNumPlantNodesWithID(ID);
+                            newParentPlant2 = new PlantNode(origParentPlant2.getPlant(), 0, null,
+                                                                ID, subID, origParentPlant2.getNumDuplicates());
                             newDanglingPlantNodes.put(newParentPlant2.getUniqueID(), origParentPlant2);
                         }
                         // create new crossing, using new parents
                         newCrossing = new CrossingNode(newParentPlant1, newParentPlant2);
+                        // increase parent plant duplicates if necessary to perform all attached crossings
+                        increasePlantDuplicatesIfNecessary(newParentPlant1, solManager);
+                        increasePlantDuplicatesIfNecessary(newParentPlant2, solManager);
                     }
                     // create new seed lot with seeds from the new crossing
-                    List<CrossingNode> newCrossings = new ArrayList<>();
-                    newCrossings.add(newCrossing);
+                    // (in generation 1, obtained after crossings from 0th generation)
                     long ID = origParentLot.getID();
-                    int duplication = curScheme.getNumSeedLotNodesWithID(ID);
-                    newParentLot = new SeedLotNode(origParentLot.getSeedLot(), 1, newCrossings, ID, duplication);
+                    int subID = curScheme.getNumSeedLotNodesWithID(ID);
+                    newParentSeedLot = new SeedLotNode(origParentLot.getSeedLot(), 1, newCrossing, ID, subID);
                 }
                 // attach dangling plant to its parent lot
-                plant.setParent(newParentLot);
-                newParentLot.addChild(plant); // manual attachment of child required, because
-                                              // node was originally created without parent
-                // reinit scheme (to update seed/plant indices, pop sizes, etc.)
+                plant.setParent(newParentSeedLot);
+                newParentSeedLot.addChild(plant);   // manual attachment of child required, because
+                                                    // node was originally created without parent
+                // reinit scheme (to update node indices etc. to detect reuse while inserting remaining nodes)
                 curScheme.reinitScheme();
             }
         }
         // add new dangling plant nodes to map
         danglingPlantNodes.putAll(newDanglingPlantNodes);
 
-    }   
+    }
+    
+    /**
+     * Duplicates the given plant if necessary to perform all desired crossings.
+     * 
+     * @param plantNode plant node of which contained plant is duplicated if necessary
+     */
+    private void increasePlantDuplicatesIfNecessary(PlantNode plantNode, BranchAndBoundSolutionManager solManager){
+        if(solManager.maxCrossingsWithPlantExceeded(plantNode)){
+            plantNode.setNumDuplicates(solManager.getRequiredPlantDuplicatesForCrossings(plantNode));
+        }
+    }
     
 }

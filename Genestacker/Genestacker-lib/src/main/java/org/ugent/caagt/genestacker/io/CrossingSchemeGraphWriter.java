@@ -107,8 +107,9 @@ public class CrossingSchemeGraphWriter {
             for(SeedLotNode seedlot : seedlots){
                 // create seedlot node
                 dotSource.append(seedlot.getUniqueID()).append(" [shape=circle, width=0.4, fixedsize=true, fontsize=12.0, label=\"S").append(seedLotCount).append("\"];\n");
-                // connect with parent crossings
-                for(CrossingNode c : seedlot.getParentCrossings()){
+                // connect with parent crossing, if any
+                CrossingNode c = seedlot.getParentCrossing();
+                if (c != null){
                     dotSource.append(c.getUniqueID()).append(" -> ").append(seedlot.getUniqueID()).append(";\n");
                 }
                 // update seed lot counter
@@ -142,18 +143,22 @@ public class CrossingSchemeGraphWriter {
                     rank.append(plant.getUniqueID()).append(" ");
                     // set label
                     String labelColor = "black";
-                    String label = plant.getPlant().toString().replace("\n", "\\n"); // escape newlines
+                    String label = plant.getPlant().toString().replace("\n", "<BR />"); // HTML newlines
+                    // output duplicates (if > 1)
+                    if(plant.getNumDuplicates() > 1){
+                        label += "<BR /><FONT POINT-SIZE=\"16\">x" + plant.getNumDuplicates() + "</FONT>";
+                    }
                     // output linkage phase ambiguity (if not zero)
                     if(plant.getLinkagePhaseAmbiguity() > 0){
                         String lpa = df.format(100*plant.getLinkagePhaseAmbiguity());
                         if(lpa.equals("100")){
                             lpa = "> " + 99.99;
                         }
-                        label = label + "\\nLPA: " + lpa + "%";
+                        label += "<BR />LPA: " + lpa + "%";
                         labelColor = "red";
                     }
                     // create plant node in cluster
-                    cluster.append(plant.getUniqueID()).append(" [shape=box, label=\"").append(label).append("\", fontcolor=").append(labelColor).append("];\n");   
+                    cluster.append(plant.getUniqueID()).append(" [shape=box, label=<").append(label).append(">, fontcolor=").append(labelColor).append("];\n");   
                     // connect plant with parent seedlot
                     int genDif = plant.getGeneration() - parentSln.getGeneration();
                     int len = 3*genDif + 1; // force length of edge from seed lot to plant
@@ -188,8 +193,21 @@ public class CrossingSchemeGraphWriter {
             List<CrossingNode> crossings = scheme.getCrossingNodesFromGeneration(gen);
             // output crossings
             for(CrossingNode c : crossings){
+                // label contains number of duplicates if > 1, else it is empty (size also depends on this)
+                String label = "";
+                String size = "0.15";
+                if(c.getNumDuplicates() > 1){
+                    label = "" + c.getNumDuplicates();
+                    size = "0.3";
+                }
                 // create crossing node
-                dotSource.append(c.getUniqueID()).append(" [shape=diamond, label=\"\", fixedsize=true, width=0.15, height=0.15, style=filled];\n");
+                dotSource.append(c.getUniqueID()).append(" [shape=diamond, label=\"")
+                                                 .append(label)
+                                                 .append("\", fontsize=11, fixedsize=true, width=")
+                                                 .append(size)
+                                                 .append(", height=")
+                                                 .append(size)
+                                                 .append(", style=filled];\n");
                 // connect with parent plants
                 dotSource.append(c.getParent1().getUniqueID()).append(" -> ").append(c.getUniqueID()).append(";\n"); 
                 dotSource.append(c.getParent2().getUniqueID()).append(" -> ").append(c.getUniqueID()).append(";\n");

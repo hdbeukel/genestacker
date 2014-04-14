@@ -31,7 +31,7 @@ public class FuturePlantNode extends PlantNode {
     private int minNumTargetsFromNonUniformSeedLots;
     
     public FuturePlantNode(int minNumTargetsFromNonUniformSeedLots, double prob) {
-        super(null, -1, null, -1, 0);
+        super(null, -1, null, -1, 0, 1);
         this.prob = prob;
         this.minNumTargetsFromNonUniformSeedLots = minNumTargetsFromNonUniformSeedLots;
     }

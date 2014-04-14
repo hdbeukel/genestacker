@@ -14,18 +14,17 @@
 
 package org.ugent.caagt.genestacker.search;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.ugent.caagt.genestacker.SeedLot;
 import org.ugent.caagt.genestacker.exceptions.CrossingSchemeException;
 
 /**
- * Represents a seed lot node in a crossing scheme. Each seed lot has a number of crossings as parents
- * (none in case of the initial seed lots). A seed lot also has a list of children (plant nodes)
+ * Represents a seed lot node in a crossing scheme. Each seed lot has a single parental crossing (possibly
+ * performed multiple times as indicated by the number of duplications of the crossing),  except for the
+ * initial seed lots which do not have a parental crossing. A seed lot also has a list of children (plant nodes)
  * representing the plants that are grown from this seed lot in subsequent generations.
  * 
  * @author <a href="mailto:herman.debeukelaer@ugent.be">Herman De Beukelaer</a>
@@ -49,8 +48,8 @@ public class SeedLotNode {
     // seed lot
     private SeedLot seedLot;
     
-    // parent crossings
-    private List<CrossingNode> parentCrossings;
+    // parent crossing
+    private CrossingNode parentCrossing;
     
     // generation in which seed lot is created
     private int generation;
@@ -59,7 +58,7 @@ public class SeedLotNode {
     private Map<Integer, Set<PlantNode>> children;
     
     /**
-     * Create an initial seed lot node, without parents.
+     * Create an initial seed lot node, without parental crossing.
      * 
      * @param seedLot contained seed lot
      * @param generation generation in which seed lot is obtained
@@ -69,7 +68,7 @@ public class SeedLotNode {
     }
     
     /**
-     * Create an initial seed lot node, without parents, with given ID and sub ID.
+     * Create an initial seed lot node, without parental crossing, with given ID and sub ID.
      * 
      * @param seedLot contained seed lot
      * @param generation generation in which seed lot is obtained
@@ -81,45 +80,42 @@ public class SeedLotNode {
     }
     
     /**
-     * Create a new seed lot node with given parents. A new unique ID is generated for this node,
-     * and the sub ID is set to 0. This seed lot node is automatically registered with its parent
-     * crossing nodes (if any).
+     * Create a new seed lot node with given parental crossing. A new unique ID is generated for this node,
+     * and the sub ID is set to 0. The seed lot node is automatically registered with its parental crossing
+     * node.
      * 
      * @param seedLot contained seed lot
      * @param generation generation in which seed lot is obtained
-     * @param parentCrossings crossings providing seeds for the contained seed lot node
+     * @param parentCrossing crossing performed to obtain the seeds in this seed lot
      */
-    public SeedLotNode(SeedLot seedLot, int generation, List<CrossingNode> parentCrossings) {
-        this(seedLot, generation, parentCrossings, genNextID(), 0);
+    public SeedLotNode(SeedLot seedLot, int generation, CrossingNode parentCrossing) {
+        this(seedLot, generation, parentCrossing, genNextID(), 0);
     }
     
     /**
-     * Create a new seed lot node with given parents, ID and sub ID. This seed lot node is automatically
-     * registered with its parent crossing nodes (if any).
+     * Create a new seed lot node with given parental crossing, ID and sub ID. The seed lot node is automatically
+     * registered with its parental crossing (if any).
      * 
      * @param seedLot contained seed lot
      * @param generation generation in which seed lot is obtained
-     * @param parentCrossings crossings providing seeds for the contained seed lot
+     * @param parentCrossing crossing performed to obtain the seeds in this seed lot
      * @param ID given ID
      * @param subID given sub ID
      */
-    public SeedLotNode(SeedLot seedLot, int generation, List<CrossingNode> parentCrossings, long ID, int subID){
+    @SuppressWarnings("LeakingThisInConstructor")
+    public SeedLotNode(SeedLot seedLot, int generation, CrossingNode parentCrossing, long ID, int subID){
         this.seeds = null;
         this.seedLot = seedLot;
         this.generation = generation;
         this.ID = ID;
         this.subID = subID;
-        // set parents
-        if(parentCrossings != null){
-            this.parentCrossings = parentCrossings;
-        } else {
-            this.parentCrossings = new ArrayList<>();
-        }
-        // set children
+        // set parent
+        this.parentCrossing = parentCrossing;
+        // initialize children
         children = new HashMap<>();
-        // register with parent crossings
-        for(CrossingNode c : this.parentCrossings){
-            c.setChild(this);
+        // register with parent crossing (if any)
+        if(parentCrossing != null){
+            parentCrossing.setChild(this);
         }
     }
         
@@ -236,26 +232,31 @@ public class SeedLotNode {
         return children;
     }
 
-    public List<CrossingNode> getParentCrossings(){
-        return parentCrossings;
-    }
-    
-    public int nrOfParentCrossings(){
-        return parentCrossings.size();
-    }
-    
-    public void addParentCrossing(CrossingNode crossing){
-        parentCrossings.add(crossing);
+    public CrossingNode getParentCrossing(){
+        return parentCrossing;
     }
     
     /**
-     * Check whether this seed lot is an initial seed lot without any parental crossings
-     * (in case it is part of the input).
+     * Get the number of duplicates of the parental crossing of this seed lot node.
+     * In case of an initial seed lot node without parental crossing, 0 is returned.
      * 
-     * @return <code>true</code> if this seed lot does not have any parental crossings
+     * @return get number of duplicates of the parental crossing, if any
+     */
+    public int numDuplicatesOfParentCrossing(){
+        if(parentCrossing == null){
+            return 0;
+        } else {
+            return parentCrossing.getNumDuplicates();
+        }
+    }
+    
+    /**
+     * Check whether this seed lot is an initial seed lot without parental crossing.
+     * 
+     * @return <code>true</code> if this seed lot does not have a parental crossing
      */
     public boolean isInitialSeedLot(){
-        return nrOfParentCrossings() == 0;
+        return parentCrossing == null;
     }
     
     public SeedLot getSeedLot(){
@@ -287,7 +288,7 @@ public class SeedLotNode {
      * @return unique ID
      */
     public String getUniqueID(){
-        return "s" + ID + "x" + subID;
+        return "s" + ID + "n" + subID;
     }
     
     public boolean isUniform(){
@@ -311,18 +312,17 @@ public class SeedLotNode {
     public SeedLotNode deepUpwardsCopy(boolean shiftGen, Map<String, SeedLotNode> curCopiedSeedLots,
                                                 Map<String, PlantNode> curCopiedPlants)
                                                                     throws CrossingSchemeException{
-        // copy parents (crossings)
-        List<CrossingNode> parentsCopy = new ArrayList<>();
-        for (CrossingNode parent : parentCrossings) {
-            CrossingNode parentCopy = parent.deepUpwardsCopy(shiftGen, curCopiedSeedLots, curCopiedPlants);
-            parentsCopy.add(parentCopy);
+        // copy parent crossing (if any)
+        CrossingNode parentCopy = null;
+        if(parentCrossing != null){
+            parentCopy = parentCrossing.deepUpwardsCopy(shiftGen, curCopiedSeedLots, curCopiedPlants);
         }
         // copy seedlot node
         int gen = generation;
         if(shiftGen){
             gen++;
         }
-        SeedLotNode copy = new SeedLotNode(seedLot, gen, parentsCopy, ID, subID);
+        SeedLotNode copy = new SeedLotNode(seedLot, gen, parentCopy, ID, subID);
         return copy;
     }
     

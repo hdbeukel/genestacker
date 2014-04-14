@@ -29,7 +29,6 @@ import org.ugent.caagt.genestacker.SeedLot;
 import org.ugent.caagt.genestacker.exceptions.DuplicateConstraintException;
 import org.ugent.caagt.genestacker.search.CrossingScheme;
 import org.ugent.caagt.genestacker.search.CrossingSchemeDescriptor;
-import org.ugent.caagt.genestacker.search.DefaultDominatesRelation;
 import org.ugent.caagt.genestacker.search.DominatesRelation;
 import org.ugent.caagt.genestacker.search.FuturePlantNode;
 import org.ugent.caagt.genestacker.search.ParetoFrontier;
@@ -237,38 +236,78 @@ public class BranchAndBoundSolutionManager implements PruningCriterion {
         if(numSeedsPerCrossing != null){
             return numSeedsPerCrossing.getDepletedSeedLots(scheme);
         } else {
-            // no constr aint on number of seeds, so lots can never be depleted
-            List<SeedLotNode> empty = Collections.emptyList();
-            return empty;
+            // no constraint on number of seeds, so lots can never be depleted
+            return Collections.emptyList();
         }
     }
     
     /**
-     * Returns a plant node with the required ID, from the required generation,
-     * which can still be reused as parent in an additional crossing. In case of a
-     * selfing, the plant can only be reused if it can still be used at least two
-     * times as parent (both father and mother).
+     * Verify whether a given seed lot is depleted, taking into account the number of
+     * seeds produced by a crossing. If the produced number of seeds has not been specified,
+     * this method always returns <code>false</code>.
      * 
-     * @param plantNodeID ID of the required plant
-     * @param generation generation in which the required plant has to be grown
-     * @param scheme crossing scheme in which to search for the required plant
-     * @param selfing <code>true</code> if a selfing is to be performed
-     * @return a plant node with the required ID, grown in the required generation inside the given scheme,
-     *         which can still be reused for an additional crossing (or selfing, if <code>selfing</code> is
-     *         <code>true</code>)
+     * @param seedLotNode given seed lot node
+     * @return <code>true</code> if the given seed lot is depleted
      */
-    public PlantNode getReusablePlantNode(long plantNodeID, int generation, CrossingScheme scheme, boolean selfing){
-        if(maxCrossingsWithPlant != null){
-            return maxCrossingsWithPlant.getReusablePlantNode(plantNodeID, generation, scheme, selfing);
+    public boolean isDepleted(SeedLotNode seedLotNode){
+        if(numSeedsPerCrossing != null){
+            return numSeedsPerCrossing.isDepeleted(seedLotNode);
         } else {
-            // no constraint on number of crossings, so any plant with required ID from
-            // required generation can be reused
-            List<PlantNode> plants = scheme.getPlantNodesFromGenerationWithID(generation, plantNodeID);
-            if(plants != null && !plants.isEmpty()){
-                return plants.get(0);
-            } else {
-                return null;
-            }
+            // number of seeds per crossing not specified
+            return false;
+        }
+    }
+    
+    /**
+     * Compute the required number of crossings to provide sufficient seeds for this seed lot,
+     * so that all target plants can be obtained. Takes into account the number of seeds produced
+     * per crossing, if set; else, this method always returns 1.
+     * 
+     * @param seedLotNode given seed lot node
+     * @return number of crossings required to produce sufficient seeds to obtain all targets
+     *         grown from this seed lot
+     */
+    public int getRequiredCrossingsForSufficientSeeds(SeedLotNode seedLotNode){
+        if(numSeedsPerCrossing != null){
+            return numSeedsPerCrossing.getRequiredCrossingsForSufficientSeeds(seedLotNode);
+        } else {
+            // number of seeds per crossing not specified
+            return 1;
+        }
+    }
+    
+    /**
+     * Checks whether the maximum number of crossings with the plant contained in the given plant node has
+     * been exceeded, in which case the plant should be duplicated. If no constraint on the number of crossings
+     * per plant has been set, this method always returns <code>false</code>
+     * 
+     * @param plantNode given plant node
+     * @return <code>true</code> if the maximum number of crossings has been exceeded for the given plant
+     */
+    public boolean maxCrossingsWithPlantExceeded(PlantNode plantNode){
+        if(maxCrossingsWithPlant != null){
+            // check constraint
+            return maxCrossingsWithPlant.maxCrossingsWithPlantExceeded(plantNode);
+        } else {
+            // no constraint on number of crossings per plant
+            return false;
+        }
+    }
+    
+    /**
+     * Get the required number of duplicates of the given plant to perform all scheduled crossings.
+     * Takes into account the maximum number of crossings per plant, if set; else, this method always
+     * returns 1.
+     * 
+     * @param plantNode given plant
+     * @return number of required duplicates to perform all scheduled crossings
+     */
+    public int getRequiredPlantDuplicatesForCrossings(PlantNode plantNode){
+        if(maxCrossingsWithPlant != null){
+            return maxCrossingsWithPlant.getRequiredPlantDuplicatesForCrossings(plantNode);
+        } else {
+            // no constraint on number of crossings per plant
+            return 1;
         }
     }
     

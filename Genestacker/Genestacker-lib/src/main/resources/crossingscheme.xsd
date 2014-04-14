@@ -4,7 +4,7 @@
 <!-- include plants structure -->
 <xs:include schemaLocation="genestacker_input.xsd" />
 
-<!-- redefine t_plant type to include id, seedlot reference, generation, LPA and observation probability -->
+<!-- redefine t_plant type to include id, seedlot reference, generation, LPA, observation probability and duplicates -->
 <xs:redefine schemaLocation="genestacker_input.xsd">
     <xs:complexType name="t_plant">
         <xs:complexContent>
@@ -14,6 +14,7 @@
                 <xs:attribute name="generation" type="xs:nonNegativeInteger" />
                 <xs:attribute name="lpa" type="probability" />
                 <xs:attribute name="obsProb" type="probability" />
+                <xs:attribute name="duplicates" type="xs:nonNegativeInteger" />
             </xs:extension>
         </xs:complexContent>
     </xs:complexType>
@@ -36,7 +37,7 @@
     </xs:complexType>
 </xs:element>
 
-<!-- seedlot -->
+<!-- seed lot -->
 <xs:element name="seedlot">
     <xs:complexType>
         <xs:sequence>
@@ -52,7 +53,7 @@
     </xs:complexType>
 </xs:element>
 
-<!-- seedlots -->
+<!-- seed lots -->
 <xs:element name="seedlots">
     <xs:complexType>
         <xs:sequence>
@@ -67,7 +68,8 @@
         <xs:attribute name="id" type="xs:string" />
         <xs:attribute name="plant1" type="xs:string" />
         <xs:attribute name="plant2" type="xs:string" />
-        <xs:attribute name="seedlot" type="xs:string" />        
+        <xs:attribute name="seedlot" type="xs:string" />
+        <xs:attribute name="duplicates" type="xs:nonNegativeInteger" />
     </xs:complexType>
 </xs:element>
 
@@ -76,7 +78,8 @@
     <xs:complexType>
         <xs:attribute name="id" type="xs:string" />
         <xs:attribute name="plant" type="xs:string" />
-        <xs:attribute name="seedlot" type="xs:string" />        
+        <xs:attribute name="seedlot" type="xs:string" />    
+        <xs:attribute name="duplicates" type="xs:nonNegativeInteger" />
     </xs:complexType>
 </xs:element>
 

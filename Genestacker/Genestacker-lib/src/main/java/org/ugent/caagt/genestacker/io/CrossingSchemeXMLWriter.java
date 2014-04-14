@@ -94,6 +94,7 @@ public class CrossingSchemeXMLWriter extends XMLWriter {
                 plantEl.setAttribute("generation", pn.getGeneration() + "");
                 plantEl.setAttribute("obsProb", "" + pn.getProbabilityOfPhaseKnownGenotype());
                 plantEl.setAttribute("lpa", "" + pn.getLinkagePhaseAmbiguity());
+                plantEl.setAttribute("duplicates", "" + pn.getNumDuplicates());
                 plantsEl.appendChild(plantEl);
                 // add genotype to plant
                 Element genotypeEl = createGenotypeElement(pn.getPlant().getGenotype(), xml);
@@ -119,6 +120,7 @@ public class CrossingSchemeXMLWriter extends XMLWriter {
                 }
                 crossingEl.setAttribute("seedlot", crossing.getChild().getUniqueID());
                 crossingEl.setAttribute("id", crossing.getUniqueID());
+                crossingEl.setAttribute("duplicates", "" + crossing.getNumDuplicates());
                 crossingsEl.appendChild(crossingEl);
             }
             
