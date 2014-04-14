@@ -4,8 +4,15 @@ Gene Stacker Changes
 Version 1.6 (under development)
 ------------------------------
 
+ - Crossings and plants are no longer explicitely duplicated when required. Instead, if a
+   crossing needs to be performed multiple times to generate a sufficient amount of seeds,
+   or if a plant needs to be grown several times to be able to perform all scheduled crossings,
+   this is indicated in the labels of the corresponding nodes in the crossing schedule. Population
+   sizes are still computed so that the required number of duplicates of the target plants are
+   expected among the offspring.
+
  - Fixed bug in joint population size computation when simultaneously targeting different
-   phase-known genotypes with the same observed genotype scores.
+   phase-known genotypes with the same observed allelic frequencies.
    
  - Cleaned up Javadoc in source code.
 
