@@ -69,16 +69,16 @@ public class MergeFirstSchemeMerger extends SchemeMerger {
                     seedLot.getGenotypeGroup(g.getAllelicFrequencies()).getLinkagePhaseAmbiguity(g),
                     seedLot.isUniform()
                 );
-                for(int alt1i=0; alt1i<scheme1.nrOfAlternatives(); alt1i++){
+                for(int alt1i=0; alt1i<scheme1.nrOfAlternatives() && skip; alt1i++){
                     CrossingScheme alt1 = scheme1.getAlternatives().get(alt1i);
-                    for(int alt2i=0; alt2i<scheme2.nrOfAlternatives(); alt2i++){
+                    for(int alt2i=0; alt2i<scheme2.nrOfAlternatives() && skip; alt2i++){
                         CrossingScheme alt2 = scheme2.getAlternatives().get(alt2i);
                         skip = pruneCross[alt1i][alt2i] || solManager.pruneCrossCurrentSchemeWithSpecificOtherWithSelectedTarget(alt1, alt2, pdesc);
                     }
                 }
             }
         }
-
+        
         if(!skip){
             
             // construct different ways of merging the history, considering all

@@ -5,3 +5,4 @@
 /Genestacker/dist/*.zip
 .Rapp.history
 /Genestacker/target/
+/Genestacker/input/

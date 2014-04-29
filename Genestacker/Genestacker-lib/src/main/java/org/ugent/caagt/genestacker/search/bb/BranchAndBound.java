@@ -579,7 +579,7 @@ public class BranchAndBound extends SearchEngine {
 
         // PRUNING
         
-        // compute pruned genotypes
+        // compute pruned genotypes (general for any combination of scheme alternatives)
         Set<PlantDescriptor> ancestors = new HashSet<>();
         ancestors.addAll(scheme1.getAncestorDescriptors());
         ancestors.addAll(scheme2.getAncestorDescriptors());
@@ -597,7 +597,7 @@ public class BranchAndBound extends SearchEngine {
             }
         }
         
-        // compute pruned pairs of parent schemes
+        // compute pruned pairs of scheme alternatives
         boolean[][] pruneCross = new boolean[scheme1.nrOfAlternatives()][scheme2.nrOfAlternatives()];
         for(int alt1i=0; alt1i<scheme1.nrOfAlternatives(); alt1i++){
             CrossingScheme alt1 = scheme1.getAlternatives().get(alt1i);
