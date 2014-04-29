@@ -17,6 +17,7 @@ package org.ugent.caagt.genestacker.search.bb;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -43,10 +44,8 @@ import org.ugent.caagt.genestacker.search.SeedLotNode;
 public class MergeFirstSchemeMerger extends SchemeMerger {
 
     public MergeFirstSchemeMerger(CrossingSchemeAlternatives scheme1, CrossingSchemeAlternatives scheme2, GeneticMap map,
-                                                    BranchAndBoundSolutionManager solManager, SeedLot seedLot,
-                                                    Set<PlantDescriptor> ancestors, boolean[][] pruneCross,
-                                                    Set<Genotype> prunedGenotypes){
-        super(scheme1, scheme2, map, solManager, seedLot, ancestors, pruneCross, prunedGenotypes);
+                                                    BranchAndBoundSolutionManager solManager, SeedLot seedLot){
+        super(scheme1, scheme2, map, solManager, seedLot);
     }
     
     @Override
@@ -57,38 +56,96 @@ public class MergeFirstSchemeMerger extends SchemeMerger {
         // try avoiding construction of alignment(s) if we can predict that they will all
         // be pruned after attaching any of the plants grown from the new seed lot
         
-        boolean skip = true;
-        Iterator<Genotype> it = seedLot.getGenotypes().iterator();
-        while(cont && skip && it.hasNext()){
-            Genotype g = it.next();
-            if(!prunedGenotypes.contains(g)){
-                Plant p = new Plant(g);
-                PlantDescriptor pdesc = new PlantDescriptor(
-                    p,
-                    seedLot.getGenotypeGroup(g.getAllelicFrequencies()).getProbabilityOfPhaseKnownGenotype(g),
-                    seedLot.getGenotypeGroup(g.getAllelicFrequencies()).getLinkagePhaseAmbiguity(g),
-                    seedLot.isUniform()
-                );
-                for(int alt1i=0; alt1i<scheme1.nrOfAlternatives() && skip; alt1i++){
-                    CrossingScheme alt1 = scheme1.getAlternatives().get(alt1i);
-                    for(int alt2i=0; alt2i<scheme2.nrOfAlternatives() && skip; alt2i++){
-                        CrossingScheme alt2 = scheme2.getAlternatives().get(alt2i);
-                        skip = pruneCross[alt1i][alt2i] || solManager.pruneCrossCurrentSchemeWithSpecificOtherWithSelectedTarget(alt1, alt2, pdesc);
-                    }
-                }
+//        boolean skip = true;
+//        Iterator<Genotype> it = seedLot.getGenotypes().iterator();
+//        while(cont && skip && it.hasNext()){
+//            Genotype g = it.next();
+//            if(!prunedGenotypes.contains(g)){
+//                Plant p = new Plant(g);
+//                PlantDescriptor pdesc = new PlantDescriptor(
+//                    p,
+//                    seedLot.getGenotypeGroup(g.getAllelicFrequencies()).getProbabilityOfPhaseKnownGenotype(g),
+//                    seedLot.getGenotypeGroup(g.getAllelicFrequencies()).getLinkagePhaseAmbiguity(g),
+//                    seedLot.isUniform()
+//                );
+//                for(int alt1i=0; alt1i<scheme1.nrOfAlternatives() && skip; alt1i++){
+//                    CrossingScheme alt1 = scheme1.getAlternatives().get(alt1i);
+//                    for(int alt2i=0; alt2i<scheme2.nrOfAlternatives() && skip; alt2i++){
+//                        CrossingScheme alt2 = scheme2.getAlternatives().get(alt2i);
+//                        skip = pruneCross[alt1i][alt2i] || solManager.pruneCrossCurrentSchemeWithSpecificOtherWithSelectedTarget(alt1, alt2, pdesc);
+//                    }
+//                }
+//            }
+//        }
+        
+        // gather descriptors of ancestors occurring in both schemes
+        Set<PlantDescriptor> ancestors = new HashSet<>();
+        ancestors.addAll(scheme1.getAncestorDescriptors());
+        ancestors.addAll(scheme2.getAncestorDescriptors());
+        // compose set of genotypes which are allowed to be grown from with these ancestors
+        Set<Genotype> candidateGenotypes = new HashSet<>();
+        for(Genotype g : seedLot.getGenotypes()){
+            if(!solManager.pruneGrowPlantFromAncestors(ancestors, new PlantDescriptor(
+                        new Plant(g),
+                        seedLot.getGenotypeGroup(g.getAllelicFrequencies()).getProbabilityOfPhaseKnownGenotype(g),
+                        seedLot.getGenotypeGroup(g.getAllelicFrequencies()).getLinkagePhaseAmbiguity(g),
+                        seedLot.isUniform()
+                    ))){
+                candidateGenotypes.add(g);
             }
         }
         
-        if(!skip){
+        // check which combinations of scheme alternatives are pruned, and especially if any are not pruned
+        boolean[][] pruneCross = new boolean[scheme1.nrOfAlternatives()][scheme2.nrOfAlternatives()];
+        boolean pruneAll = true;
+        int alt1i, alt2i;
+        Iterator<Genotype> it;
+        alt1i = 0;
+        while(alt1i<scheme1.nrOfAlternatives()){
+            CrossingScheme alt1 = scheme1.getAlternatives().get(alt1i);
+            alt2i=0;
+            while(alt2i<scheme2.nrOfAlternatives()){
+                CrossingScheme alt2 = scheme2.getAlternatives().get(alt2i);
+                // check general pruning
+                boolean prune = solManager.pruneCrossCurrentSchemeWithSpecificOther(alt1, alt2);
+                if(prune){
+                    // all extensions are definitely pruned
+                    pruneCross[alt1i][alt2i] = true;
+                } else {
+                    // not pruned yet, now check if there is any genotype in the offspring that does not
+                    // cause the extension to be pruned anyway when being attached as next target
+                    prune = true;
+                    it = candidateGenotypes.iterator();
+                    while(prune && it.hasNext()){
+                        Genotype g = it.next();
+                        PlantDescriptor pdesc = new PlantDescriptor(
+                            new Plant(g),
+                            seedLot.getGenotypeGroup(g.getAllelicFrequencies()).getProbabilityOfPhaseKnownGenotype(g),
+                            seedLot.getGenotypeGroup(g.getAllelicFrequencies()).getLinkagePhaseAmbiguity(g),
+                            seedLot.isUniform()
+                        );
+                        prune = solManager.pruneCrossCurrentSchemeWithSpecificOtherWithSelectedTarget(alt1, alt2, pdesc);
+                    }
+                    // all candidate genotypes pruned?
+                    pruneCross[alt1i][alt2i] = prune;
+                }
+                // all combinations pruned until now?
+                pruneAll = pruneAll && prune;
+                alt2i++;
+            }
+            alt1i++;
+        }    
+        
+        if(!pruneAll){
             
             // construct different ways of merging the history, considering all
             // pairs of alternatives of the parent schemes
             
             MergedSchemes merged = new MergedSchemes();
             
-            for(int alt1i=0; alt1i<scheme1.nrOfAlternatives(); alt1i++){
+            for(alt1i=0; alt1i<scheme1.nrOfAlternatives(); alt1i++){
                 CrossingScheme alt1 = scheme1.getAlternatives().get(alt1i);
-                for(int alt2i=0; alt2i<scheme2.nrOfAlternatives(); alt2i++){
+                for(alt2i=0; alt2i<scheme2.nrOfAlternatives(); alt2i++){
                     CrossingScheme alt2 = scheme2.getAlternatives().get(alt2i);
                     
                     // check pruning
@@ -150,47 +207,40 @@ public class MergeFirstSchemeMerger extends SchemeMerger {
             // now we will replace the dummy with each possible real plant grown from the new seedlot, attached
             // to the computed Pareto optimal alternatives resulting from the merging procedure
 
-            it = seedLot.getGenotypes().iterator();
+            it = candidateGenotypes.iterator();
             while(cont && it.hasNext()){
                 Genotype g = it.next();
-                if(!prunedGenotypes.contains(g)){
-                    
-                    Plant p = new Plant(g);
-
-                    List<CrossingScheme> newAlts = new ArrayList<>();
-
-                    // consider alternatives resulting from the merging procedure
-                    Iterator<CrossingScheme> schemeIt = merged.getMergedSchemes().iterator();
-                    while(cont && schemeIt.hasNext()){
-                        CrossingScheme scheme = schemeIt.next();
-                        // check pruning
-                        if(!solManager.pruneGrowPlantInGeneration(p, scheme.getNumGenerations())){
-                            // create deep upwards copy, and final plant node and its parent
-                            PlantNode finalPn = scheme.getFinalPlantNode().deepUpwardsCopy();
-                            SeedLotNode finalSln = finalPn.getParent();
-                            // remove final plant node (the dummy)
-                            finalSln.removeChild(finalPn);
-                            // create new plant node as child of final seedlot, replacing the dummy
-                            PlantNode newFinalPlantNode = new PlantNode(p, finalPn.getGeneration(), finalSln);
-                            // create final scheme with new final plant
-                            CrossingScheme finalScheme = new CrossingScheme(scheme.getPopulationSizeTools(), newFinalPlantNode);
-                            // register scheme if:
-                            //   - not pruned
-                            //   - depleted seedlots successfully resolved, in case final
-                            //     seedlot became depleted after replacing the dummy
-                            if(!solManager.pruneCurrentScheme(finalScheme)
-                                    && finalScheme.resolveDepletedSeedLots(solManager)){
-                                newAlts.add(finalScheme);
-                            }
+                Plant p = new Plant(g);
+                List<CrossingScheme> newAlts = new ArrayList<>();
+                // consider alternatives resulting from the merging procedure
+                Iterator<CrossingScheme> schemeIt = merged.getMergedSchemes().iterator();
+                while(cont && schemeIt.hasNext()){
+                    CrossingScheme scheme = schemeIt.next();
+                    // check pruning
+                    if(!solManager.pruneGrowPlantInGeneration(p, scheme.getNumGenerations())){
+                        // create deep upwards copy, and final plant node and its parent
+                        PlantNode finalPn = scheme.getFinalPlantNode().deepUpwardsCopy();
+                        SeedLotNode finalSln = finalPn.getParent();
+                        // remove final plant node (the dummy)
+                        finalSln.removeChild(finalPn);
+                        // create new plant node as child of final seedlot, replacing the dummy
+                        PlantNode newFinalPlantNode = new PlantNode(p, finalPn.getGeneration(), finalSln);
+                        // create final scheme with new final plant
+                        CrossingScheme finalScheme = new CrossingScheme(scheme.getPopulationSizeTools(), newFinalPlantNode);
+                        // register scheme if:
+                        //   - not pruned
+                        //   - depleted seedlots successfully resolved, in case final
+                        //     seedlot became depleted after replacing the dummy
+                        if(!solManager.pruneCurrentScheme(finalScheme)
+                                && finalScheme.resolveDepletedSeedLots(solManager)){
+                            newAlts.add(finalScheme);
                         }
                     }
-
-                    // register new alternatives
-                    if(!newAlts.isEmpty()){
-                        newSchemes.add(new CrossingSchemeAlternatives(newAlts));
-                    }
                 }
-
+                // register new alternatives
+                if(!newAlts.isEmpty()){
+                    newSchemes.add(new CrossingSchemeAlternatives(newAlts));
+                }
             }
             return newSchemes;
             

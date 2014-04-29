@@ -14,7 +14,6 @@
 
 package org.ugent.caagt.genestacker.search.bb;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -55,28 +54,13 @@ public abstract class SchemeMerger implements Callable<List<CrossingSchemeAltern
     // seed lot obtained by crossing final plants of parent schemes
     protected SeedLot seedLot;
     
-    // ancestor plants from parent schemes
-    protected Set<PlantDescriptor> ancestors;
-    
-    // pruning matrix for pairs of alternatives of parent schemes
-    protected boolean[][] pruneCross;
-    // set of pruned genotypes
-    protected Set<Genotype> prunedGenotypes;
-    
     public SchemeMerger(CrossingSchemeAlternatives scheme1, CrossingSchemeAlternatives scheme2, GeneticMap map,
-                                        BranchAndBoundSolutionManager solManager, SeedLot seedLot, Set<PlantDescriptor> ancestors,
-                                        boolean[][] pruneCross, Set<Genotype> prunedGenotypes){
+                                        BranchAndBoundSolutionManager solManager, SeedLot seedLot){
         this.scheme1 = scheme1;
         this.scheme2 = scheme2;
-        ancestors = new HashSet<>();
-        ancestors.addAll(scheme1.getAncestorDescriptors());
-        ancestors.addAll(scheme2.getAncestorDescriptors());
         this.map = map;
         this.solManager = solManager;
         this.seedLot = seedLot;
-        this.ancestors = ancestors;
-        this.pruneCross = pruneCross;
-        this.prunedGenotypes = prunedGenotypes;
         cont = true;
     }
     

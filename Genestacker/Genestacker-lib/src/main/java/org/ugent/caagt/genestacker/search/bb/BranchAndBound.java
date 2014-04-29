@@ -569,49 +569,12 @@ public class BranchAndBound extends SearchEngine {
                                                                                 throws  GenotypeException,
                                                                                         CrossingSchemeException{
         
-        /************************/
-        /* GENERAL PREPARATIONS */
-        /************************/
-        
-        // get cached seed lot
+        // construct seed lot obtained from crossing
         SeedLot sl = constructSeedLot(Math.max(scheme1.getMinNumGen(), scheme2.getMinNumGen())+1,
                                         scheme1.getFinalPlant(), scheme2.getFinalPlant(), map, solManager);
-
-        // PRUNING
         
-        // compute pruned genotypes (general for any combination of scheme alternatives)
-        Set<PlantDescriptor> ancestors = new HashSet<>();
-        ancestors.addAll(scheme1.getAncestorDescriptors());
-        ancestors.addAll(scheme2.getAncestorDescriptors());
-        Set<Genotype> prunedGenotypes = new HashSet<>();
-        Iterator<Genotype> it = sl.getGenotypes().iterator();
-        while(it.hasNext()){
-            Genotype g = it.next();
-            if(solManager.pruneGrowPlantFromAncestors(ancestors, new PlantDescriptor(
-                        new Plant(g),
-                        sl.getGenotypeGroup(g.getAllelicFrequencies()).getProbabilityOfPhaseKnownGenotype(g),
-                        sl.getGenotypeGroup(g.getAllelicFrequencies()).getLinkagePhaseAmbiguity(g),
-                        sl.isUniform()
-                    ))){
-                prunedGenotypes.add(g);
-            }
-        }
-        
-        // compute pruned pairs of scheme alternatives
-        boolean[][] pruneCross = new boolean[scheme1.nrOfAlternatives()][scheme2.nrOfAlternatives()];
-        for(int alt1i=0; alt1i<scheme1.nrOfAlternatives(); alt1i++){
-            CrossingScheme alt1 = scheme1.getAlternatives().get(alt1i);
-            for(int alt2i=0; alt2i<scheme2.nrOfAlternatives(); alt2i++){
-                CrossingScheme alt2 = scheme2.getAlternatives().get(alt2i);
-                pruneCross[alt1i][alt2i] = solManager.pruneCrossCurrentSchemeWithSpecificOther(alt1, alt2);
-            }
-        }
-        
-        /**************/
-        /* RUN MERGER */
-        /**************/
-        
-        return new MergeFirstSchemeMerger(scheme1, scheme2, map, solManager, sl, ancestors, pruneCross, prunedGenotypes).combineSchemes();
+        // run scheme merger
+        return new MergeFirstSchemeMerger(scheme1, scheme2, map, solManager, sl).combineSchemes();
         
     }
     

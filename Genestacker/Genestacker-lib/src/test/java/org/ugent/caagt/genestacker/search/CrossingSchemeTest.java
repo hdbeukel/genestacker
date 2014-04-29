@@ -319,9 +319,7 @@ public class CrossingSchemeTest extends TestCase {
         ancestors.addAll(schemes.get(1).getAncestorDescriptors());
         ancestors.addAll(schemes.get(0).getAncestorDescriptors());
         SeedLot sl = seedLotConstructor.cross(schemes.get(1).getFinalPlant().getGenotype(), schemes.get(0).getFinalPlant().getGenotype());
-        List<CrossingSchemeAlternatives> merged = new MergeFirstSchemeMerger(schemes.get(1), schemes.get(0), map, solManager, sl, ancestors,
-                                                        new boolean[schemes.get(1).nrOfAlternatives()][schemes.get(0).nrOfAlternatives()],
-                                                        new HashSet<Genotype>()).combineSchemes();
+        List<CrossingSchemeAlternatives> merged = new MergeFirstSchemeMerger(schemes.get(1), schemes.get(0), map, solManager, sl).combineSchemes();
         System.out.println("\n--!! Crossed ideotype of scheme 2 with 1 !!--");
         for(int i=0; i<merged.size(); i++){
             for(CrossingScheme s : merged.get(i).getAlternatives()){
@@ -341,9 +339,7 @@ public class CrossingSchemeTest extends TestCase {
         ancestors.addAll(schemes.get(2).getAncestorDescriptors());
         ancestors.addAll(schemes.get(0).getAncestorDescriptors());
         sl = seedLotConstructor.cross(schemes.get(2).getFinalPlant().getGenotype(), schemes.get(0).getFinalPlant().getGenotype());
-        merged = new MergeFirstSchemeMerger(schemes.get(2), schemes.get(0), map, solManager, sl, ancestors,
-                                                new boolean[schemes.get(2).nrOfAlternatives()][schemes.get(0).nrOfAlternatives()],
-                                                new HashSet<Genotype>()).combineSchemes();
+        merged = new MergeFirstSchemeMerger(schemes.get(2), schemes.get(0), map, solManager, sl).combineSchemes();
         System.out.println("\n--!! Crossed ideotype of scheme 3 with 1 !!--");
         for(int i=0; i<merged.size(); i++){
             for(CrossingScheme s : merged.get(i).getAlternatives()){
@@ -363,9 +359,7 @@ public class CrossingSchemeTest extends TestCase {
         ancestors.addAll(schemes.get(3).getAncestorDescriptors());
         ancestors.addAll(schemes.get(2).getAncestorDescriptors());
         sl = seedLotConstructor.cross(schemes.get(3).getFinalPlant().getGenotype(), schemes.get(2).getFinalPlant().getGenotype());
-        merged = new MergeFirstSchemeMerger(schemes.get(3), schemes.get(2), map, solManager, sl, ancestors,
-                                                    new boolean[schemes.get(3).nrOfAlternatives()][schemes.get(2).nrOfAlternatives()],
-                                                    new HashSet<Genotype>()).combineSchemes();
+        merged = new MergeFirstSchemeMerger(schemes.get(3), schemes.get(2), map, solManager, sl).combineSchemes();
         System.out.println("\n--!! Crossed ideotype of scheme 4 with 3 !!--");
         for(int i=0; i<merged.size(); i++){
             for(CrossingScheme s : merged.get(i).getAlternatives()){
@@ -385,9 +379,7 @@ public class CrossingSchemeTest extends TestCase {
         ancestors.addAll(schemes.get(10).getAncestorDescriptors());
         ancestors.addAll(schemes.get(8).getAncestorDescriptors());
         sl = seedLotConstructor.cross(schemes.get(10).getFinalPlant().getGenotype(), schemes.get(8).getFinalPlant().getGenotype());
-        merged = new MergeFirstSchemeMerger(schemes.get(10), schemes.get(8), map, solManager, sl, ancestors,
-                                                    new boolean[schemes.get(10).nrOfAlternatives()][schemes.get(8).nrOfAlternatives()],
-                                                    new HashSet<Genotype>()).combineSchemes();
+        merged = new MergeFirstSchemeMerger(schemes.get(10), schemes.get(8), map, solManager, sl).combineSchemes();
         System.out.println("\n--!! Crossed ideotype of scheme 11 with 9 !!--");
         for(int i=0; i<merged.size(); i++){
             for(CrossingScheme s : merged.get(i).getAlternatives()){
@@ -429,9 +421,7 @@ public class CrossingSchemeTest extends TestCase {
         ancestors.addAll(schemes.get(2).getAncestorDescriptors());
         ancestors.addAll(selfed.get(0).getAncestorDescriptors());
         sl = seedLotConstructor.cross(schemes.get(2).getFinalPlant().getGenotype(), selfed.get(0).getFinalPlant().getGenotype());
-        merged = new MergeFirstSchemeMerger(schemes.get(2), selfed.get(0), map, solManager, sl, ancestors,
-                                                    new boolean[schemes.get(2).nrOfAlternatives()][selfed.get(0).nrOfAlternatives()],
-                                                    new HashSet<Genotype>()).combineSchemes();
+        merged = new MergeFirstSchemeMerger(schemes.get(2), selfed.get(0), map, solManager, sl).combineSchemes();
         System.out.println("\n--!! Crossed ideotype of scheme 3 with S1 !!--");
         for(int i=0; i<merged.size(); i++){
             for(CrossingScheme s : merged.get(i).getAlternatives()){
