@@ -14,6 +14,10 @@ Version 1.6 (under development)
  - Fixed bug in joint population size computation when simultaneously targeting different
    phase-known genotypes with the same observed allelic frequencies.
    
+ - Heuristic H6 now computes a tighter population size bound. May result in speedups
+   when using presets `default`, `faster` or `fastest`, or when enabling the individual
+   heuristic H6.
+   
  - Cleaned up Javadoc in source code.
 
 Version 1.5 (17 March 2014)

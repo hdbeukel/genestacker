@@ -187,8 +187,8 @@ public class HeuristicPopulationSizeBound extends Heuristic {
                 if(found.size() < locusStretches.size()){
                     // number of distinct crossovers still required betweeen corresponding loci
                     int n = locusStretches.size() - found.size();
-                    // recombination rate
-                    double prob = map.getRecombinationProbability(c, l, l+1);
+                    // recombination rate (divided by two; not interested in complement)
+                    double prob = 0.5 * map.getRecombinationProbability(c, l, l+1);
                     // compute corresponding population size
                     PlantNode fpn = new FuturePlantNode(minNumTargetsFromNonUniformSeedLots, prob);
                     long pop = popSizeTools.computeRequiredSeedsForTargetPlant(fpn);
