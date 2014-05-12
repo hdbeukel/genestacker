@@ -14,6 +14,13 @@ Version 1.6 (under development)
  - Fixed bug in joint population size computation when simultaneously targeting different
    phase-known genotypes with the same observed allelic frequencies.
    
+ - Heuristic H3 now allows selfing of genotypes which are homozygous at all target loci, in order
+   to reproduce such genotype in the next generation, although this can not yield a Pareto optimal
+   subschedule. This exception has been introduced because such selfings are regularly performed to be able
+   to cross with the respective genotype over multiple generations, at low cost (efficient reuse of
+   material). May result in better schedules when using presets `default`, `faster` or `fastest`, and
+   the corresponding increase in runtime is negligibly small.
+   
  - Heuristic H6 now computes a tighter population size bound. May result in speedups
    when using presets `default`, `faster` or `fastest`, or when enabling the individual
    heuristic H6.

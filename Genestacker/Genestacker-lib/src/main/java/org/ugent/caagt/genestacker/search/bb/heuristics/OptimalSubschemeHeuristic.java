@@ -17,10 +17,13 @@ package org.ugent.caagt.genestacker.search.bb.heuristics;
 import java.util.HashMap;
 import java.util.Map;
 import org.ugent.caagt.genestacker.Genotype;
+import org.ugent.caagt.genestacker.Plant;
+import org.ugent.caagt.genestacker.search.CrossingNode;
 import org.ugent.caagt.genestacker.search.CrossingScheme;
 import org.ugent.caagt.genestacker.search.CrossingSchemeDescriptor;
 import org.ugent.caagt.genestacker.search.DominatesRelation;
 import org.ugent.caagt.genestacker.search.ParetoFrontier;
+import org.ugent.caagt.genestacker.search.SelfingNode;
 
 /**
  * This heuristic keeps track of a Pareto frontier for each intermediary genotype
@@ -44,6 +47,16 @@ public class OptimalSubschemeHeuristic extends Heuristic {
     
     @Override
     public boolean pruneQueueScheme(CrossingScheme scheme){
+        // special case: allow selfing of homozygous plant to recreate itself,
+        // although this is never Pareto optimal (this technique is often used
+        // in efficient schedules)
+        if(detectSpecialCase(scheme)){
+            return false;
+        }
+        
+        // check if scheme is not dominated by previously constructed scheme with
+        // same final genotype
+        
         // get genotype of final plant of the scheme
         Genotype g = scheme.getFinalPlantNode().getPlant().getGenotype();
         // check if pareto frontier already present
@@ -60,6 +73,13 @@ public class OptimalSubschemeHeuristic extends Heuristic {
     
     @Override
     public boolean pruneDequeueScheme(CrossingScheme scheme){
+        // special case: allow selfing of homozygous plant to recreate itself,
+        // although this is never Pareto optimal (this technique is often used
+        // in efficient schedules)
+        if(detectSpecialCase(scheme)){
+            return false;
+        }
+        
         // check if scheme is still contained in the respective Pareto frontier
         // when it has been dequeued
         
@@ -70,6 +90,23 @@ public class OptimalSubschemeHeuristic extends Heuristic {
         // prune if scheme no longer contained in frontier
         return !f.contains(scheme);
         
+    }
+    
+    /**
+     * Detects the special case where the penultimate plant of the given scheme is homozygous at all target loci and
+     * has been selfed to recreate it in the final generation. In such case, the scheme is not pruned althrough it is
+     * certainly not Pareto optimal. This pattern is frequently observed in efficient schedules, as it is very easy to
+     * reproduce a homozygous genotype through a selfing.
+     * 
+     * @param scheme considered crossing scheme
+     * @return <code>true</code> if the described special case is detected, so that the scheme should not be pruned
+     */
+    private boolean detectSpecialCase(CrossingScheme scheme){
+        Plant finalPlant = scheme.getFinalPlantNode().getPlant();
+        CrossingNode lastCrossing = scheme.getFinalPlantNode().getParent().getParentCrossing();
+        return lastCrossing != null && lastCrossing.isSelfing()
+                && finalPlant.isHomozygousAtAllTargetLoci()
+                && ((SelfingNode)lastCrossing).getParent().getPlant().equals(finalPlant);
     }
     
 }
