@@ -47,9 +47,7 @@ public class OptimalSubschemeHeuristic extends Heuristic {
     
     @Override
     public boolean pruneQueueScheme(CrossingScheme scheme){
-        // special case: allow selfing of homozygous plant to recreate itself,
-        // although this is never Pareto optimal (this technique is often used
-        // in efficient schedules)
+        // special case
         if(detectSpecialCase(scheme)){
             return false;
         }
@@ -73,9 +71,7 @@ public class OptimalSubschemeHeuristic extends Heuristic {
     
     @Override
     public boolean pruneDequeueScheme(CrossingScheme scheme){
-        // special case: allow selfing of homozygous plant to recreate itself,
-        // although this is never Pareto optimal (this technique is often used
-        // in efficient schedules)
+        // special case
         if(detectSpecialCase(scheme)){
             return false;
         }
