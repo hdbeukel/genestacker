@@ -79,13 +79,13 @@ public class MergedSchemes{
        int minGenIncrease = Math.max(nextGen1, nextGen2);
        desc.setNumGenerations(desc.getNumGenerations()+minGenIncrease);
 
-       // best case increase in pop size and ambiguity
+       // min increase in pop size and linkage phase ambiguity
 
        // scheme 1
        Collection<PlantNode> plantNodes1 = getNodesWithAncestors(scheme1, danglingPlantNodes1, nextGen1);
        double bestCaseLPAInc1 = 0.0;
        for(PlantNode pn : plantNodes1){
-           bestCaseLPAInc1 = 1.0 - (1.0-bestCaseLPAInc1)*(1.0*pn.getLinkagePhaseAmbiguity());
+           bestCaseLPAInc1 = 1.0 - (1.0-bestCaseLPAInc1)*(1.0-pn.getLinkagePhaseAmbiguity());
        }
        Collection<SeedLotNode> seedLots1 = getAncestorSeedLots(scheme1, nextGen1);
        int minPopSizeInc1 = 0;
@@ -96,7 +96,7 @@ public class MergedSchemes{
        Collection<PlantNode> plantNodes2 = getNodesWithAncestors(scheme2, danglingPlantNodes2, nextGen2);
        double bestCaseLPAInc2 = 0.0;
        for(PlantNode pn : plantNodes2){
-           bestCaseLPAInc2 = 1.0 - (1.0-bestCaseLPAInc2)*(1.0*pn.getLinkagePhaseAmbiguity());
+           bestCaseLPAInc2 = 1.0 - (1.0-bestCaseLPAInc2)*(1.0-pn.getLinkagePhaseAmbiguity());
        }
        Collection<SeedLotNode> seedLots2 = getAncestorSeedLots(scheme2, nextGen2);
        int minPopSizeInc2 = 0;

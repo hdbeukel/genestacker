@@ -10,9 +10,6 @@ Version 1.6 (under development)
    this is indicated in the labels of the corresponding nodes in the crossing schedule. Population
    sizes are still computed so that the required number of duplicates of the target plants are
    expected among the offspring.
-
- - Fixed bug in joint population size computation when simultaneously targeting different
-   phase-known genotypes with the same observed allelic frequencies.
    
  - Heuristic H3 now allows selfing of genotypes which are homozygous at all target loci, in order
    to reproduce such genotype in the next generation, although this can not yield a Pareto optimal
@@ -24,6 +21,12 @@ Version 1.6 (under development)
  - Heuristic H6 now computes a tighter population size bound. May result in speedups
    when using presets `default`, `faster` or `fastest`, or when enabling the individual
    heuristic H6.
+   
+ - Fixed bug in joint population size computation when simultaneously targeting different
+   phase-known genotypes with the same observed allelic frequencies.
+   
+ - Fixed bug in alignment computation because of which some alignments of partial schedules
+   were sometimes not considered.
    
  - Cleaned up Javadoc in source code.
 
