@@ -569,7 +569,7 @@ public class BranchAndBound extends SearchEngine {
                                                                                 throws  GenotypeException,
                                                                                         CrossingSchemeException{
         
-        // construct seed lot obtained from crossing
+        // construct seed lot obtained from crossing (retrieved from cache if constructed before)
         SeedLot sl = constructSeedLot(Math.max(scheme1.getMinNumGen(), scheme2.getMinNumGen())+1,
                                         scheme1.getFinalPlant(), scheme2.getFinalPlant(), map, solManager);
         
@@ -625,7 +625,8 @@ public class BranchAndBound extends SearchEngine {
                 }
                 // cross with previous scheme
                 if(toExtend != null){
-                    // check pruning
+                    // check pruning (if all combinations are pruned, we can
+                    // save some time by not constructing the obtained seed lot)
                     boolean prune = true;
                     Iterator<CrossingScheme> it1 = curScheme.iterator();
                     while(prune && it1.hasNext()){

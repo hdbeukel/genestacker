@@ -50,34 +50,7 @@ public class MergeFirstSchemeMerger extends SchemeMerger {
     
     @Override
     public List<CrossingSchemeAlternatives> combineSchemes() throws GenotypeException, CrossingSchemeException {
-        
-        List<CrossingSchemeAlternatives> newSchemes = new ArrayList<>(); 
-        
-        // try avoiding construction of alignment(s) if we can predict that they will all
-        // be pruned after attaching any of the plants grown from the new seed lot
-        
-//        boolean skip = true;
-//        Iterator<Genotype> it = seedLot.getGenotypes().iterator();
-//        while(cont && skip && it.hasNext()){
-//            Genotype g = it.next();
-//            if(!prunedGenotypes.contains(g)){
-//                Plant p = new Plant(g);
-//                PlantDescriptor pdesc = new PlantDescriptor(
-//                    p,
-//                    seedLot.getGenotypeGroup(g.getAllelicFrequencies()).getProbabilityOfPhaseKnownGenotype(g),
-//                    seedLot.getGenotypeGroup(g.getAllelicFrequencies()).getLinkagePhaseAmbiguity(g),
-//                    seedLot.isUniform()
-//                );
-//                for(int alt1i=0; alt1i<scheme1.nrOfAlternatives() && skip; alt1i++){
-//                    CrossingScheme alt1 = scheme1.getAlternatives().get(alt1i);
-//                    for(int alt2i=0; alt2i<scheme2.nrOfAlternatives() && skip; alt2i++){
-//                        CrossingScheme alt2 = scheme2.getAlternatives().get(alt2i);
-//                        skip = pruneCross[alt1i][alt2i] || solManager.pruneCrossCurrentSchemeWithSpecificOtherWithSelectedTarget(alt1, alt2, pdesc);
-//                    }
-//                }
-//            }
-//        }
-        
+                
         // gather descriptors of ancestors occurring in both schemes
         Set<PlantDescriptor> ancestors = new HashSet<>();
         ancestors.addAll(scheme1.getAncestorDescriptors());
@@ -137,6 +110,8 @@ public class MergeFirstSchemeMerger extends SchemeMerger {
         }    
         
         if(!pruneAll){
+            
+            List<CrossingSchemeAlternatives> newSchemes = new ArrayList<>();
             
             // construct different ways of merging the history, considering all
             // pairs of alternatives of the parent schemes
