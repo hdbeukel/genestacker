@@ -1,7 +1,7 @@
 Gene Stacker Changes
 ====================
 
-Version 1.6 (under development)
+Version 1.6 (10 September 2014)
 ------------------------------
 
  - Crossings and plants are no longer explicitely duplicated. Instead, if a
