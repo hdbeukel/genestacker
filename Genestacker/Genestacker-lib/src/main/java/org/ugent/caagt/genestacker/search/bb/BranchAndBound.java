@@ -59,11 +59,14 @@ public class BranchAndBound extends SearchEngine {
     private Logger logger = LogManager.getLogger(BranchAndBound.class);
     // log markers
     private static final Marker VERBOSE = MarkerManager.getMarker("VERBOSE");
-    private static final Marker VERY_VERBOSE = MarkerManager.getMarker("VERY_VERBOSE", VERBOSE);
+    private static final Marker VERY_VERBOSE = MarkerManager.getMarker("VERY_VERBOSE");
+    static {
+        VERY_VERBOSE.setParents(VERBOSE);
+    }
     
-    // previously considered schemes
+    // previously considered schemes (grouped by alternatives of the same scheme)
     private List<CrossingSchemeAlternatives> previousSchemes;
-    // previously considered scheme alternatives
+    // previously considered schemes (all alternatives individually contained)
     private Set<CrossingScheme> previousSchemeAlternatives;
     // queue schemes to be considered later
     private Queue<CrossingSchemeAlternatives> schemeQueue;
