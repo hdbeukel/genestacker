@@ -1,6 +1,11 @@
 Gene Stacker Changes
 ====================
 
+Version 1.7 (under development)
+-------------------------------
+
+ - [TODO] Colored output graphs. A new command line option `-nc,--no-color` is provided to produce greyscale graphs.
+
 Version 1.6 (10 September 2014)
 ------------------------------
 
