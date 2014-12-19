@@ -85,6 +85,7 @@ public class Main
     private int maxNumCrossovers = GenestackerConstants.UNLIMITED_CROSSOVERS;
     // misc options
     private GraphFileFormat graphFileFormat;
+    private GraphColorScheme graphColorScheme;
     private boolean useKosambiMap;
     private boolean tree;
     private long runtimeLimit = GenestackerConstants.NO_RUNTIME_LIMIT;
@@ -306,8 +307,9 @@ public class Main
         Option graphFileFormatOption = OptionBuilder.withLongOpt("graph-file-format")
                                                   .hasArg()
                                                   .withArgName("f")
-                                                  .withDescription("output file format used for graphs created by graphviz (pdf, eps, ps, svg, png, bmp, jpg or gif), defaults to pdf")
+                                                  .withDescription("output file format used for graphs created by Graphviz (pdf, eps, ps, svg, png, bmp, jpg or gif), defaults to pdf")
                                                   .create("gf");
+        Option noColorOption = new Option("nc", "no-color", false, "produce greyscale graphs instead of the default colored graphs");
         Option kosambiOption = new Option("k", "kosambi", false, "use the Kosambi mapping function to translate genetic distances into crossover probabilities, instead of"
                                                                + " the default Haldane mapping function");
         Option treeOption = new Option("tree", "tree", false, "construct crossing schemes with tree structure, i.e. no reuse nor selfings are allowed (except from a "
@@ -333,6 +335,7 @@ public class Main
         
         miscOptions = new Options();
         miscOptions.addOption(graphFileFormatOption);
+        miscOptions.addOption(noColorOption);
         miscOptions.addOption(kosambiOption);
         miscOptions.addOption(treeOption);
         miscOptions.addOption(runtimeLimitOption);
@@ -774,6 +777,12 @@ public class Main
             }
         }
         
+        // check for -no-color
+        graphColorScheme = GraphColorScheme.COLORED;
+        if(cmd.hasOption("no-color")){
+            graphColorScheme = GraphColorScheme.GREYSCALE;
+        }
+        
         // check for -kosambi
         useKosambiMap = cmd.hasOption("kosambi");
         
@@ -955,7 +964,7 @@ public class Main
         }
 
         // create B&B engine
-        BranchAndBound engine = new BranchAndBound(input, graphFileFormat, popSizeTools, constraints, numSeeds, heuristics,
+        BranchAndBound engine = new BranchAndBound(input, graphFileFormat, graphColorScheme, popSizeTools, constraints, numSeeds, heuristics,
                                                     seedLotFilters, initialPlantFilter, seedLotConstructor, dominatesRelation, homozygousIdeotypeParents);
         // write intermediate output files ?
         if(writeIntermediateOutput){
@@ -1143,7 +1152,7 @@ public class Main
             System.out.println("");
             // generate ZIP package
             logger.info("Generating output file ...");
-            new ZIPWriter().createZIP(frontier, graphFileFormat, outputFile);
+            new ZIPWriter().createZIP(frontier, graphFileFormat, graphColorScheme, outputFile);
             // remove intermediate output file if generated
             if(writeIntermediateOutput){
                 logger.info("Deleting intermediate output file ...");

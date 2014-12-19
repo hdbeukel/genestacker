@@ -116,23 +116,26 @@ public class BranchAndBound extends SearchEngine {
                 null, seedLotConstructor, new DefaultDominatesRelation(), false);
     }
     
-    public BranchAndBound(GenestackerInput input, GraphFileFormat graphFileFormat,
+    public BranchAndBound(GenestackerInput input, GraphFileFormat graphFileFormat, GraphColorScheme colorScheme,
                                                 PopulationSizeTools popSizeTools,  List<Constraint> constraints,
                                                 NumberOfSeedsPerCrossing maxNumSeedsPerCrossing,
                                                 Heuristics heuristics, List<SeedLotFilter> seedLotFilters,
                                                 PlantCollectionFilter initialPlantFilter, SeedLotConstructor seedLotConstructor,
                                                 DominatesRelation<CrossingSchemeDescriptor> dominatesRelation,
                                                 boolean homozygousIdeotypeParents){
-        super(input.getInitialPlants(), input.getIdeotype(), input.getGeneticMap(), graphFileFormat);
+        super(input.getInitialPlants(), input.getIdeotype(), input.getGeneticMap(), graphFileFormat, colorScheme);
         init(popSizeTools, constraints, maxNumSeedsPerCrossing, heuristics, seedLotFilters,
                 initialPlantFilter, null, seedLotConstructor, dominatesRelation, homozygousIdeotypeParents);
     }
     
-    public BranchAndBound(GenestackerInput input, GraphFileFormat graphFileFormat, List<Constraint> constraints, PopulationSizeTools popSizeTools,
-                                NumberOfSeedsPerCrossing maxNumSeedsPerCrossing, Heuristics heuristics, List<SeedLotFilter> seedLotFilters,
-                                PlantCollectionFilter initialPlantFilter, ParetoFrontier initialFrontier, SeedLotConstructor seedLotConstructor,
-                                DominatesRelation<CrossingSchemeDescriptor> dominatesRelation, boolean homozygousIdeotypeParents){
-        super(input.getInitialPlants(), input.getIdeotype(), input.getGeneticMap(), graphFileFormat);
+    public BranchAndBound(GenestackerInput input, GraphFileFormat graphFileFormat, GraphColorScheme colorScheme,
+                                List<Constraint> constraints, PopulationSizeTools popSizeTools,
+                                NumberOfSeedsPerCrossing maxNumSeedsPerCrossing, Heuristics heuristics,
+                                List<SeedLotFilter> seedLotFilters, PlantCollectionFilter initialPlantFilter,
+                                ParetoFrontier initialFrontier, SeedLotConstructor seedLotConstructor,
+                                DominatesRelation<CrossingSchemeDescriptor> dominatesRelation,
+                                boolean homozygousIdeotypeParents){
+        super(input.getInitialPlants(), input.getIdeotype(), input.getGeneticMap(), graphFileFormat, colorScheme);
         init(popSizeTools, constraints, maxNumSeedsPerCrossing, heuristics, seedLotFilters,
                 initialPlantFilter, initialFrontier, seedLotConstructor, dominatesRelation, homozygousIdeotypeParents);
     }
@@ -401,7 +404,8 @@ public class BranchAndBound extends SearchEngine {
                             // update intermediate output file, if enabled
                             if(writeIntermediateOutput){
                                 try {
-                                    new ZIPWriter().createZIP(solManager.getFrontier(), graphFileFormat, intermediatOutputFileName);
+                                    new ZIPWriter().createZIP(solManager.getFrontier(), graphFileFormat,
+                                                              graphColorScheme, intermediatOutputFileName);
                                     logger.info("Updated intermediate output file {}.", intermediatOutputFileName);
                                 } catch (IOException | ArchiveException ex) {
                                     throw new SearchException("Failed to write intermediate output file." , ex);
@@ -434,7 +438,7 @@ public class BranchAndBound extends SearchEngine {
     }
     
     protected String writeDiagram(CrossingScheme scheme) throws GenestackerException {
-        CrossingSchemeGraphWriter epsWriter = new CrossingSchemeGraphWriter(graphFileFormat);
+        CrossingSchemeGraphWriter epsWriter = new CrossingSchemeGraphWriter(graphFileFormat, graphColorScheme);
         CrossingSchemeXMLWriter xmlWriter = new CrossingSchemeXMLWriter();
         try {
             File graph = File.createTempFile("graph_", "." + graphFileFormat);

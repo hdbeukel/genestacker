@@ -25,6 +25,7 @@ import org.ugent.caagt.genestacker.Genotype;
 import org.ugent.caagt.genestacker.Plant;
 import org.ugent.caagt.genestacker.exceptions.GenestackerException;
 import org.ugent.caagt.genestacker.io.GenestackerInput;
+import org.ugent.caagt.genestacker.io.GraphColorScheme;
 import org.ugent.caagt.genestacker.io.GraphFileFormat;
 import org.ugent.caagt.genestacker.log.SearchStartedMessage;
 import org.ugent.caagt.genestacker.log.SearchStoppedMessage;
@@ -49,8 +50,10 @@ public abstract class SearchEngine{
     // search listeners
     protected final List<SearchListener> searchListeners;
 
-    // graph file format for debug output
+    // graph file format for debug and intermediate output
     protected GraphFileFormat graphFileFormat;
+    // graph color scheme for debug and intermediate output
+    protected GraphColorScheme graphColorScheme;
     
     // start, stop time
     protected long startTime, stopTime;
@@ -63,14 +66,16 @@ public abstract class SearchEngine{
     }
     
     public SearchEngine(List<Plant> initialPlants, Genotype ideotype, GeneticMap map){
-        this(initialPlants, ideotype, map, GraphFileFormat.PDF);
+        this(initialPlants, ideotype, map, GraphFileFormat.PDF, GraphColorScheme.COLORED);
     }
     
-    public SearchEngine(List<Plant> initialPlants, Genotype ideotype, GeneticMap map, GraphFileFormat graphFileFormat){
+    public SearchEngine(List<Plant> initialPlants, Genotype ideotype, GeneticMap map,
+                        GraphFileFormat graphFileFormat, GraphColorScheme graphColorScheme){
         this.initialPlants = initialPlants;
         this.ideotype = ideotype;
         this.map = map;
         this.graphFileFormat = graphFileFormat;
+        this.graphColorScheme = graphColorScheme;
         searchListeners = new LinkedList<>();
     }
     

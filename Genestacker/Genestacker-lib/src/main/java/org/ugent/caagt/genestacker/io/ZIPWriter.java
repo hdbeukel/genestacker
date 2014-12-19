@@ -47,13 +47,15 @@ public class ZIPWriter {
      *
      * @param pf Pareto frontier
      * @param format graph file format (e.g. PDF)
+     * @param colorScheme graph color scheme
      * @param outputFile output file (extension ".zip" is appended if not already contained in the file name)
      * 
      * @throws IOException if any IO errors occur
      * @throws ArchiveException if the ZIP file can not be created
      * @throws GenestackerException if any problems occur with the Gene Stacker config file
      */
-    public void createZIP(ParetoFrontier pf, GraphFileFormat format, String outputFile) throws IOException, ArchiveException, GenestackerException {
+    public void createZIP(ParetoFrontier pf, GraphFileFormat format, GraphColorScheme colorScheme, String outputFile)
+            throws IOException, ArchiveException, GenestackerException {
         // format outputFile string
         if (!outputFile.endsWith(".zip")) {
             outputFile += ".zip";
@@ -64,7 +66,7 @@ public class ZIPWriter {
             inZIPFolder = inZIPFolder.substring(outputFile.lastIndexOf('/') + 1);
         }
         // create ZIP archive
-        CrossingSchemeGraphWriter graphWriter = new CrossingSchemeGraphWriter(format);
+        CrossingSchemeGraphWriter graphWriter = new CrossingSchemeGraphWriter(format, colorScheme);
         CrossingSchemeXMLWriter xmlWriter = new CrossingSchemeXMLWriter();
         try (OutputStream out = new FileOutputStream(new File(outputFile));
                 ArchiveOutputStream os = new ArchiveStreamFactory().createArchiveOutputStream("zip", out);) {
