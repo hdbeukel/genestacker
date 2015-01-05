@@ -1,7 +1,7 @@
 Gene Stacker Changes
 ====================
 
-Version 1.7 (under development)
+Version 1.7 (06 January 2015)
 -------------------------------
 
  - Default colored output graphs. A new command line option `-nc,--no-color` is provided to produce greyscale graphs. **Note:** it is advised to install the latest version of Graphviz if colored graphs are not rendered correctly.
