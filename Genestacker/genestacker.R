@@ -17,6 +17,7 @@ genestacker.run <- function(input,          # input file path (relative or absol
                             mapping=c("haldane", "kosambi"), # mapping function (distances --> crossover rates)
                             tree=FALSE,     # construct schedules with tree structure only (no reuse)
                             minp=FALSE,     # minimize the population size only
+                            nc=FALSE,       # produce greyscale graphs instead of the default colored graphs
                             rt=NA,          # runtime limit (in seconds)
                             thr=NA,         # number of threads used to extend a partial schedule
                             preset=c("default", "best", "better", "faster", "fastest"), # heuristic preset
@@ -100,6 +101,9 @@ genestacker.run <- function(input,          # input file path (relative or absol
   }
   if(minp){
       options = paste("-minp", options)
+  }
+  if(nc){
+      options = paste("-nc", options)
   }
   if(!(is.na(rt))){
       options = paste("-rt", rt, options)
