@@ -189,7 +189,7 @@ public class CrossingSchemeGraphWriter {
                              .append("<td height=\"18\" cellpadding=\"0\" valign=\"bottom\" colspan=\"")
                              .append(nCol)
                              .append("\">")
-                             .append("<font point-size=\"12\" color=\"")
+                             .append("<font point-size=\"14\" color=\"")
                              .append(colorScheme.getLpaTextColor())
                              .append("\">")
                              .append("LPA: ")
