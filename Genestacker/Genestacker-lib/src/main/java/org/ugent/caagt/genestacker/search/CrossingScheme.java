@@ -149,8 +149,15 @@ public class CrossingScheme {
                     if(!plant.grownFromUniformLot()){
                         numTargetsFromNonUniformSeedLots += plant.getNumDuplicates();
                     }
-                    // update LPA
-                    linkagePhaseAmbiguity = 1 - ((1-linkagePhaseAmbiguity)*(1-plant.getLinkagePhaseAmbiguity()));
+                    // update LPA (take into account number of duplicates)
+                    double pOneGood = 1-plant.getLinkagePhaseAmbiguity();
+                    double pAllDuplicatesGood = 1;
+                    for(int i=0; i<plant.getNumDuplicates(); i++){
+                        pAllDuplicatesGood *= pOneGood;
+                    }
+                    double pSchemeCurAllGood = 1-linkagePhaseAmbiguity;
+                    double pSchemeNewAllGood = pSchemeCurAllGood * pAllDuplicatesGood;
+                    linkagePhaseAmbiguity = 1 - pSchemeNewAllGood;
                     // get parent seed lot
                     SeedLotNode sl = plant.getParent();
                     // update seedlot child counter
