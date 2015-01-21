@@ -1,6 +1,11 @@
 Gene Stacker Changes
 ====================
 
+Version 1.8 (21 January 2015)
+-----------------------------
+
+ - Fixed wrong overall LPA when targeting several duplicates of plants with a non-zero LPA.
+
 Version 1.7 (06 January 2015)
 -------------------------------
 
