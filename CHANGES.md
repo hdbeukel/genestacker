@@ -1,6 +1,11 @@
 Gene Stacker Changes
 ====================
 
+Version 1.9 (28 August 2015)
+----------------------------
+
+ - Various bugfixes.
+
 Version 1.8 (21 January 2015)
 -----------------------------
 

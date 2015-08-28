@@ -88,8 +88,9 @@ public class DefaultPopulationSizeTools extends PopulationSizeTools {
             //    desired duplicates of that target
 
             long numPlants = 0;
-            long maxSeeds = 0;
-            long sumSeeds = 0;
+            // note: first compute seed counts as doubles to avoid overflow issues
+            double maxSeedsD = 0;
+            double sumSeedsD = 0;
             double[] targetProbs = new double[plantNodes.size()];
             int[] targetDups = new int[plantNodes.size()];
             int i=0;
@@ -97,18 +98,21 @@ public class DefaultPopulationSizeTools extends PopulationSizeTools {
                 // update num plants
                 numPlants += pn.getNumDuplicates();
                 // compute seeds required for plant
-                long seeds = computeRequiredSeedsForTargetPlant(pn);
+                double seeds = computeRequiredSeedsForTargetPlant(pn);
                 // update max and sum
-                if(seeds > maxSeeds){
-                    maxSeeds = seeds;
+                if(seeds > maxSeedsD){
+                    maxSeedsD = seeds;
                 }
-                sumSeeds += numPlants*seeds;
+                sumSeedsD += pn.getNumDuplicates()*seeds;
                 // update arrays
                 targetProbs[i] = pn.getProbabilityOfPhaseKnownGenotype();
                 targetDups[i] = pn.getNumDuplicates();
                 // increase counter
                 i++;
             }
+            // convert to long values
+            long maxSeeds = (long) maxSeedsD;
+            long sumSeeds = (long) sumSeedsD;
 
             // first guess for seeds required for this collection of targets:
             // at least one seed needed per target occurrence, and also at least

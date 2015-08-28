@@ -207,8 +207,9 @@ public class CrossingScheme {
         
         // compute and index population sizes for all seed lots
         
-        totalPopulationSize = 0;
-        popSizePerGeneration = new long[numGenerations+1];
+        // compute as doubles first to avoid overflow
+        double totalPopulationSizeD = 0.0;
+        double[] popSizePerGenerationD = new double[numGenerations+1];
         
         // go through seed lots
         for(SeedLotNode sln : getSeedLotNodes()){
@@ -218,9 +219,15 @@ public class CrossingScheme {
             sln.setSeedsTaken(numSeeds);
             // update pop size sums
             for(int g : numSeeds.keySet()){
-                totalPopulationSize += numSeeds.get(g);
-                popSizePerGeneration[g] += numSeeds.get(g);
+                totalPopulationSizeD += numSeeds.get(g);
+                popSizePerGenerationD[g] += numSeeds.get(g);
             }
+        }
+        // convert to long values (truncate at maximum long value)
+        totalPopulationSize = (long) totalPopulationSizeD;
+        popSizePerGeneration = new long[numGenerations+1];
+        for(int g=0; g<=numGenerations; g++){
+            popSizePerGeneration[g] = (long) popSizePerGenerationD[g];
         }
     }
     
