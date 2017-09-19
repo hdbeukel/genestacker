@@ -82,6 +82,6 @@ Gene Stacker is developed and maintained by
 
 
 
-[1]: http://genestacker.ugent.be/downloads.shtml
+[1]: http://genestacker.ugent.be/downloads.php
 [2]: CHANGES.md
 [3]: http://maven.apache.org/download.cgi
